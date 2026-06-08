@@ -34,9 +34,9 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 .qr-box{background:#111;border:0.5px solid rgba(255,255,255,0.12);border-radius:4px;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:.9rem;transition:none}
 .qr-box.jump-out{animation:jumpOut .4s cubic-bezier(.55,.06,.68,.19) forwards}
 @keyframes jumpOut{
-  0%{transform:var(--qr-pos) scale(1);opacity:1}
-  40%{transform:var(--qr-pos) scale(1.15);opacity:1}
-  100%{transform:var(--qr-pos) scale(0.3) translateY(-60px);opacity:0}
+  0%{opacity:1;transform:scale(1)}
+  40%{opacity:1;transform:scale(1.15)}
+  100%{opacity:0;transform:scale(0.3) translateY(-60px)}
 }
 .qr-box img{width:180px;height:180px;object-fit:contain;image-rendering:pixelated}
 .qr-label{font-family:var(--fraktur);font-size:13px;letter-spacing:-.08em;color:var(--muted)}
@@ -85,7 +85,20 @@ const DKEYS=Object.keys(DIFFS);
 let di=0,diff=DIFFS.Easy;
 let score=0,misses=0,combo=1,running=false;
 let moles=[],gTimer=null,bTimer=null,DUR=30000,timeLeft=DUR;
-let audioCtx=null,ambientNodes=null;
+let audioCtx=null,ambientNodes=null,bgmStarted=false;
+const QR_THRESHOLDS=[1249,949,649];
+const FAIL_MSGS=[
+  'there is more beyond this',
+  'something remains unseen',
+  'not yet',
+  'look closer',
+  'the threshold has not been crossed'
+];
+document.addEventListener('click',function initBGM(){
+  if(bgmStarted)return;
+  bgmStarted=true;
+  try{startAmbient();}catch(e){}
+},{once:true});
 
 const field=document.getElementById('field');
 const scoreEl=document.getElementById('score');
@@ -105,6 +118,7 @@ function getAudio(){
 
 /* ── AMBIENT MUSIC ── lo-fi dark drone with slow LFO movement */
 function startAmbient(){
+  if(ambientNodes)return;
   const ctx=getAudio();
   const master=ctx.createGain();
   master.gain.setValueAtTime(0,ctx.currentTime);
@@ -314,12 +328,17 @@ function spawnLoop(){
 
 function showQR(){
   qrScoreVal.textContent=score;
-  const maxX=100,maxY=60;
-  const offX=Math.floor(Math.random()*maxX*2)-maxX;
-  const offY=Math.floor(Math.random()*maxY*2)-maxY;
-  const posStr='translate('+offX+'px,'+offY+'px)';
+  // Random position across viewport
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const bw=260,bh=340;
+  const left=Math.floor(Math.random()*(vw-bw));
+  const top=Math.floor(Math.random()*(vh-bh));
+  const posStr='translate(0px,0px)';
   qrBox.style.setProperty('--qr-pos',posStr);
-  qrBox.style.transform=posStr;
+  qrBox.style.position='fixed';
+  qrBox.style.left=left+'px';
+  qrBox.style.top=top+'px';
+  qrBox.style.transform='scale(1)';
   qrBox.classList.remove('jump-out');
   qrOverlay.classList.add('show');
   let t=5;
@@ -332,7 +351,7 @@ function showQR(){
       setTimeout(()=>{
         qrOverlay.classList.remove('show');
         qrBox.classList.remove('jump-out');
-        qrBox.style.transform='';
+        qrBox.style.left='';qrBox.style.top='';qrBox.style.position='';qrBox.style.transform='';
       },420);
     } else {
       qrCountdown.textContent='disappears in '+t+'s';
@@ -348,7 +367,6 @@ function startGame(){
   field.innerHTML='';moles=[];
   document.getElementById('start-btn').textContent='Stop';
   barEl.style.width='100%';
-  try{startAmbient();}catch(e){}
   spawnLoop();
   const t0=Date.now();
   bTimer=setInterval(()=>{
@@ -362,11 +380,15 @@ function endGame(){
   running=false;clearTimeout(gTimer);clearInterval(bTimer);
   moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);m.el.remove();}});
   moles=[];
-  stopAmbient();
   document.getElementById('start-btn').textContent='Start';
-  msgEl.textContent='Final: '+score+' pts — '+misses+' missed';
+  const threshold=QR_THRESHOLDS[di];
+  if(score>=threshold){
+    msgEl.textContent='Final: '+score+' pts — '+misses+' missed';
+    showQR();
+  } else {
+    msgEl.textContent=FAIL_MSGS[Math.floor(Math.random()*FAIL_MSGS.length)];
+  }
   barEl.style.width='0%';
-  showQR();
 }
 
 function cycleDiff(){
