@@ -1,0 +1,173 @@
+<link href="https://googleapis.com" rel="stylesheet">
+<style>
+.wam-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 20px auto;
+  background: #000;
+  color: #fff;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2rem 1.4rem 1rem;
+  box-sizing: border-box;
+  border: 1px solid #222;
+  border-radius: 6px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.wam-container * { box-sizing: border-box; }
+.wam-hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: .8rem; }
+.wam-stat span:first-child { display: block; font-family: 'UnifrakturMaguntia', serif; font-size: 13px; letter-spacing: -.08em; color: #666; margin-bottom: 2px; }
+.wam-stat span:last-child { font-family: 'UnifrakturMaguntia', serif; font-size: 28px; font-weight: 400; letter-spacing: -.08em; }
+.wam-bar-wrap { height: 2px; background: #222; border-radius: 2px; overflow: hidden; margin-bottom: .8rem; }
+.wam-bar { height: 100%; background: #fff; width: 100%; }
+.wam-field { position: relative; width: 100%; height: 450px; overflow: hidden; border: 1px solid #111; background: rgba(255,255,255,0.01); margin-bottom: 10px; }
+.wam-mole-el { position: absolute; width: 80px; height: 80px; transform: translate(-50%,-50%) scale(0); transition: transform .2s cubic-bezier(.34,1.56,.64,1); cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+.wam-mole-el.up { transform: translate(-50%,-50%) scale(1); }
+.wam-pts { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: 'UnifrakturMaguntia', serif; font-size: 13px; letter-spacing: -.08em; color: #fff; white-space: nowrap; opacity: 0; transition: opacity .15s, top .4s; z-index: 10; pointer-events: none; }
+.wam-pts.show { opacity: 1; top: -34px; }
+.wam-glitch-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5; }
+.wam-footer { display: flex; align-items: center; justify-content: space-between; padding-top: .8rem; }
+.wam-msg { font-family: 'UnifrakturMaguntia', serif; font-size: 13px; letter-spacing: -.08em; color: #666; min-height: 18px; }
+.wam-controls { display: flex; gap: 10px; }
+.wam-btn { font-family: 'UnifrakturMaguntia', serif; font-size: 13px; letter-spacing: -.08em; padding: 6px 18px; border: 1px solid #fff; background: transparent; color: #fff; cursor: pointer; border-radius: 2px; transition: background .15s, color .15s; }
+.wam-btn:hover { background: rgba(255,255,255,0.12); }
+.wam-btn.primary { background: #fff; color: #000; border-color: #fff; font-weight: 700; }
+.wam-btn.primary:hover { background: #e0ddd6; }
+.wam-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+.wam-qr-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; z-index: 99999; padding: 10px; }
+.wam-qr-overlay.show { display: flex; }
+.wam-qr-box { background: #111; border: 0.5px solid rgba(255,255,255,0.12); border-radius: 4px; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: .7rem; width: 100%; max-width: 290px; text-align: center; }
+.wam-qr-label { font-family: 'UnifrakturMaguntia', serif; font-size: 13px; letter-spacing: -.08em; color: #666; }
+.wam-qr-score { font-family: 'UnifrakturMaguntia', serif; font-size: 40px; font-weight: 400; letter-spacing: -.08em; color: #fff; line-height: 1; }
+.wam-qr-timer { font-family: 'UnifrakturMaguntia', serif; font-size: 12px; letter-spacing: -.08em; color: #666; }
+.wam-qr-placeholder { width: 160px; height: 160px; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+</style>
+
+<div class="wam-container">
+  <div class="wam-hud">
+    <div class="wam-stat"><span>Score</span><span id="wam-score">0</span></div>
+    <div class="wam-stat" style="text-align:center"><span>Combo</span><span id="wam-combo">×1</span></div>
+    <div class="wam-stat" style="text-align:right"><span>Misses</span><span id="wam-misses">0</span></div>
+  </div>
+  <div class="wam-bar-wrap"><div class="wam-bar" id="wam-bar"></div></div>
+  <div class="wam-field" id="wam-field"></div>
+  <div class="wam-footer">
+    <div class="wam-msg" id="wam-msg">press start</div>
+    <div class="wam-controls">
+      <!-- Fixed: Inline Hardwired Function Initializers to Bypass Carrd's Defer Blocks -->
+      <button class="wam-btn primary" id="wam-start-btn" onclick="window.wamStartGame()">Start</button>
+      <button class="wam-btn" id="wam-diff-btn" onclick="window.wamCycleDiff()">Easy</button>
+    </div>
+  </div>
+</div>
+
+<div class="wam-qr-overlay" id="wam-qr-overlay">
+  <div class="wam-qr-box">
+    <div class="wam-qr-label">You scored</div>
+    <div class="wam-qr-score" id="wam-qr-score-val">0</div>
+    <div class="wam-qr-placeholder">
+      <svg width="130" height="130" viewBox="0 0 100 100" fill="none" stroke="#000" stroke-width="6"><path d="M10 10h30v30H10zm50 0h30v30H60zM10 60h30v30H10zm50 10h10v10H60zm10 10h10v10H70zm10-10h10v10H80zm0-10h10v10H80z"/></svg>
+    </div>
+    <div class="wam-qr-label">scan to continue</div>
+    <div class="wam-qr-timer" id="wam-qr-countdown">disappears in 5s</div>
+  </div>
+</div>
+
+<audio id="wam-sfx-hit" preload="auto">
+  <source src="data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACAAgAZGF0YWABAACAgICAgICAgICAgICAgICAgICAgICAAP+AgICAgICA/4CAgICAAP+AgICAgMD/gICAgIDAgMDAgMDAwMDAwICAwMCAgMDAgICAgICAwICAwICAwICAwICAwMD/gICAgICAwMDAwMD/gMDAwICAwMD/gMDAwICAwMD/gMDAgICAwP+AgICAgID/gMD/gMD/gMD/gMD/gMD/gMD/gMD/gMDAwMD/gICAwMD/gICAwP+AgICAwP+AgIDAgID/gICAgIDAgIDAgIDAgICAwICAwICAwICAwICAwMD/gIDAgIDAgMDAwMD/gMDAwICAwP+AwMCAgIDAgMD/gIDAgID/gIDAgID/gID/gID/gID/gID/gID/gIDAgICA" type="audio/wav">
+</audio>
+<audio id="wam-sfx-miss" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiwAAAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQgAAAAAf39/f39/fw==" type="audio/wav">
+</audio>
+
+<script>
+// Bind modules immediately to the global window landscape to make them unblockable
+(function() {
+    const MOLE_SVGS = [
+    `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><circle cx="50" cy="50" r="40" fill="none" stroke="#fff" stroke-width="4"/><path d="M30 50h40M50 30v40" stroke="#fff" stroke-width="4"/></svg>`,
+    `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><rect x="15" y="15" width="70" height="70" fill="none" stroke="#fff" stroke-width="4"/><path d="M15 15l70 70M85 15L15 85" stroke="#fff" stroke-width="2"/></svg>`,
+    `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><circle cx="50" cy="50" r="35" fill="none" stroke="#666" stroke-width="3"/><circle cx="50" cy="50" r="15" fill="#fff"/></svg>`,
+    `<svg viewBox="0 0 100 100" style="width:100%;height:100%;"><path d="M50 10L90 85H10Z" fill="none" stroke="#fff" stroke-width="4"/><circle cx="50" cy="55" r="10" fill="#666"/></svg>`
+    ];
+
+    const DIFFS = { Easy: { speed: 1300, max: 3 }, Normal: { speed: 850, max: 4 }, Hard: { speed: 500, max: 5 } };
+    const DKEYS = Object.keys(DIFFS);
+    let di = 0, diff = DIFFS.Easy;
+    let score = 0, misses = 0, combo = 1, running = false;
+    let moles = [], gTimer = null, bTimer = null, DUR = 30000, timeLeft = DUR;
+    let activeCanvases = [];
+
+    window.wamPlaySound = function(isHit = true) {
+        try {
+            const audio = document.getElementById(isHit ? 'wam-sfx-hit' : 'wam-sfx-miss');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(() => {});
+            }
+        } catch(e) {}
+    }
+
+    window.wamDrawGlitch = function(el) {
+        const field = document.getElementById('wam-field');
+        if (!field) return;
+        const canvas = document.createElement('canvas');
+        canvas.className = 'wam-glitch-canvas';
+        canvas.width = 80; canvas.height = 80;
+        canvas.style.left = el.style.left;
+        canvas.style.top = el.style.top;
+        canvas.style.transform = 'translate(-50%, -50%)';
+        field.appendChild(canvas);
+        activeCanvases.push(canvas);
+
+        const ctx = canvas.getContext('2d');
+        let f = 0;
+        function render() {
+            if (!running || f > 8 || !canvas.parentNode) {
+                if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+                activeCanvases = activeCanvases.filter(c => c !== canvas);
+                return;
+            }
+            ctx.clearRect(0, 0, 80, 80);
+            for (let i = 0; i < 4; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,255,230,0.6)' : 'rgba(255,0,120,0.6)';
+                ctx.fillRect(Math.random()*10, Math.random()*50, Math.random()*50+20, Math.random()*10+2);
+            }
+            f++;
+            requestAnimationFrame(render);
+        }
+        render();
+    }
+
+    window.wamCycleDiff = function() {
+        if(running) return;
+        di = (di + 1) % DKEYS.length;
+        diff = DIFFS[DKEYS[di]];
+        const diffBtn = document.getElementById('wam-diff-btn');
+        if (diffBtn) diffBtn.innerText = DKEYS[di];
+    }
+
+    window.wamSpawnMole = function() {
+        const field = document.getElementById('wam-field');
+        if(!running || moles.length >= diff.max || !field) return;
+        
+        const el = document.createElement('div');
+        el.className = 'wam-mole-el';
+        el.innerHTML = MOLE_SVGS[Math.floor(Math.random() * MOLE_SVGS.length)];
+
+        const pts = document.createElement('div');
+        pts.className = 'wam-pts';
+        pts.innerText = '+10';
+        el.appendChild(pts);
+
+        const rect = field.getBoundingClientRect();
+        const padding = 45;
+        const x = Math.random() * ((rect.width - padding) - padding) + padding;
+        const y = Math.random() * ((rect.height - padding) - padding) + padding;
+        
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+
+        el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
