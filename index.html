@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-a-Mole</title>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--text:#fff;--muted:#666;--fraktur:'UnifrakturMaguntia',serif}
+html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospace}
+.wrap{display:flex;flex-direction:column;min-height:100vh;padding:1.2rem 1.4rem 1rem}
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;flex-shrink:0}
+.stat span:first-child{display:block;font-family:var(--fraktur);font-size:13px;letter-spacing:-.08em;color:var(--muted);margin-bottom:2px}
+.stat span:last-child{font-family:var(--fraktur);font-size:28px;font-weight:400;letter-spacing:-.08em}
+.bar-wrap{height:2px;background:#222;border-radius:2px;overflow:hidden;margin-bottom:.8rem;flex-shrink:0}
+.bar{height:100%;background:var(--text);border-radius:2px;transition:width .1s linear}
+.field{position:relative;width:100%;height:500px;overflow:hidden}
+.mole-el{position:absolute;width:80px;height:80px;transform:translate(-50%,-50%) scale(0);transition:transform .2s cubic-bezier(.34,1.56,.64,1);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mole-el.up{transform:translate(-50%,-50%) scale(1)}
+.mole-el img{width:100%;height:100%;object-fit:contain;pointer-events:none;border-radius:50%}
+.pts{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-family:var(--fraktur);font-size:13px;letter-spacing:-.08em;color:var(--text);white-space:nowrap;opacity:0;transition:opacity .15s,top .4s}
+.pts.show{opacity:1;top:-34px}
+.glitch-canvas{position:absolute;top:0;left:0;pointer-events:none;border-radius:50%}
+.footer{display:flex;align-items:center;justify-content:space-between;padding-top:.8rem;flex-shrink:0}
+.msg{font-family:var(--fraktur);font-size:13px;letter-spacing:-.08em;color:var(--muted);min-height:18px}
+.controls{display:flex;gap:10px}
+.btn{font-family:var(--fraktur);font-size:13px;letter-spacing:-.08em;padding:6px 18px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer;border-radius:2px;transition:background .15s,color .15s}
+.btn:hover{background:rgba(255,255,255,0.12)}
+.btn.primary{background:#fff;color:#000;border-color:#fff;font-weight:700}
+.btn.primary:hover{background:#e0ddd6;color:#000;border-color:#e0ddd6}
+.qr-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;z-index:100}
+.qr-overlay.show{display:flex}
+.qr-box{background:#111;border:0.5px solid rgba(255,255,255,0.12);border-radius:4px;padding:2rem;display:flex;flex-direction:column;align-items:center;gap:.9rem;transition:none}
+.qr-box.jump-out{animation:jumpOut .4s cubic-bezier(.55,.06,.68,.19) forwards}
+@keyframes jumpOut{
+  0%{transform:var(--qr-pos) scale(1);opacity:1}
+  40%{transform:var(--qr-pos) scale(1.15);opacity:1}
+  100%{transform:var(--qr-pos) scale(0.3) translateY(-60px);opacity:0}
+}
+.qr-box img{width:180px;height:180px;object-fit:contain;image-rendering:pixelated}
+.qr-label{font-family:var(--fraktur);font-size:13px;letter-spacing:-.08em;color:var(--muted)}
+.qr-score{font-family:var(--fraktur);font-size:40px;font-weight:400;letter-spacing:-.08em}
+.qr-timer{font-family:var(--fraktur);font-size:12px;letter-spacing:-.08em;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <div class="stat"><span>Score</span><span id="score">0</span></div>
+    <div class="stat" style="text-align:center"><span>Combo</span><span id="combo">×1</span></div>
+    <div class="stat" style="text-align:right"><span>Misses</span><span id="misses">0</span></div>
+  </div>
+  <div class="bar-wrap"><div class="bar" id="bar" style="width:100%"></div></div>
+  <div class="field" id="field"></div>
+  <div class="footer">
+    <div class="msg" id="msg">press start</div>
+    <div class="controls">
+      <button class="btn primary" id="start-btn" onclick="startGame()">Start</button>
+      <button class="btn" id="diff-btn" onclick="cycleDiff()">Easy</button>
+    </div>
+  </div>
+</div>
+
+<div class="qr-overlay" id="qr-overlay">
+  <div class="qr-box" id="qr-box">
+    <div class="qr-label">You scored</div>
+    <div class="qr-score" id="qr-score-val">0</div>
+    <img src="https://i.imgur.com/uaa8sAh.png" alt="QR code">
+    <div class="qr-label">scan to continue</div>
+    <div class="qr-timer" id="qr-countdown">disappears in 5s</div>
+  </div>
+</div>
+
+<script>
+const MOLE_IMAGES=[
+  'https://i.imgur.com/zSllGVG.png',
+  'https://i.imgur.com/LWvL8eE.png',
+  'https://i.imgur.com/Vhm1AdX.png',
+  'https://i.imgur.com/lwUiMZn.png'
+];
+
+const DIFFS={Easy:{speed:1400,max:3},Normal:{speed:900,max:4},Hard:{speed:550,max:5}};
+const DKEYS=Object.keys(DIFFS);
+let di=0,diff=DIFFS.Easy;
+let score=0,misses=0,combo=1,running=false;
+let moles=[],gTimer=null,bTimer=null,DUR=30000,timeLeft=DUR;
+let audioCtx=null,ambientNodes=null;
+
+const field=document.getElementById('field');
+const scoreEl=document.getElementById('score');
+const missEl=document.getElementById('misses');
+const comboEl=document.getElementById('combo');
+const msgEl=document.getElementById('msg');
+const barEl=document.getElementById('bar');
+const qrOverlay=document.getElementById('qr-overlay');
+const qrBox=document.getElementById('qr-box');
+const qrScoreVal=document.getElementById('qr-score-val');
+const qrCountdown=document.getElementById('qr-countdown');
+
+function getAudio(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+/* ── AMBIENT MUSIC ── lo-fi dark drone with slow LFO movement */
+function startAmbient(){
+  const ctx=getAudio();
+  const master=ctx.createGain();
+  master.gain.setValueAtTime(0,ctx.currentTime);
+  master.gain.linearRampToValueAtTime(0.18,ctx.currentTime+3);
+  master.connect(ctx.destination);
+
+  const nodes=[];
+
+  // Deep sub drone
+  const sub=ctx.createOscillator();
+  sub.type='sine';
+  sub.frequency.value=38;
+  const subGain=ctx.createGain();subGain.gain.value=0.6;
+  sub.connect(subGain);subGain.connect(master);
+  sub.start();nodes.push(sub);
+
+  // Mid drone with slow detune LFO
+  const mid=ctx.createOscillator();
+  mid.type='triangle';
+  mid.frequency.value=76.2;
+  const midGain=ctx.createGain();midGain.gain.value=0.3;
+  mid.connect(midGain);midGain.connect(master);
+  mid.start();nodes.push(mid);
+
+  // Slow LFO on mid detune
+  const lfo=ctx.createOscillator();
+  lfo.frequency.value=0.07;
+  const lfoGain=ctx.createGain();lfoGain.gain.value=8;
+  lfo.connect(lfoGain);lfoGain.connect(mid.detune);
+  lfo.start();nodes.push(lfo);
+
+  // High shimmer
+  const shim=ctx.createOscillator();
+  shim.type='sine';
+  shim.frequency.value=304.5;
+  const shimGain=ctx.createGain();shimGain.gain.value=0.04;
+  shim.connect(shimGain);shimGain.connect(master);
+  shim.start();nodes.push(shim);
+
+  // Noise layer — filtered dark hiss
+  const bufLen=ctx.sampleRate*2;
+  const buf=ctx.createBuffer(1,bufLen,ctx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<bufLen;i++) data[i]=(Math.random()*2-1);
+  const noise=ctx.createBufferSource();
+  noise.buffer=buf;noise.loop=true;
+  const noiseFilter=ctx.createBiquadFilter();
+  noiseFilter.type='lowpass';noiseFilter.frequency.value=180;noiseFilter.Q.value=1.2;
+  const noiseGain=ctx.createGain();noiseGain.gain.value=0.07;
+  noise.connect(noiseFilter);noiseFilter.connect(noiseGain);noiseGain.connect(master);
+  noise.start();nodes.push(noise);
+
+  // Slow volume LFO for breathing effect
+  const breathLFO=ctx.createOscillator();
+  breathLFO.frequency.value=0.04;
+  const breathGain=ctx.createGain();breathGain.gain.value=0.06;
+  breathLFO.connect(breathGain);breathGain.connect(master.gain);
+  breathLFO.start();nodes.push(breathLFO);
+
+  ambientNodes={nodes,master};
+}
+
+function stopAmbient(){
+  if(!ambientNodes)return;
+  const ctx=getAudio();
+  ambientNodes.master.gain.linearRampToValueAtTime(0,ctx.currentTime+1.5);
+  setTimeout(()=>{
+    ambientNodes.nodes.forEach(n=>{try{n.stop();}catch(e){}});
+    ambientNodes=null;
+  },1600);
+}
+
+/* ── HIT SFX ── deep thud/impact */
+function playThud(pitch=1){
+  const ctx=getAudio();
+  const now=ctx.currentTime;
+
+  // Body thud — pitched sine that drops fast
+  const osc=ctx.createOscillator();
+  osc.type='sine';
+  osc.frequency.setValueAtTime(140*pitch,now);
+  osc.frequency.exponentialRampToValueAtTime(28,now+0.18);
+  const oscGain=ctx.createGain();
+  oscGain.gain.setValueAtTime(0.7,now);
+  oscGain.gain.exponentialRampToValueAtTime(0.001,now+0.22);
+  osc.connect(oscGain);oscGain.connect(ctx.destination);
+  osc.start(now);osc.stop(now+0.23);
+
+  // Click transient
+  const click=ctx.createOscillator();
+  click.type='square';
+  click.frequency.setValueAtTime(900,now);
+  click.frequency.exponentialRampToValueAtTime(60,now+0.04);
+  const clickGain=ctx.createGain();
+  clickGain.gain.setValueAtTime(0.25,now);
+  clickGain.gain.exponentialRampToValueAtTime(0.001,now+0.05);
+  click.connect(clickGain);clickGain.connect(ctx.destination);
+  click.start(now);click.stop(now+0.06);
+
+  // Noise burst
+  const nBuf=ctx.createBuffer(1,ctx.sampleRate*0.1,ctx.sampleRate);
+  const nd=nBuf.getChannelData(0);
+  for(let i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1);
+  const nSrc=ctx.createBufferSource();nSrc.buffer=nBuf;
+  const nFilt=ctx.createBiquadFilter();nFilt.type='bandpass';nFilt.frequency.value=200;nFilt.Q.value=0.8;
+  const nGain=ctx.createGain();
+  nGain.gain.setValueAtTime(0.3,now);
+  nGain.gain.exponentialRampToValueAtTime(0.001,now+0.1);
+  nSrc.connect(nFilt);nFilt.connect(nGain);nGain.connect(ctx.destination);
+  nSrc.start(now);
+}
+
+/* ── MISS SFX ── low dull thud */
+function playMiss(){
+  const ctx=getAudio();
+  const now=ctx.currentTime;
+  const osc=ctx.createOscillator();
+  osc.type='sine';
+  osc.frequency.setValueAtTime(55,now);
+  osc.frequency.exponentialRampToValueAtTime(30,now+0.15);
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0.25,now);
+  g.gain.exponentialRampToValueAtTime(0.001,now+0.18);
+  osc.connect(g);g.connect(ctx.destination);
+  osc.start(now);osc.stop(now+0.2);
+}
+
+
+
+/* ── GAMEPLAY ── */
+function randPos(){
+  const pad=10;
+  return{x:pad+Math.random()*(100-pad*2),y:pad+Math.random()*(100-pad*2)};
+}
+
+function spawnMole(){
+  if(!running)return;
+  if(moles.filter(m=>m.alive).length>=diff.max)return;
+  const pos=randPos();
+  const el=document.createElement('div');
+  el.className='mole-el';
+  el.style.left=pos.x+'%';
+  el.style.top=pos.y+'%';
+  const imgSrc=MOLE_IMAGES[Math.floor(Math.random()*MOLE_IMAGES.length)];
+  const img=document.createElement('img');
+  img.src=imgSrc;img.alt='mole';
+  const pts=document.createElement('span');
+  pts.className='pts';
+  el.appendChild(img);el.appendChild(pts);
+  field.appendChild(el);
+  const mole={el,alive:true,timer:null,imgSrc,pos};
+  moles.push(mole);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('up')));
+  el.addEventListener('click',()=>whack(mole,pts));
+  mole.timer=setTimeout(()=>{
+    if(mole.alive){
+      mole.alive=false;
+      el.classList.remove('up');
+      misses++;combo=1;
+      missEl.textContent=misses;comboEl.textContent='×1';
+  try{playMiss();}catch(e){}
+      setTimeout(()=>el.remove(),220);
+    }
+  },diff.speed);
+}
+
+function cssGlitch(el){
+  // Pure CSS-driven glitch dissolve — no canvas, no CORS
+  el.style.transition='none';
+  let f=0;const total=14;
+  const frames=[
+    ()=>{el.style.transform='translate(-50%,-50%) scale(1) skewX(8deg)';el.style.opacity='0.9';el.style.filter='hue-rotate(90deg) brightness(1.5)';},
+    ()=>{el.style.transform='translate(-46%,-50%) scale(1.05) skewX(-12deg)';el.style.opacity='0.8';el.style.filter='hue-rotate(180deg) brightness(2)';},
+    ()=>{el.style.transform='translate(-54%,-50%) scale(0.95) skewX(6deg)';el.style.opacity='0.6';el.style.filter='hue-rotate(270deg) brightness(1.2)';},
+    ()=>{el.style.transform='translate(-48%,-52%) scale(1.08) skewY(4deg)';el.style.opacity='0.5';el.style.filter='saturate(0) brightness(3)';},
+    ()=>{el.style.transform='translate(-52%,-48%) scale(0.9) skewX(10deg)';el.style.opacity='0.35';el.style.filter='invert(1) brightness(2)';},
+    ()=>{el.style.transform='translate(-50%,-50%) scale(0.7) skewX(-8deg)';el.style.opacity='0.2';el.style.filter='hue-rotate(45deg) brightness(1)';},
+    ()=>{el.style.transform='translate(-50%,-50%) scale(0.4)';el.style.opacity='0';},
+  ];
+  function next(){
+    if(f>=frames.length){el.remove();return;}
+    frames[f]();f++;
+    setTimeout(next,30+Math.random()*20);
+  }
+  next();
+}
+
+function whack(mole,ptsEl){
+  if(!running||!mole.alive)return;
+  clearTimeout(mole.timer);
+  mole.alive=false;
+  cssGlitch(mole.el);
+  const pitchMult=0.9+Math.min(combo,8)*0.04;
+  try{playThud(pitchMult);}catch(e){}
+  combo=Math.min(combo+1,8);
+  const pts=10*combo;score+=pts;
+  scoreEl.textContent=score;comboEl.textContent='×'+combo;
+  ptsEl.textContent='+'+pts;ptsEl.classList.add('show');
+  msgEl.textContent=combo>=5?'unstoppable':combo>=3?'combo ×'+combo:'';
+}
+
+function spawnLoop(){
+  if(!running)return;
+  spawnMole();
+  gTimer=setTimeout(spawnLoop,diff.speed*0.45+Math.random()*diff.speed*0.4);
+}
+
+function showQR(){
+  qrScoreVal.textContent=score;
+  const maxX=100,maxY=60;
+  const offX=Math.floor(Math.random()*maxX*2)-maxX;
+  const offY=Math.floor(Math.random()*maxY*2)-maxY;
+  const posStr='translate('+offX+'px,'+offY+'px)';
+  qrBox.style.setProperty('--qr-pos',posStr);
+  qrBox.style.transform=posStr;
+  qrBox.classList.remove('jump-out');
+  qrOverlay.classList.add('show');
+  let t=5;
+  qrCountdown.textContent='disappears in '+t+'s';
+  const cd=setInterval(()=>{
+    t--;
+    if(t<=0){
+      clearInterval(cd);
+      qrBox.classList.add('jump-out');
+      setTimeout(()=>{
+        qrOverlay.classList.remove('show');
+        qrBox.classList.remove('jump-out');
+        qrBox.style.transform='';
+      },420);
+    } else {
+      qrCountdown.textContent='disappears in '+t+'s';
+    }
+  },1000);
+}
+
+function startGame(){
+  if(running){endGame();return;}
+  try{getAudio().resume();}catch(e){}
+  score=0;misses=0;combo=1;running=true;timeLeft=DUR;
+  scoreEl.textContent='0';missEl.textContent='0';comboEl.textContent='×1';msgEl.textContent='';
+  field.innerHTML='';moles=[];
+  document.getElementById('start-btn').textContent='Stop';
+  barEl.style.width='100%';
+  try{startAmbient();}catch(e){}
+  spawnLoop();
+  const t0=Date.now();
+  bTimer=setInterval(()=>{
+    timeLeft=DUR-(Date.now()-t0);
+    barEl.style.width=Math.max(0,(timeLeft/DUR)*100)+'%';
+    if(timeLeft<=0){clearInterval(bTimer);endGame();}
+  },50);
+}
+
+function endGame(){
+  running=false;clearTimeout(gTimer);clearInterval(bTimer);
+  moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);m.el.remove();}});
+  moles=[];
+  stopAmbient();
+  document.getElementById('start-btn').textContent='Start';
+  msgEl.textContent='Final: '+score+' pts — '+misses+' missed';
+  barEl.style.width='0%';
+  showQR();
+}
+
+function cycleDiff(){
+  di=(di+1)%DKEYS.length;diff=DIFFS[DKEYS[di]];
+  document.getElementById('diff-btn').textContent=DKEYS[di];
+}
+</script>
+</body>
+</html>
