@@ -85,7 +85,7 @@ const DKEYS=Object.keys(DIFFS);
 let di=0,diff=DIFFS.Easy;
 let score=0,misses=0,combo=1,running=false;
 let moles=[],gTimer=null,bTimer=null,DUR=30000,timeLeft=DUR;
-let audioCtx=null,ambientNodes=null,bgmStarted=false;
+let bgmStarted=false;
 const QR_THRESHOLDS=[1249,949,649];
 const FAIL_MSGS=[
   'there is more beyond this',
@@ -111,142 +111,66 @@ const qrBox=document.getElementById('qr-box');
 const qrScoreVal=document.getElementById('qr-score-val');
 const qrCountdown=document.getElementById('qr-countdown');
 
+// ── AUDIO FILES ──
+const BGM_URL='https://raw.githubusercontent.com/kasdaededejoj/whack-a-mole/main/the%20citadel%20observes.mp3';
+const THUD_URL='https://raw.githubusercontent.com/kasdaededejoj/whack-a-mole/main/thud%20sfx%2C%201st%20iteration.mp3';
+
+const bgmAudio=new Audio(BGM_URL);
+bgmAudio.loop=true;
+bgmAudio.volume=0.5;
+
+let audioCtx=null;
+let thudBuffer=null;
+
 function getAudio(){
   if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
   return audioCtx;
 }
 
-/* ── AMBIENT MUSIC ── lo-fi dark drone with slow LFO movement */
+function preloadThud(){
+  try{
+    const ctx=getAudio();
+    fetch(THUD_URL)
+      .then(r=>r.arrayBuffer())
+      .then(ab=>ctx.decodeAudioData(ab))
+      .then(buf=>{thudBuffer=buf;})
+      .catch(e=>{});
+  }catch(e){}
+}
+
 function startAmbient(){
-  if(ambientNodes)return;
-  const ctx=getAudio();
-  const master=ctx.createGain();
-  master.gain.setValueAtTime(0,ctx.currentTime);
-  master.gain.linearRampToValueAtTime(0.18,ctx.currentTime+3);
-  master.connect(ctx.destination);
-
-  const nodes=[];
-
-  // Deep sub drone
-  const sub=ctx.createOscillator();
-  sub.type='sine';
-  sub.frequency.value=38;
-  const subGain=ctx.createGain();subGain.gain.value=0.6;
-  sub.connect(subGain);subGain.connect(master);
-  sub.start();nodes.push(sub);
-
-  // Mid drone with slow detune LFO
-  const mid=ctx.createOscillator();
-  mid.type='triangle';
-  mid.frequency.value=76.2;
-  const midGain=ctx.createGain();midGain.gain.value=0.3;
-  mid.connect(midGain);midGain.connect(master);
-  mid.start();nodes.push(mid);
-
-  // Slow LFO on mid detune
-  const lfo=ctx.createOscillator();
-  lfo.frequency.value=0.07;
-  const lfoGain=ctx.createGain();lfoGain.gain.value=8;
-  lfo.connect(lfoGain);lfoGain.connect(mid.detune);
-  lfo.start();nodes.push(lfo);
-
-  // High shimmer
-  const shim=ctx.createOscillator();
-  shim.type='sine';
-  shim.frequency.value=304.5;
-  const shimGain=ctx.createGain();shimGain.gain.value=0.04;
-  shim.connect(shimGain);shimGain.connect(master);
-  shim.start();nodes.push(shim);
-
-  // Noise layer — filtered dark hiss
-  const bufLen=ctx.sampleRate*2;
-  const buf=ctx.createBuffer(1,bufLen,ctx.sampleRate);
-  const data=buf.getChannelData(0);
-  for(let i=0;i<bufLen;i++) data[i]=(Math.random()*2-1);
-  const noise=ctx.createBufferSource();
-  noise.buffer=buf;noise.loop=true;
-  const noiseFilter=ctx.createBiquadFilter();
-  noiseFilter.type='lowpass';noiseFilter.frequency.value=180;noiseFilter.Q.value=1.2;
-  const noiseGain=ctx.createGain();noiseGain.gain.value=0.07;
-  noise.connect(noiseFilter);noiseFilter.connect(noiseGain);noiseGain.connect(master);
-  noise.start();nodes.push(noise);
-
-  // Slow volume LFO for breathing effect
-  const breathLFO=ctx.createOscillator();
-  breathLFO.frequency.value=0.04;
-  const breathGain=ctx.createGain();breathGain.gain.value=0.06;
-  breathLFO.connect(breathGain);breathGain.connect(master.gain);
-  breathLFO.start();nodes.push(breathLFO);
-
-  ambientNodes={nodes,master};
+  bgmAudio.play().catch(e=>{});
 }
 
-function stopAmbient(){
-  if(!ambientNodes)return;
-  const ctx=getAudio();
-  ambientNodes.master.gain.linearRampToValueAtTime(0,ctx.currentTime+1.5);
-  setTimeout(()=>{
-    ambientNodes.nodes.forEach(n=>{try{n.stop();}catch(e){}});
-    ambientNodes=null;
-  },1600);
-}
-
-/* ── HIT SFX ── deep thud/impact */
 function playThud(pitch=1){
-  const ctx=getAudio();
-  const now=ctx.currentTime;
-
-  // Body thud — pitched sine that drops fast
-  const osc=ctx.createOscillator();
-  osc.type='sine';
-  osc.frequency.setValueAtTime(140*pitch,now);
-  osc.frequency.exponentialRampToValueAtTime(28,now+0.18);
-  const oscGain=ctx.createGain();
-  oscGain.gain.setValueAtTime(0.7,now);
-  oscGain.gain.exponentialRampToValueAtTime(0.001,now+0.22);
-  osc.connect(oscGain);oscGain.connect(ctx.destination);
-  osc.start(now);osc.stop(now+0.23);
-
-  // Click transient
-  const click=ctx.createOscillator();
-  click.type='square';
-  click.frequency.setValueAtTime(900,now);
-  click.frequency.exponentialRampToValueAtTime(60,now+0.04);
-  const clickGain=ctx.createGain();
-  clickGain.gain.setValueAtTime(0.25,now);
-  clickGain.gain.exponentialRampToValueAtTime(0.001,now+0.05);
-  click.connect(clickGain);clickGain.connect(ctx.destination);
-  click.start(now);click.stop(now+0.06);
-
-  // Noise burst
-  const nBuf=ctx.createBuffer(1,ctx.sampleRate*0.1,ctx.sampleRate);
-  const nd=nBuf.getChannelData(0);
-  for(let i=0;i<nd.length;i++) nd[i]=(Math.random()*2-1);
-  const nSrc=ctx.createBufferSource();nSrc.buffer=nBuf;
-  const nFilt=ctx.createBiquadFilter();nFilt.type='bandpass';nFilt.frequency.value=200;nFilt.Q.value=0.8;
-  const nGain=ctx.createGain();
-  nGain.gain.setValueAtTime(0.3,now);
-  nGain.gain.exponentialRampToValueAtTime(0.001,now+0.1);
-  nSrc.connect(nFilt);nFilt.connect(nGain);nGain.connect(ctx.destination);
-  nSrc.start(now);
+  try{
+    if(thudBuffer){
+      const ctx=getAudio();
+      const src=ctx.createBufferSource();
+      src.buffer=thudBuffer;
+      src.playbackRate.value=pitch;
+      const g=ctx.createGain();g.gain.value=0.9;
+      src.connect(g);g.connect(ctx.destination);
+      src.start();
+    }
+  }catch(e){}
 }
 
-/* ── MISS SFX ── low dull thud */
 function playMiss(){
-  const ctx=getAudio();
-  const now=ctx.currentTime;
-  const osc=ctx.createOscillator();
-  osc.type='sine';
-  osc.frequency.setValueAtTime(55,now);
-  osc.frequency.exponentialRampToValueAtTime(30,now+0.15);
-  const g=ctx.createGain();
-  g.gain.setValueAtTime(0.25,now);
-  g.gain.exponentialRampToValueAtTime(0.001,now+0.18);
-  osc.connect(g);g.connect(ctx.destination);
-  osc.start(now);osc.stop(now+0.2);
+  try{
+    if(thudBuffer){
+      const ctx=getAudio();
+      const src=ctx.createBufferSource();
+      src.buffer=thudBuffer;
+      src.playbackRate.value=0.6;
+      const g=ctx.createGain();g.gain.value=0.4;
+      src.connect(g);g.connect(ctx.destination);
+      src.start();
+    }
+  }catch(e){}
 }
 
-
+preloadThud();
 
 /* ── GAMEPLAY ── */
 function randPos(){
