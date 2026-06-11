@@ -174,10 +174,23 @@ const portalTimer=document.getElementById('portal-timer');
 const glitchTrans=document.getElementById('glitch-transition');
 const portalQR=document.getElementById('portal-qr');
 
-// BGM on first interaction
+// BGM on first interaction — 6s fade in
 document.addEventListener('click',function initBGM(){
   if(bgmStarted)return;bgmStarted=true;
-  try{getAudio().resume();bgmAudio.play().catch(e=>{});}catch(e){}
+  try{
+    getAudio().resume();
+    bgmAudio.volume=0;
+    bgmAudio.play().catch(e=>{});
+    const fadeSteps=60, fadeTarget=0.5, fadeDuration=6000;
+    const stepTime=fadeDuration/fadeSteps;
+    const stepSize=fadeTarget/fadeSteps;
+    let step=0;
+    const fadeInterval=setInterval(()=>{
+      step++;
+      bgmAudio.volume=Math.min(fadeTarget, step*stepSize);
+      if(step>=fadeSteps) clearInterval(fadeInterval);
+    },stepTime);
+  }catch(e){}
 },{once:true});
 
 // Welcome → start series
@@ -317,14 +330,9 @@ function endRound(){
   const isLast=currentRound===ROUNDS.length-1;
 
   if(!passed){
-    // Failed threshold — cryptic message, reset entirely
+    // Failed threshold — cryptic message, terminal. Player must refresh to retry.
     msgEl.textContent=CRYPTIC_FAIL;
     totalScore=0;
-    // Offer restart after pause
-    setTimeout(()=>{
-      currentRound=0;totalScore=0;
-      showRoundTransition('—', ()=>startRound(0));
-    },2200);
     return;
   }
 
