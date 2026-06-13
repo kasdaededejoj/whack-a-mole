@@ -165,6 +165,21 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 }
 #dev-close:hover{color:#555}
 
+
+/* ── DEV AUDIO CONTROLS ── */
+#dev-audio{display:flex;flex-direction:column;gap:.6rem;width:100%;border-top:1px solid #1a1a1a;padding-top:.8rem;margin-top:.2rem;}
+.dev-audio-row{display:flex;align-items:center;justify-content:space-between;gap:.8rem;}
+.dev-audio-label{font-family:var(--fraktur);font-size:11px;letter-spacing:.06em;color:#333;min-width:60px;}
+.dev-slider{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:#222;outline:none;cursor:pointer;}
+.dev-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:10px;height:10px;background:#555;cursor:pointer;border-radius:50%;}
+.dev-slider::-webkit-slider-thumb:hover{background:#fff;}
+.dev-slider::-moz-range-thumb{width:10px;height:10px;background:#555;cursor:pointer;border-radius:50%;border:none;}
+.dev-audio-val{font-family:monospace;font-size:10px;color:#333;min-width:28px;text-align:right;}
+.dev-toggle-row{display:flex;align-items:center;justify-content:space-between;}
+.dev-toggle{font-family:var(--fraktur);font-size:11px;letter-spacing:.04em;padding:4px 10px;border:1px solid #222;background:transparent;color:#444;cursor:pointer;transition:border-color .12s,color .12s;}
+.dev-toggle:hover{border-color:#555;color:#888;}
+.dev-toggle.on{border-color:#555;color:#aaa;}
+
 /* ── DUEL SCREEN ── */
 #duel-screen{display:none;position:fixed;inset:0;flex-direction:column;background:var(--bg);z-index:10}
 #duel-screen.active{display:flex}
@@ -277,6 +292,30 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
       <button class="dev-btn" id="dev-r2">round iii — the void</button>
       <button class="dev-btn" id="dev-portal">→ portal direct</button>
     </div>
+    <div id="dev-audio">
+      <div class="dev-audio-row">
+        <span class="dev-audio-label">bgm vol</span>
+        <input class="dev-slider" type="range" id="dev-bgm-vol" min="0" max="100" value="50" step="1">
+        <span class="dev-audio-val" id="dev-bgm-vol-val">50</span>
+      </div>
+      <div class="dev-audio-row">
+        <span class="dev-audio-label">sfx vol</span>
+        <input class="dev-slider" type="range" id="dev-sfx-vol" min="0" max="100" value="80" step="1">
+        <span class="dev-audio-val" id="dev-sfx-vol-val">80</span>
+      </div>
+      <div class="dev-toggle-row">
+        <span class="dev-audio-label">bgm</span>
+        <button class="dev-toggle on" id="dev-bgm-toggle">on</button>
+      </div>
+      <div class="dev-toggle-row">
+        <span class="dev-audio-label">sfx</span>
+        <button class="dev-toggle on" id="dev-sfx-toggle">on</button>
+      </div>
+      <div class="dev-toggle-row">
+        <span class="dev-audio-label">bgm restart</span>
+        <button class="dev-toggle" id="dev-bgm-restart">↺</button>
+      </div>
+    </div>
     <button id="dev-close">dismiss</button>
   </div>
 </div>
@@ -314,6 +353,8 @@ const bgmAudio=new Audio(BGM_URL);
 bgmAudio.loop=true;bgmAudio.volume=0.5;
 
 let audioCtx=null;
+let sfxMuted=false;
+let sfxVolScale=0.8;
 let thudBuffer=null,thudReversedBuffer=null;
 function reverseBuffer(ctx, buffer){
   const reversed=ctx.createBuffer(buffer.numberOfChannels,buffer.length,buffer.sampleRate);
@@ -329,10 +370,12 @@ function preloadThud(){
   try{const ctx=getAudio();fetch(THUD_URL).then(r=>r.arrayBuffer()).then(ab=>ctx.decodeAudioData(ab)).then(buf=>{thudBuffer=buf;thudReversedBuffer=reverseBuffer(ctx,buf);}).catch(e=>{});}catch(e){}
 }
 function playThud(pitch=1){
-  try{if(thudBuffer){const ctx=getAudio();const src=ctx.createBufferSource();src.buffer=thudBuffer;src.playbackRate.value=pitch;const g=ctx.createGain();g.gain.value=0.9;src.connect(g);g.connect(ctx.destination);src.start();}}catch(e){}
+  if(sfxMuted)return;
+  try{if(thudBuffer){const ctx=getAudio();const src=ctx.createBufferSource();src.buffer=thudBuffer;src.playbackRate.value=pitch;const g=ctx.createGain();g.gain.value=0.9*sfxVolScale;src.connect(g);g.connect(ctx.destination);src.start();}}catch(e){}
 }
 function playMiss(){
-  try{if(thudReversedBuffer){const ctx=getAudio();const src=ctx.createBufferSource();src.buffer=thudReversedBuffer;src.playbackRate.value=1;const g=ctx.createGain();g.gain.value=0.1;src.connect(g);g.connect(ctx.destination);src.start();}}catch(e){}
+  if(sfxMuted)return;
+  try{if(thudReversedBuffer){const ctx=getAudio();const src=ctx.createBufferSource();src.buffer=thudReversedBuffer;src.playbackRate.value=1;const g=ctx.createGain();g.gain.value=0.1*sfxVolScale;src.connect(g);g.connect(ctx.destination);src.start();}}catch(e){}
 }
 preloadThud();
 
@@ -456,6 +499,43 @@ document.getElementById('dev-portal').addEventListener('click',()=>{
   showPortal();
 });
 document.getElementById('dev-close').addEventListener('click',closeDevPanel);
+
+// ── DEV AUDIO CONTROLS ──
+const devBgmVol=document.getElementById('dev-bgm-vol');
+const devBgmVolVal=document.getElementById('dev-bgm-vol-val');
+const devSfxVol=document.getElementById('dev-sfx-vol');
+const devSfxVolVal=document.getElementById('dev-sfx-vol-val');
+const devBgmToggle=document.getElementById('dev-bgm-toggle');
+const devSfxToggle=document.getElementById('dev-sfx-toggle');
+const devBgmRestart=document.getElementById('dev-bgm-restart');
+
+devBgmVol.addEventListener('input',()=>{
+  const v=parseInt(devBgmVol.value)/100;
+  devBgmVolVal.textContent=devBgmVol.value;
+  bgmAudio.volume=v;
+});
+devSfxVol.addEventListener('input',()=>{
+  sfxVolScale=parseInt(devSfxVol.value)/100;
+  devSfxVolVal.textContent=devSfxVol.value;
+});
+devBgmToggle.addEventListener('click',()=>{
+  const on=devBgmToggle.classList.toggle('on');
+  devBgmToggle.textContent=on?'on':'off';
+  if(on){ bgmAudio.play().catch(e=>{}); }
+  else { bgmAudio.pause(); }
+});
+devSfxToggle.addEventListener('click',()=>{
+  const on=devSfxToggle.classList.toggle('on');
+  devSfxToggle.textContent=on?'on':'off';
+  sfxMuted=!on;
+});
+devBgmRestart.addEventListener('click',()=>{
+  bgmAudio.currentTime=0;
+  bgmAudio.volume=parseInt(devBgmVol.value)/100;
+  bgmAudio.play().catch(e=>{});
+  devBgmToggle.classList.add('on');
+  devBgmToggle.textContent='on';
+});
 // ── END DEV PANEL ──
 
 // BGM on first interaction — 6s fade in
@@ -1111,6 +1191,7 @@ const OUTCOME = {
 
 // ── DUEL SFX (Web Audio procedural) ──
 function duelSFX(type){
+  if(sfxMuted)return;
   try{
     const ctx=getAudio();
     const now=ctx.currentTime;
