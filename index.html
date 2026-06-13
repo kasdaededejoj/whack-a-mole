@@ -127,11 +127,11 @@ const MOLE_IMAGES=[
 ];
 
 // 3-part series — pacing hidden from user
-// Round 0: Easy (slow), Round 1: Normal, Round 2: Semi-hard (slow spawn, more moles)
+// Round 0: Easy (slow), Round 1: Void Invaders, Round 2: Semi-hard
 const ROUNDS=[
-  {speed:1400, max:3, dur:30000, threshold:1249},
-  {speed:900,  max:4, dur:30000, threshold:949},
-  {speed:1100, max:5, dur:30000, threshold:649}, // semi-hard: slower than normal but more moles
+  {speed:1400, max:3, dur:30000, threshold:1249, type:'mole'},
+  {dur:30000, threshold:949, type:'invaders'},
+  {speed:1100, max:5, dur:30000, threshold:649, type:'mole'},
 ];
 const ROUND_FAIL=[
   'how odd. there should be more effort.',
@@ -463,6 +463,199 @@ function spawnLoop(){
   gTimer=setTimeout(spawnLoop,round.speed*0.45+Math.random()*round.speed*0.4);
 }
 
+// ── VOID INVADERS ENGINE ──
+let invCanvas=null,invCtx=null,invRaf=null;
+let invEntities=[],invBullets=[],invParticles=[];
+let invShooterX=0,invLastShot=0,invDescentY=0;
+const INV_GLYPHS=['⌖','⊕','⊗','◈','⌬','⍟','⎔','⊞'];
+const INV_COLS=8,INV_ROWS=4;
+
+function startInvaders(){
+  invCanvas=document.createElement('canvas');
+  invCanvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;';
+  field.appendChild(invCanvas);
+  invCanvas.width=field.offsetWidth||window.innerWidth;
+  invCanvas.height=field.offsetHeight||window.innerHeight-80;
+  invCtx=invCanvas.getContext('2d');
+  invShooterX=invCanvas.width/2;
+  invDescentY=0;
+  invEntities=[];invBullets=[];invParticles=[];
+
+  const cw=invCanvas.width,ch=invCanvas.height;
+  const cellW=Math.min(60,Math.floor((cw-60)/INV_COLS));
+  const cellH=48;
+  const gLeft=(cw-INV_COLS*cellW)/2;
+  const gTop=40;
+
+  for(let r=0;r<INV_ROWS;r++){
+    for(let c=0;c<INV_COLS;c++){
+      invEntities.push({
+        col:c,row:r,
+        baseX:gLeft+c*cellW+cellW/2,
+        baseY:gTop+r*cellH,
+        x:0,y:0,
+        alive:true,
+        glyph:INV_GLYPHS[Math.floor(Math.random()*INV_GLYPHS.length)],
+        flicker:Math.random()*Math.PI*2,
+        glitchTimer:0,glitchOffset:0,
+        hp:r===0?2:1,
+        cellW,cellH
+      });
+    }
+  }
+
+  invCanvas.addEventListener('click',invHandleClick);
+  invCanvas.addEventListener('mousemove',invHandleMove);
+  invLoop();
+}
+
+function stopInvaders(){
+  if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  if(invCanvas){
+    invCanvas.removeEventListener('click',invHandleClick);
+    invCanvas.removeEventListener('mousemove',invHandleMove);
+    invCanvas.remove();invCanvas=null;invCtx=null;
+  }
+}
+
+function invHandleMove(e){
+  if(!running)return;
+  const r=invCanvas.getBoundingClientRect();
+  invShooterX+=(e.clientX-r.left-invShooterX)*0.12;
+}
+
+function invHandleClick(e){
+  if(!running)return;
+  const r=invCanvas.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  invShooterX+=(mx-invShooterX)*0.4;
+  const now=Date.now();
+  if(now-invLastShot<120)return;
+  invLastShot=now;
+  invBullets.push({x:invShooterX,y:invCanvas.height-70,tx:mx,ty:my,progress:0,speed:0.07});
+  invCheckHit(mx,my);
+}
+
+function invCheckHit(mx,my){
+  let hit=false;
+  for(let e of invEntities){
+    if(!e.alive)continue;
+    if(Math.abs(mx-e.x)<e.cellW*0.5&&Math.abs(my-e.y)<e.cellH*0.55){
+      e.hp--;
+      if(e.hp<=0){
+        e.alive=false;
+        invSpawnParticles(e.x,e.y);
+        const pts=10*combo;
+        roundScore+=pts;totalScore+=pts;
+        combo++;
+        scoreEl.textContent=roundScore;
+        comboEl.textContent='×'+combo;
+      } else {
+        e.glitchTimer=10;
+        combo=Math.max(1,combo-1);
+        comboEl.textContent='×'+combo;
+      }
+      hit=true;break;
+    }
+  }
+  if(!hit){
+    misses++;
+    missEl.textContent=misses;
+    combo=1;comboEl.textContent='×1';
+    invSpawnParticles(mx,my,0.25);
+  }
+}
+
+function invSpawnParticles(x,y,alpha){
+  for(let i=0;i<10;i++){
+    const a=Math.random()*Math.PI*2;
+    const spd=1+Math.random()*2.5;
+    invParticles.push({x,y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life:1,alpha:alpha||1});
+  }
+}
+
+function invLoop(){
+  if(!running||!invCanvas){return;}
+  invUpdate();invDraw();
+  invRaf=requestAnimationFrame(invLoop);
+}
+
+function invUpdate(){
+  const ch=invCanvas.height;
+  invDescentY+=0.12;
+  const drop=Math.floor(invDescentY/20)*20;
+  for(let e of invEntities){
+    if(!e.alive)continue;
+    e.x=e.baseX;
+    e.y=e.baseY+drop+Math.sin(e.flicker+Date.now()*0.001)*1.5;
+    e.flicker+=0.008;
+    if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*5;}else{e.glitchOffset=0;}
+    if(e.y>ch-80){running=false;clearInterval(bTimer);endRound();return;}
+  }
+  for(let b of invBullets) b.progress=Math.min(1,b.progress+b.speed);
+  invBullets=invBullets.filter(b=>b.progress<1);
+  for(let p of invParticles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045;}
+  invParticles=invParticles.filter(p=>p.life>0);
+  const alive=invEntities.filter(e=>e.alive);
+  if(alive.length===0){running=false;clearInterval(bTimer);endRound();}
+}
+
+function invDraw(){
+  const cw=invCanvas.width,ch=invCanvas.height;
+  invCtx.clearRect(0,0,cw,ch);
+
+  for(let p of invParticles){
+    invCtx.save();
+    invCtx.globalAlpha=p.life*p.alpha;
+    invCtx.fillStyle='#fff';
+    invCtx.fillRect(p.x-1,p.y-1,2,2);
+    invCtx.restore();
+  }
+
+  for(let b of invBullets){
+    const bx=b.x+(b.tx-b.x)*b.progress;
+    const by=b.y+(b.ty-b.y)*b.progress;
+    invCtx.save();
+    invCtx.globalAlpha=1-b.progress*0.5;
+    invCtx.strokeStyle='rgba(255,255,255,0.8)';
+    invCtx.lineWidth=1;
+    invCtx.beginPath();invCtx.moveTo(bx,by);invCtx.lineTo(bx,by-7);invCtx.stroke();
+    invCtx.restore();
+  }
+
+  invCtx.font="18px 'UnifrakturMaguntia', serif";
+  for(let e of invEntities){
+    if(!e.alive)continue;
+    const alpha=0.5+0.4*(Math.sin(e.flicker*1.3)*0.5+0.5);
+    invCtx.save();
+    invCtx.translate(e.x+e.glitchOffset,e.y);
+    if(e.glitchTimer>0){
+      invCtx.globalAlpha=0.4;
+      invCtx.fillStyle='#fff';
+      invCtx.fillRect(-e.cellW*0.35,-e.cellH*0.35,e.cellW*0.7,e.cellH*0.7);
+    }
+    invCtx.globalAlpha=alpha;
+    invCtx.fillStyle=e.row===0?'#fff':'rgba(255,255,255,0.72)';
+    invCtx.textAlign='center';invCtx.textBaseline='middle';
+    invCtx.fillText(e.glyph,0,0);
+    invCtx.restore();
+  }
+
+  // Shooter
+  invCtx.save();
+  invCtx.translate(invShooterX,ch-54);
+  invCtx.strokeStyle='rgba(255,255,255,0.85)';
+  invCtx.lineWidth=1.5;
+  invCtx.beginPath();invCtx.moveTo(0,-13);invCtx.lineTo(-11,9);invCtx.lineTo(0,4);invCtx.lineTo(11,9);invCtx.closePath();invCtx.stroke();
+  invCtx.restore();
+
+  // Scanline
+  const scanY=(Date.now()*0.035)%ch;
+  invCtx.save();invCtx.globalAlpha=0.02;invCtx.fillStyle='#fff';invCtx.fillRect(0,scanY,cw,2);invCtx.restore();
+}
+
+// ── END VOID INVADERS ENGINE ──
+
 function startRound(idx){
   currentRound=idx;
   roundScore=0;misses=0;combo=1;running=true;
@@ -473,7 +666,13 @@ function startRound(idx){
   msgEl.textContent='';
   barEl.style.width='100%';
   field.innerHTML='';moles=[];
-  spawnLoop();
+
+  if(round.type==='invaders'){
+    startInvaders();
+  } else {
+    spawnLoop();
+  }
+
   const t0=Date.now();
   bTimer=setInterval(()=>{
     timeLeft=round.dur-(Date.now()-t0);
@@ -487,6 +686,7 @@ function endRound(){
   clearTimeout(gTimer);clearInterval(bTimer);
   moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);m.el.remove();}});
   moles=[];
+  stopInvaders();
   barEl.style.width='0%';
 
   const round=ROUNDS[currentRound];
