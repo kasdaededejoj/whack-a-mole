@@ -15,7 +15,8 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 .screen.active{display:flex}
 
 /* ── WELCOME ── */
-#welcome-screen{gap:2.4rem}
+#welcome-screen{gap:2.4rem;overflow:hidden}
+#welcome-screen .welcome-msg,#welcome-screen .welcome-sub,#welcome-screen #ok-btn{flex-shrink:0;position:relative;z-index:2}
 .welcome-msg{font-family:var(--fraktur);font-size:clamp(44px,10vw,76px);letter-spacing:-.04em;text-align:center;line-height:.65;opacity:0;animation:fadeDown .9s ease forwards .3s}
 .welcome-sub{font-family:var(--fraktur);font-size:13px;letter-spacing:-.04em;color:var(--muted);opacity:0;animation:fadeUp .9s ease forwards .8s}
 #ok-btn{opacity:0;animation:btnFadeUp .9s ease forwards .3s}
@@ -78,6 +79,91 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 #glitch-transition{display:none;position:fixed;inset:0;z-index:190;pointer-events:none}
 #glitch-transition.active{display:block}
 .gt-slice{position:absolute;left:0;right:0;background:#000;mix-blend-mode:normal}
+
+/* ── DEV PANEL ── */
+#dev-panel{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(0,0,0,0.96);
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:1.4rem;
+  border:1px solid #1a1a1a;
+}
+#dev-panel.open{display:flex}
+#dev-panel-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1.2rem;
+  border:1px solid #222;
+  padding:2.4rem 3rem;
+  min-width:280px;
+}
+#dev-panel-title{
+  font-family:var(--fraktur);
+  font-size:13px;
+  letter-spacing:.12em;
+  color:#333;
+  text-transform:uppercase;
+}
+#dev-pw-input{
+  font-family:monospace;
+  font-size:14px;
+  background:#000;
+  border:1px solid #333;
+  color:#fff;
+  padding:8px 14px;
+  width:100%;
+  text-align:center;
+  letter-spacing:.2em;
+  outline:none;
+}
+#dev-pw-input:focus{border-color:#555}
+#dev-pw-error{
+  font-family:var(--fraktur);
+  font-size:11px;
+  color:#4a0000;
+  letter-spacing:-.04em;
+  min-height:14px;
+}
+#dev-controls{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:.8rem;
+  width:100%;
+}
+#dev-controls.unlocked{display:flex}
+.dev-btn{
+  font-family:var(--fraktur);
+  font-size:14px;
+  letter-spacing:-.04em;
+  padding:8px 0;
+  border:1px solid #333;
+  background:transparent;
+  color:#888;
+  cursor:pointer;
+  width:100%;
+  transition:border-color .15s,color .15s;
+}
+.dev-btn:hover{border-color:#fff;color:#fff}
+.dev-btn.active-round{border-color:#555;color:#ccc}
+#dev-close{
+  font-family:var(--fraktur);
+  font-size:11px;
+  letter-spacing:.06em;
+  color:#222;
+  cursor:pointer;
+  transition:color .15s;
+  background:none;
+  border:none;
+  margin-top:.4rem;
+}
+#dev-close:hover{color:#555}
 </style>
 </head>
 <body>
@@ -118,6 +204,22 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
   <div class="portal-timer" id="portal-timer"></div>
 </div>
 
+<!-- DEV PANEL -->
+<div id="dev-panel">
+  <div id="dev-panel-inner">
+    <div id="dev-panel-title">dev access</div>
+    <input id="dev-pw-input" type="password" maxlength="12" placeholder="——————" autocomplete="off" spellcheck="false"/>
+    <div id="dev-pw-error"></div>
+    <div id="dev-controls">
+      <button class="dev-btn" id="dev-r0">round i — mole (easy)</button>
+      <button class="dev-btn" id="dev-r1">round ii — void invaders</button>
+      <button class="dev-btn" id="dev-r2">round iii — mole (hard)</button>
+      <button class="dev-btn" id="dev-portal">→ portal direct</button>
+    </div>
+    <button id="dev-close">dismiss</button>
+  </div>
+</div>
+
 <script>
 const MOLE_IMAGES=[
   'https://i.imgur.com/zSllGVG.png',
@@ -126,8 +228,6 @@ const MOLE_IMAGES=[
   'https://i.imgur.com/lwUiMZn.png'
 ];
 
-// 3-part series — pacing hidden from user
-// Round 0: Easy (slow), Round 1: Void Invaders, Round 2: Semi-hard
 const ROUNDS=[
   {speed:1400, max:3, dur:30000, threshold:1249, type:'mole'},
   {dur:30000, threshold:949, type:'invaders'},
@@ -140,8 +240,8 @@ const ROUND_FAIL=[
 ];
 
 let currentRound=0;
-let roundScore=0; // score for current round
-let totalScore=0; // cumulative
+let roundScore=0;
+let totalScore=0;
 let misses=0,combo=1,running=false;
 let moles=[],gTimer=null,bTimer=null,timeLeft=0;
 let bgmStarted=false;
@@ -152,6 +252,7 @@ const THUD_URL='https://raw.githubusercontent.com/kasdaededejoj/whack-a-mole/mai
 const bgmAudio=new Audio(BGM_URL);
 bgmAudio.loop=true;bgmAudio.volume=0.5;
 
+let audioCtx=null;
 let thudBuffer=null,thudReversedBuffer=null;
 function reverseBuffer(ctx, buffer){
   const reversed=ctx.createBuffer(buffer.numberOfChannels,buffer.length,buffer.sampleRate);
@@ -190,6 +291,110 @@ const portalTimer=document.getElementById('portal-timer');
 const glitchTrans=document.getElementById('glitch-transition');
 const portalQR=document.getElementById('portal-qr');
 
+// ── DEV PANEL ──
+const DEV_PASSWORD='1221';
+const devPanel=document.getElementById('dev-panel');
+const devPwInput=document.getElementById('dev-pw-input');
+const devPwError=document.getElementById('dev-pw-error');
+const devControls=document.getElementById('dev-controls');
+
+let devKeys=[];
+const DEV_COMBO=['Shift','KeyD']; // Shift+D
+let shiftHeld=false;
+
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Shift'){shiftHeld=true;}
+  if(shiftHeld && e.code==='KeyD'){
+    openDevPanel();
+  }
+  // ESC closes
+  if(e.key==='Escape' && devPanel.classList.contains('open')){
+    closeDevPanel();
+  }
+});
+document.addEventListener('keyup',(e)=>{
+  if(e.key==='Shift') shiftHeld=false;
+});
+
+devPwInput.addEventListener('keydown',(e)=>{
+  if(e.key==='Enter') checkDevPassword();
+});
+devPwInput.addEventListener('input',()=>{
+  devPwError.textContent='';
+});
+
+function openDevPanel(){
+  // Pause running game if mid-round
+  if(running){
+    running=false;
+    clearTimeout(gTimer);clearInterval(bTimer);
+  }
+  devPanel.classList.add('open');
+  devPwInput.value='';
+  devPwError.textContent='';
+  devControls.classList.remove('unlocked');
+  setTimeout(()=>devPwInput.focus(),80);
+}
+
+function closeDevPanel(){
+  devPanel.classList.remove('open');
+  devPwInput.value='';
+  devPwError.textContent='';
+}
+
+function checkDevPassword(){
+  if(devPwInput.value===DEV_PASSWORD){
+    devPwError.textContent='';
+    devControls.classList.add('unlocked');
+    devPwInput.style.display='none';
+  } else {
+    devPwError.textContent='denied.';
+    devPwInput.value='';
+  }
+}
+
+function devJumpToRound(idx){
+  closeDevPanel();
+  // Tear down whatever is running
+  running=false;
+  clearTimeout(gTimer);clearInterval(bTimer);
+  stopInvaders();
+  moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);try{m.el.remove();}catch(e){};}});
+  moles=[];
+  field.innerHTML='';
+  // Hide all screens
+  welcomeScreen.classList.remove('active');
+  portalScreen.classList.remove('active');
+  gameScreen.classList.remove('active');
+  glitchTrans.classList.remove('active');
+  roundOverlay.classList.remove('show');
+  // Reset scores so thresholds are reachable but don't break total
+  roundScore=0;misses=0;combo=1;
+  // Re-show pw input for next open
+  devPwInput.style.display='';
+  // Jump
+  startRound(idx);
+}
+
+document.getElementById('dev-r0').addEventListener('click',()=>devJumpToRound(0));
+document.getElementById('dev-r1').addEventListener('click',()=>devJumpToRound(1));
+document.getElementById('dev-r2').addEventListener('click',()=>devJumpToRound(2));
+document.getElementById('dev-portal').addEventListener('click',()=>{
+  closeDevPanel();
+  running=false;
+  clearTimeout(gTimer);clearInterval(bTimer);
+  stopInvaders();
+  moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);try{m.el.remove();}catch(e){};}});
+  moles=[];
+  field.innerHTML='';
+  welcomeScreen.classList.remove('active');
+  gameScreen.classList.remove('active');
+  devPwInput.style.display='';
+  showPortal();
+});
+document.getElementById('dev-close').addEventListener('click',closeDevPanel);
+// ── END DEV PANEL ──
+
 // BGM on first interaction — 6s fade in
 document.addEventListener('click',function initBGM(){
   if(bgmStarted)return;bgmStarted=true;
@@ -221,7 +426,6 @@ document.addEventListener('click',function initBGM(){
   const DIAMOND='polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
   const RECT='polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)';
 
-  // SVG filters
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('style','position:absolute;width:0;height:0');
   svg.innerHTML=`<defs>
@@ -252,7 +456,6 @@ document.addEventListener('click',function initBGM(){
   </defs>`;
   document.body.appendChild(svg);
 
-  // Venetian blinds canvas overlay for button
   const canvas=document.createElement('canvas');
   canvas.style.cssText='position:absolute;pointer-events:none;border-radius:2px;';
   btn.style.position='relative';
@@ -270,14 +473,12 @@ document.addEventListener('click',function initBGM(){
     }
   }
 
-  // Backdrop glitch overlay div
   const backdropGlitch=document.createElement('div');
   backdropGlitch.style.cssText='position:absolute;inset:0;pointer-events:none;opacity:0;z-index:1;';
   welcome.style.position='relative';
   welcome.appendChild(backdropGlitch);
 
   function fireBackdropGlitch(){
-    // Horizontal scan tear bands across the screen
     backdropGlitch.innerHTML='';
     const numBands=Math.floor(3+Math.random()*4);
     const screenH=window.innerHeight;
@@ -297,7 +498,6 @@ document.addEventListener('click',function initBGM(){
 
   function startGlitch(){
     glitchInterval=setInterval(()=>{
-      // Shape ping-pong — no transition, instant
       isDiamond=!isDiamond;
       const rect=btn.getBoundingClientRect();
       const w=Math.round(rect.width), h=Math.round(rect.height);
@@ -314,12 +514,10 @@ document.addEventListener('click',function initBGM(){
         btn.style.borderColor='';
       }
 
-      // Venetian scanlines over button
       canvas.style.display='block';
       canvas.style.top='0'; canvas.style.left='0';
       drawVenetian(w,h);
 
-      // Redacted glitch text
       btn.textContent=redacted;
       btn.style.filter='url(#redact-glitch) invert(1) brightness(0.35)';
       btn.style.transform='skewX(-3deg) translateX(1px)';
@@ -338,7 +536,6 @@ document.addEventListener('click',function initBGM(){
         canvas.style.display='none';
       },200);
 
-      // Backdrop fires simultaneously
       fireBackdropGlitch();
 
     },4000);
@@ -368,21 +565,19 @@ function randPos(){
   return{x:pad+Math.random()*(100-pad*2),y:pad+Math.random()*(100-pad*2)};
 }
 
-// ── SONIDO APPEAR: rapid BW flicker then snap in ──
 function sonidoAppear(el){
   el.style.transition='none';
   el.style.transform='translate(-50%,-50%) scale(0)';
   el.style.opacity='0';
   let f=0;
   const flickers=[
-    // rapid BW flash frames — Bleach sonido feel
     ()=>{el.style.transform='translate(-50%,-50%) scale(1.2)';el.style.opacity='1';el.style.filter='saturate(0) brightness(4) invert(1)';},
     ()=>{el.style.transform='translate(-50%,-50%) scale(0.3)';el.style.opacity='0';el.style.filter='none';},
     ()=>{el.style.transform='translate(-54%,-48%) scale(1.1)';el.style.opacity='1';el.style.filter='saturate(0) brightness(3)';},
     ()=>{el.style.transform='translate(-46%,-52%) scale(0.2)';el.style.opacity='0';el.style.filter='none';},
     ()=>{el.style.transform='translate(-50%,-50%) scale(1.05)';el.style.opacity='1';el.style.filter='saturate(0) contrast(4) brightness(2)';},
     ()=>{el.style.transform='translate(-50%,-50%) scale(0.9)';el.style.opacity='0.5';el.style.filter='saturate(0) brightness(2)';},
-    ()=>{el.style.transform='translate(-50%,-50%) scale(1)';el.style.opacity='1';el.style.filter='none';}, // snap in
+    ()=>{el.style.transform='translate(-50%,-50%) scale(1)';el.style.opacity='1';el.style.filter='none';},
   ];
   function next(){
     if(f>=flickers.length)return;
@@ -392,7 +587,6 @@ function sonidoAppear(el){
   requestAnimationFrame(()=>requestAnimationFrame(next));
 }
 
-// ── GLITCH DISSOLVE DISAPPEAR ──
 function cssGlitch(el){
   el.style.transition='none';
   let f=0;
@@ -641,7 +835,6 @@ function invDraw(){
     invCtx.restore();
   }
 
-  // Shooter
   invCtx.save();
   invCtx.translate(invShooterX,ch-54);
   invCtx.strokeStyle='rgba(255,255,255,0.85)';
@@ -649,12 +842,9 @@ function invDraw(){
   invCtx.beginPath();invCtx.moveTo(0,-13);invCtx.lineTo(-11,9);invCtx.lineTo(0,4);invCtx.lineTo(11,9);invCtx.closePath();invCtx.stroke();
   invCtx.restore();
 
-  // Scanline
   const scanY=(Date.now()*0.035)%ch;
   invCtx.save();invCtx.globalAlpha=0.02;invCtx.fillStyle='#fff';invCtx.fillRect(0,scanY,cw,2);invCtx.restore();
 }
-
-// ── END VOID INVADERS ENGINE ──
 
 function startRound(idx){
   currentRound=idx;
@@ -694,20 +884,17 @@ function endRound(){
   const isLast=currentRound===ROUNDS.length-1;
 
   if(!passed){
-    // Failed threshold — cryptic message, terminal. Player must refresh to retry.
     msgEl.textContent=ROUND_FAIL[currentRound];
     totalScore=0;
     return;
   }
 
   if(isLast){
-    // All 3 rounds cleared — portal transition
     msgEl.textContent='';
     setTimeout(()=>glitchToPortal(),600);
     return;
   }
 
-  // Next round
   const next=currentRound+1;
   const labels=['—','——','———'];
   showRoundTransition(labels[next],()=>startRound(next));
@@ -725,7 +912,6 @@ function showRoundTransition(label, cb){
   },1800);
 }
 
-// ── GLITCH-TO-PORTAL TRANSITION ──
 function glitchToPortal(){
   const gt=glitchTrans;
   gt.innerHTML='';
@@ -745,12 +931,10 @@ function glitchToPortal(){
     slices.push(s);
   }
 
-  // Phase 1: rapid slice flicker
   let frame=0;
   const totalFrames=22;
   function flicker(){
     if(frame>=totalFrames){
-      // Phase 2: wipe to black then show portal
       slices.forEach(s=>{s.style.background='#000';s.style.opacity='1';});
       setTimeout(()=>{
         gt.classList.remove('active');
@@ -773,7 +957,6 @@ function glitchToPortal(){
 
 function showPortal(){
   portalScreen.classList.add('active');
-  // Reset and re-trigger animation
   portalQR.style.animation='none';
   void portalQR.offsetWidth;
   portalQR.style.animation='portalReveal .8s ease forwards';
@@ -786,7 +969,6 @@ function showPortal(){
       t--;
       if(t<0){
         clearInterval(cd);
-        // Jump-out exit
         portalQR.style.animation='none';
         portalQR.style.transition='transform .4s cubic-bezier(.55,.06,.68,.19), opacity .4s';
         portalQR.style.transform='scale(0.2) translateY(-80px)';
@@ -794,7 +976,6 @@ function showPortal(){
         setTimeout(()=>{
           portalScreen.classList.remove('active');
           portalQR.style.transform='';portalQR.style.opacity='';portalQR.style.transition='';
-          // Reset for replay
           currentRound=0;totalScore=0;
           welcomeScreen.classList.add('active');
         },450);
