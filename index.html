@@ -15,8 +15,8 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 .screen.active{display:flex}
 
 /* ── WELCOME ── */
-#welcome-screen{gap:2.4rem;overflow:hidden}
-#welcome-screen .welcome-msg,#welcome-screen .welcome-sub,#welcome-screen #ok-btn{flex-shrink:0;position:relative;z-index:2}
+#welcome-screen{overflow:hidden}
+#welcome-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4rem;position:relative;z-index:2}
 .welcome-msg{font-family:var(--fraktur);font-size:clamp(44px,10vw,76px);letter-spacing:-.04em;text-align:center;line-height:.65;opacity:0;animation:fadeDown .9s ease forwards .3s}
 .welcome-sub{font-family:var(--fraktur);font-size:13px;letter-spacing:-.04em;color:var(--muted);opacity:0;animation:fadeUp .9s ease forwards .8s}
 #ok-btn{opacity:0;animation:btnFadeUp .9s ease forwards .3s}
@@ -164,15 +164,45 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
   margin-top:.4rem;
 }
 #dev-close:hover{color:#555}
+
+/* ── DUEL SCREEN ── */
+#duel-screen{display:none;position:fixed;inset:0;flex-direction:column;background:var(--bg);z-index:10}
+#duel-screen.active{display:flex}
+.duel-top{display:flex;justify-content:space-between;align-items:flex-start;padding:1.6rem 2rem 0;flex-shrink:0}
+.duel-fighter{display:flex;flex-direction:column;gap:.4rem;width:38%}
+.duel-fighter.right{align-items:flex-end}
+.duel-name{font-family:var(--fraktur);font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.duel-hp-wrap{height:2px;background:#1a1a1a;overflow:hidden;width:100%}
+.duel-hp-bar{height:100%;background:var(--text);transition:width .3s ease}
+.duel-hp-num{font-family:var(--fraktur);font-size:22px;letter-spacing:-.06em}
+.duel-arena{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.duel-canvas-wrap{position:relative;width:100%;height:100%}
+#duel-canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.duel-bottom{flex-shrink:0;padding:1rem 2rem 1.6rem;display:flex;flex-direction:column;align-items:center;gap:.8rem}
+.duel-msg{font-family:var(--fraktur);font-size:12px;letter-spacing:-.04em;color:var(--muted);min-height:16px;text-align:center}
+.duel-actions{display:flex;gap:1rem}
+.duel-action-btn{
+  font-family:var(--fraktur);font-size:15px;letter-spacing:-.04em;
+  padding:10px 28px;border:1px solid #333;background:transparent;color:#555;
+  cursor:pointer;transition:border-color .12s,color .12s;
+  position:relative;overflow:hidden;
+}
+.duel-action-btn:hover:not(:disabled){border-color:#888;color:#ccc}
+.duel-action-btn.selected{border-color:#fff;color:#fff}
+.duel-action-btn:disabled{opacity:.25;cursor:default}
+.duel-phase-label{font-family:var(--fraktur);font-size:10px;letter-spacing:.14em;color:#222;text-transform:uppercase}
+
 </style>
 </head>
 <body>
 
 <!-- WELCOME -->
 <div class="screen active" id="welcome-screen">
-  <div class="welcome-msg">hello, welcome.<br>shall we?</div>
-  <div class="welcome-sub">— ——— —</div>
-  <button class="btn primary" id="ok-btn">begin.</button>
+  <div id="welcome-inner">
+    <div class="welcome-msg">hello, welcome.<br>shall we?</div>
+    <div class="welcome-sub">— ——— —</div>
+    <button class="btn primary" id="ok-btn">begin.</button>
+  </div>
 </div>
 
 <!-- GAME -->
@@ -185,6 +215,37 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
   <div class="bar-wrap"><div class="bar" id="bar" style="width:100%"></div></div>
   <div class="field" id="field"></div>
   <div class="msg" id="msg"></div>
+</div>
+
+
+<!-- DUEL SCREEN -->
+<div id="duel-screen">
+  <div class="duel-top">
+    <div class="duel-fighter left">
+      <div class="duel-name">you</div>
+      <div class="duel-hp-wrap"><div class="duel-hp-bar" id="duel-player-bar" style="width:100%"></div></div>
+      <div class="duel-hp-num" id="duel-player-hp">5</div>
+    </div>
+    <div class="duel-fighter right">
+      <div class="duel-name">the void</div>
+      <div class="duel-hp-wrap"><div class="duel-hp-bar" id="duel-enemy-bar" style="width:100%"></div></div>
+      <div class="duel-hp-num" id="duel-enemy-hp">16</div>
+    </div>
+  </div>
+  <div class="duel-arena">
+    <div class="duel-canvas-wrap">
+      <canvas id="duel-canvas"></canvas>
+    </div>
+  </div>
+  <div class="duel-bottom">
+    <div class="duel-phase-label" id="duel-phase">choose</div>
+    <div class="duel-actions">
+      <button class="duel-action-btn" id="duel-btn-strike">strike</button>
+      <button class="duel-action-btn" id="duel-btn-guard">guard</button>
+      <button class="duel-action-btn" id="duel-btn-void">void</button>
+    </div>
+    <div class="duel-msg" id="duel-msg"></div>
+  </div>
 </div>
 
 <!-- ROUND TRANSITION OVERLAY -->
@@ -213,7 +274,7 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
     <div id="dev-controls">
       <button class="dev-btn" id="dev-r0">round i — mole (easy)</button>
       <button class="dev-btn" id="dev-r1">round ii — void invaders</button>
-      <button class="dev-btn" id="dev-r2">round iii — mole (hard)</button>
+      <button class="dev-btn" id="dev-r2">round iii — the void</button>
       <button class="dev-btn" id="dev-portal">→ portal direct</button>
     </div>
     <button id="dev-close">dismiss</button>
@@ -231,12 +292,12 @@ const MOLE_IMAGES=[
 const ROUNDS=[
   {speed:1400, max:3, dur:30000, threshold:1249, type:'mole'},
   {dur:30000, threshold:949, type:'invaders'},
-  {speed:1100, max:5, dur:30000, threshold:649, type:'mole'},
+  {type:'duel'},
 ];
 const ROUND_FAIL=[
   'how odd. there should be more effort.',
   'weird, there\'s a crack across.',
-  'it\'s very close to breaking apart.'
+  'the above pushes you back to the beginning.'
 ];
 
 let currentRound=0;
@@ -359,6 +420,7 @@ function devJumpToRound(idx){
   running=false;
   clearTimeout(gTimer);clearInterval(bTimer);
   stopInvaders();
+  stopDuel();
   moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);try{m.el.remove();}catch(e){};}});
   moles=[];
   field.innerHTML='';
@@ -384,6 +446,7 @@ document.getElementById('dev-portal').addEventListener('click',()=>{
   running=false;
   clearTimeout(gTimer);clearInterval(bTimer);
   stopInvaders();
+  stopDuel();
   moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);try{m.el.remove();}catch(e){};}});
   moles=[];
   field.innerHTML='';
@@ -859,6 +922,12 @@ function startRound(idx){
 
   if(round.type==='invaders'){
     startInvaders();
+  } else if(round.type==='duel'){
+    // duel manages its own screen
+    gameScreen.classList.remove('active');
+    clearInterval(bTimer);
+    startDuel();
+    return;
   } else {
     spawnLoop();
   }
@@ -877,6 +946,7 @@ function endRound(){
   moles.forEach(m=>{if(m.alive){clearTimeout(m.timer);m.el.remove();}});
   moles=[];
   stopInvaders();
+  stopDuel();
   barEl.style.width='0%';
 
   const round=ROUNDS[currentRound];
@@ -983,6 +1053,352 @@ function showPortal(){
     },1000);
   },1000);
 }
+
+// ══════════════════════════════════════════
+// ── DUEL ENGINE (Round 3) ──
+// ══════════════════════════════════════════
+const DUEL_PLAYER_MAX = 5;
+const DUEL_ENEMY_MAX  = 16;
+const ACTIONS = ['strike','guard','void'];
+
+// Outcome matrix [player][enemy] → [playerDmg, enemyDmg, msg]
+// strike beats void (void user punished), guard beats strike, void breaks guard
+const OUTCOME = {
+  'strike-strike': [1, 1,  'clash.'],
+  'strike-guard':  [0, 0,  'deflected.'],
+  'strike-void':   [0, 2,  'exposed — void shatters through.'],
+  'guard-strike':  [0, 1,  'absorbed.'],
+  'guard-guard':   [0, 0,  'standoff.'],
+  'guard-void':    [2, 0,  'guard broken.'],
+  'void-strike':   [2, 0,  'void dissolves your strike.'],
+  'void-guard':    [0, 2,  'void tears the guard open.'],
+  'void-void':     [1, 1,  'mutual annihilation.'],
+};
+
+let duelPlayerHP, duelEnemyHP;
+let duelPlayerChoice = null;
+let duelPhase = 'choose'; // choose | reveal | locked
+let duelRaf = null;
+let duelParticles = [];
+let duelShake = 0;
+let duelEntityPhase = 0; // animation clock
+
+const duelScreen    = document.getElementById('duel-screen');
+const duelCanvas    = document.getElementById('duel-canvas');
+const duelCtx       = duelCanvas.getContext('2d');
+const duelPlayerBar = document.getElementById('duel-player-bar');
+const duelEnemyBar  = document.getElementById('duel-enemy-bar');
+const duelPlayerHPEl= document.getElementById('duel-player-hp');
+const duelEnemyHPEl = document.getElementById('duel-enemy-hp');
+const duelPhaseEl   = document.getElementById('duel-phase');
+const duelMsgEl     = document.getElementById('duel-msg');
+const duelBtns      = {
+  strike: document.getElementById('duel-btn-strike'),
+  guard:  document.getElementById('duel-btn-guard'),
+  void:   document.getElementById('duel-btn-void'),
+};
+
+// Enemy AI — weighted by HP ratio
+function enemyChoose(){
+  const ratio = duelEnemyHP / DUEL_ENEMY_MAX; // 1=full, 0=dying
+  // At full HP: aggressive (strike-heavy)
+  // At low HP: defensive + heal tendency
+  // heal = guard used conservatively as "recover" — not a separate action,
+  // just weighted toward guard + we grant +1 hp on guard-guard
+  let w;
+  if(ratio > 0.6)      w = {strike:0.55, guard:0.2, void:0.25};
+  else if(ratio > 0.3) w = {strike:0.35, guard:0.35, void:0.3};
+  else                 w = {strike:0.15, guard:0.55, void:0.3};
+  const r = Math.random();
+  let acc = 0;
+  for(const [k,v] of Object.entries(w)){
+    acc += v;
+    if(r < acc) return k;
+  }
+  return 'guard';
+}
+
+function duelSetButtons(enabled){
+  Object.values(duelBtns).forEach(b=>{ b.disabled = !enabled; });
+}
+
+function duelHighlight(choice){
+  Object.entries(duelBtns).forEach(([k,b])=>{
+    b.classList.toggle('selected', k===choice);
+  });
+}
+
+function duelUpdateBars(){
+  duelPlayerBar.style.width = Math.max(0,(duelPlayerHP/DUEL_PLAYER_MAX)*100)+'%';
+  duelEnemyBar.style.width  = Math.max(0,(duelEnemyHP/DUEL_ENEMY_MAX)*100)+'%';
+  duelPlayerHPEl.textContent = Math.max(0,duelPlayerHP);
+  duelEnemyHPEl.textContent  = Math.max(0,duelEnemyHP);
+}
+
+function duelSpawnParticles(side, count, col){
+  const cw = duelCanvas.width, ch = duelCanvas.height;
+  const x = side==='player' ? cw*0.28 : cw*0.72;
+  const y = ch * 0.5;
+  for(let i=0;i<count;i++){
+    const a = Math.random()*Math.PI*2;
+    const s = 1.5+Math.random()*3;
+    duelParticles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col:col||'#fff'});
+  }
+}
+
+function duelResolveTurn(playerAction){
+  duelPhase = 'reveal';
+  duelPhaseEl.textContent = '——';
+  duelSetButtons(false);
+
+  const enemyAction = enemyChoose();
+  const key = playerAction+'-'+enemyAction;
+  let [pDmg, eDmg, msg] = OUTCOME[key];
+
+  // Heal mechanic: guard-guard both recover 1 if below max
+  if(playerAction==='guard' && enemyAction==='guard'){
+    if(duelPlayerHP < DUEL_PLAYER_MAX){ duelPlayerHP++; msg = 'mutual guard — you recover.'; }
+    if(duelEnemyHP < DUEL_ENEMY_MAX)  { duelEnemyHP++;  }
+  }
+
+  duelPlayerHP -= pDmg;
+  duelEnemyHP  -= eDmg;
+  duelPlayerHP = Math.max(0, duelPlayerHP);
+  duelEnemyHP  = Math.max(0, duelEnemyHP);
+
+  // Shake + particles
+  if(pDmg > 0){ duelShake = 14; duelSpawnParticles('player', 14, '#fff'); }
+  if(eDmg > 0){ duelShake = 10; duelSpawnParticles('enemy',  18, '#fff'); }
+
+  duelUpdateBars();
+  duelMsgEl.textContent = msg;
+
+  // Show enemy choice briefly
+  duelPhaseEl.textContent = 'void chose: '+enemyAction;
+
+  setTimeout(()=>{
+    duelHighlight(null);
+    duelPlayerChoice = null;
+
+    if(duelPlayerHP <= 0){
+      duelPhase = 'locked';
+      duelPhaseEl.textContent = '';
+      duelMsgEl.textContent = '';
+      setTimeout(()=> duelEnd(false), 700);
+      return;
+    }
+    if(duelEnemyHP <= 0){
+      duelPhase = 'locked';
+      duelPhaseEl.textContent = '';
+      duelMsgEl.textContent = '';
+      setTimeout(()=> duelEnd(true), 700);
+      return;
+    }
+
+    duelPhase = 'choose';
+    duelPhaseEl.textContent = 'choose';
+    duelSetButtons(true);
+    duelMsgEl.textContent = '';
+  }, 1400);
+}
+
+function duelEnd(won){
+  cancelAnimationFrame(duelRaf);
+  duelRaf = null;
+  duelScreen.classList.remove('active');
+  gameScreen.classList.remove('active');
+
+  if(won){
+    // Pass — go to portal
+    setTimeout(()=>glitchToPortal(), 400);
+  } else {
+    // Fail — use existing fail message flow
+    gameScreen.classList.add('active');
+    field.innerHTML='';
+    barEl.style.width='0%';
+    msgEl.textContent = ROUND_FAIL[2];
+    totalScore = 0;
+  }
+}
+
+// ── VOID ENTITY RENDERER (canvas) ──
+function duelResizeCanvas(){
+  const wrap = duelCanvas.parentElement;
+  duelCanvas.width  = wrap.offsetWidth  || window.innerWidth;
+  duelCanvas.height = wrap.offsetHeight || window.innerHeight * 0.55;
+}
+
+function duelDrawFrame(){
+  const cw = duelCanvas.width, ch = duelCanvas.height;
+  duelCtx.clearRect(0,0,cw,ch);
+
+  // Screen shake offset
+  let ox=0, oy=0;
+  if(duelShake>0){
+    ox=(Math.random()-0.5)*duelShake;
+    oy=(Math.random()-0.5)*duelShake*0.4;
+    duelShake = Math.max(0, duelShake-1.4);
+  }
+
+  duelCtx.save();
+  duelCtx.translate(ox,oy);
+
+  const t = Date.now()*0.001;
+  duelEntityPhase = t;
+
+  // ── Player sigil (left) ──
+  const px = cw*0.25, py = ch*0.5;
+  const pAlive = duelPlayerHP > 0;
+  duelCtx.save();
+  duelCtx.translate(px, py);
+  if(pAlive){
+    // Simple upward triangle sigil — player presence
+    const sz = 28 + Math.sin(t*1.1)*2;
+    duelCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+    duelCtx.lineWidth = 1.2;
+    duelCtx.beginPath();
+    duelCtx.moveTo(0,-sz);
+    duelCtx.lineTo(sz*0.87, sz*0.5);
+    duelCtx.lineTo(-sz*0.87, sz*0.5);
+    duelCtx.closePath();
+    duelCtx.stroke();
+    // inner dot
+    duelCtx.fillStyle='rgba(255,255,255,0.6)';
+    duelCtx.beginPath();duelCtx.arc(0,0,2.5,0,Math.PI*2);duelCtx.fill();
+  }
+  duelCtx.restore();
+
+  // ── Void Entity (right) ──
+  const ex = cw*0.72, ey = ch*0.5;
+  const eAlive = duelEnemyHP > 0;
+  const eRatio = duelEnemyHP / DUEL_ENEMY_MAX;
+  duelCtx.save();
+  duelCtx.translate(ex, ey);
+
+  if(eAlive){
+    // Void shape: layered irregular polygon rings that shift with HP
+    const layers = Math.ceil(eRatio * 5) + 1;
+    for(let l=0;l<layers;l++){
+      const baseR = 18 + l*10;
+      const pts = 7 + l;
+      const alpha = 0.12 + (l===0?0.5:0);
+      const phaseOff = t*(0.3+l*0.07) + l*0.8;
+      duelCtx.beginPath();
+      for(let i=0;i<pts;i++){
+        const a = (i/pts)*Math.PI*2 + phaseOff;
+        // Perturb radius — void breathes
+        const rr = baseR + Math.sin(t*1.7+i*1.3+l)*6 + Math.cos(t*0.9+i*2.1)*4;
+        const x2 = Math.cos(a)*rr, y2 = Math.sin(a)*rr;
+        i===0 ? duelCtx.moveTo(x2,y2) : duelCtx.lineTo(x2,y2);
+      }
+      duelCtx.closePath();
+      // At low HP void becomes more fragmented
+      const frag = 1-eRatio;
+      duelCtx.strokeStyle = `rgba(255,255,255,${alpha + frag*0.2})`;
+      duelCtx.lineWidth = l===0 ? 1.4 : 0.5;
+      if(l===0 && frag>0.5){
+        // Glitch offset at low HP
+        duelCtx.save();
+        duelCtx.translate((Math.random()-0.5)*frag*8, 0);
+        duelCtx.stroke();
+        duelCtx.restore();
+      } else {
+        duelCtx.stroke();
+      }
+    }
+
+    // Core — pulsing point
+    const coreA = 0.4+Math.sin(t*2.2)*0.35;
+    duelCtx.fillStyle=`rgba(255,255,255,${coreA})`;
+    duelCtx.beginPath();
+    const coreR = 2.5+Math.sin(t*3)*1;
+    duelCtx.arc(0,0,coreR,0,Math.PI*2);
+    duelCtx.fill();
+
+    // HP-dependent scanline tear across entity
+    if(eRatio < 0.4){
+      const tearY = (Math.sin(t*4.3)*0.5+0.5)*50-25;
+      duelCtx.save();
+      duelCtx.globalAlpha=0.18;
+      duelCtx.fillStyle='#fff';
+      duelCtx.fillRect(-40,tearY,80,1.5);
+      duelCtx.restore();
+    }
+  }
+  duelCtx.restore();
+
+  // ── Particles ──
+  duelParticles.forEach(p=>{
+    duelCtx.save();
+    duelCtx.globalAlpha = p.life*0.85;
+    duelCtx.fillStyle = p.col;
+    duelCtx.fillRect(p.x-1,p.y-1,2,2);
+    duelCtx.restore();
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life-=0.04;
+  });
+  duelParticles = duelParticles.filter(p=>p.life>0);
+
+  // ── Arena divider ──
+  const midX = cw*0.5;
+  duelCtx.save();
+  duelCtx.strokeStyle='rgba(255,255,255,0.04)';
+  duelCtx.lineWidth=1;
+  duelCtx.setLineDash([4,8]);
+  duelCtx.beginPath();duelCtx.moveTo(midX,ch*0.1);duelCtx.lineTo(midX,ch*0.9);duelCtx.stroke();
+  duelCtx.setLineDash([]);
+  duelCtx.restore();
+
+  // Scanline
+  const scanY=(Date.now()*0.025)%ch;
+  duelCtx.save();duelCtx.globalAlpha=0.018;duelCtx.fillStyle='#fff';duelCtx.fillRect(0,scanY,cw,2);duelCtx.restore();
+
+  duelCtx.restore(); // shake
+
+  if(duelRaf !== null) duelRaf = requestAnimationFrame(duelDrawFrame);
+}
+
+function startDuel(){
+  duelPlayerHP = DUEL_PLAYER_MAX;
+  duelEnemyHP  = DUEL_ENEMY_MAX;
+  duelParticles = [];
+  duelShake = 0;
+  duelPlayerChoice = null;
+  duelPhase = 'choose';
+
+  // Hide game screen HUD for duel — duel has its own layout
+  gameScreen.classList.remove('active');
+  duelScreen.classList.add('active');
+
+  duelResizeCanvas();
+  duelUpdateBars();
+  duelPhaseEl.textContent = 'choose';
+  duelMsgEl.textContent = '';
+  duelHighlight(null);
+  duelSetButtons(true);
+
+  duelRaf = requestAnimationFrame(duelDrawFrame);
+}
+
+function stopDuel(){
+  if(duelRaf){ cancelAnimationFrame(duelRaf); duelRaf=null; }
+  duelScreen.classList.remove('active');
+}
+
+// Button listeners
+Object.entries(duelBtns).forEach(([action,btn])=>{
+  btn.addEventListener('click',()=>{
+    if(duelPhase !== 'choose') return;
+    duelPlayerChoice = action;
+    duelHighlight(action);
+    duelResolveTurn(action);
+  });
+});
+
+window.addEventListener('resize',()=>{
+  if(duelScreen.classList.contains('active')) duelResizeCanvas();
+});
+// ══════════════════════════════════════════
+
 </script>
 </body>
 </html>
