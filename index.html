@@ -722,9 +722,11 @@ function spawnLoop(){
 // ── VOID INVADERS ENGINE ──
 let invCanvas=null,invCtx=null,invRaf=null;
 let invEntities=[],invBullets=[],invParticles=[];
-let invShooterX=0,invLastShot=0,invDescentY=0;
+let invShooterX=0,invDescentY=0,invMouseDown=false,invFireInterval=null;
+const INV_BULLET_SPEED=7,INV_FIRE_RATE=120;
 const INV_GLYPHS=['⌖','⊕','⊗','◈','⌬','⍟','⎔','⊞'];
 const INV_COLS=8,INV_ROWS=4;
+
 
 function startInvaders(){
   invCanvas=document.createElement('canvas');
@@ -760,16 +762,25 @@ function startInvaders(){
     }
   }
 
-  invCanvas.addEventListener('click',invHandleClick);
+  invMouseDown=false;
   invCanvas.addEventListener('mousemove',invHandleMove);
+  invCanvas.addEventListener('mousedown',invHandleMouseDown);
+  invCanvas.addEventListener('mouseup',invHandleMouseUp);
+  invCanvas.addEventListener('mouseleave',invHandleMouseUp);
+  invCanvas.addEventListener('click',invHandleSingleClick);
   invLoop();
 }
 
 function stopInvaders(){
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
+  invMouseDown=false;
   if(invCanvas){
-    invCanvas.removeEventListener('click',invHandleClick);
     invCanvas.removeEventListener('mousemove',invHandleMove);
+    invCanvas.removeEventListener('mousedown',invHandleMouseDown);
+    invCanvas.removeEventListener('mouseup',invHandleMouseUp);
+    invCanvas.removeEventListener('mouseleave',invHandleMouseUp);
+    invCanvas.removeEventListener('click',invHandleSingleClick);
     invCanvas.remove();invCanvas=null;invCtx=null;
   }
 }
@@ -777,49 +788,35 @@ function stopInvaders(){
 function invHandleMove(e){
   if(!running)return;
   const r=invCanvas.getBoundingClientRect();
-  invShooterX+=(e.clientX-r.left-invShooterX)*0.12;
+  invShooterX+=(e.clientX-r.left-invShooterX)*0.18;
 }
 
-function invHandleClick(e){
+function invHandleMouseDown(e){
+  if(!running)return;
+  invMouseDown=true;
+  invFire();
+  invFireInterval=setInterval(()=>{
+    if(!running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
+    invFire();
+  },INV_FIRE_RATE);
+}
+
+function invHandleMouseUp(){
+  invMouseDown=false;
+  if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
+}
+
+function invHandleSingleClick(e){
   if(!running)return;
   const r=invCanvas.getBoundingClientRect();
-  const mx=e.clientX-r.left, my=e.clientY-r.top;
-  invShooterX+=(mx-invShooterX)*0.4;
-  const now=Date.now();
-  if(now-invLastShot<120)return;
-  invLastShot=now;
-  invBullets.push({x:invShooterX,y:invCanvas.height-70,tx:mx,ty:my,progress:0,speed:0.07});
-  invCheckHit(mx,my);
+  invShooterX=e.clientX-r.left;
+  invFire();
 }
 
-function invCheckHit(mx,my){
-  let hit=false;
-  for(let e of invEntities){
-    if(!e.alive)continue;
-    if(Math.abs(mx-e.x)<e.cellW*0.5&&Math.abs(my-e.y)<e.cellH*0.55){
-      e.hp--;
-      if(e.hp<=0){
-        e.alive=false;
-        invSpawnParticles(e.x,e.y);
-        const pts=10*combo;
-        roundScore+=pts;totalScore+=pts;
-        combo++;
-        scoreEl.textContent=roundScore;
-        comboEl.textContent='×'+combo;
-      } else {
-        e.glitchTimer=10;
-        combo=Math.max(1,combo-1);
-        comboEl.textContent='×'+combo;
-      }
-      hit=true;break;
-    }
-  }
-  if(!hit){
-    misses++;
-    missEl.textContent=misses;
-    combo=1;comboEl.textContent='×1';
-    invSpawnParticles(mx,my,0.25);
-  }
+function invFire(){
+  if(!running||!invCanvas)return;
+  const ch=invCanvas.height;
+  invBullets.push({x:invShooterX,y:ch-67,vy:-INV_BULLET_SPEED,trail:[],hit:false});
 }
 
 function invSpawnParticles(x,y,alpha){
@@ -848,8 +845,34 @@ function invUpdate(){
     if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*5;}else{e.glitchOffset=0;}
     if(e.y>ch-80){running=false;clearInterval(bTimer);endRound();return;}
   }
-  for(let b of invBullets) b.progress=Math.min(1,b.progress+b.speed);
-  invBullets=invBullets.filter(b=>b.progress<1);
+  // Bullets: straight up, real collision
+  for(let b of invBullets){
+    b.trail.push({x:b.x,y:b.y});
+    if(b.trail.length>8)b.trail.shift();
+    b.y+=b.vy;
+    if(!b.hit){
+      for(let e of invEntities){
+        if(!e.alive)continue;
+        if(Math.abs(b.x-e.x)<e.cellW*0.48&&Math.abs(b.y-e.y)<e.cellH*0.52){
+          b.hit=true;
+          e.hp--;
+          if(e.hp<=0){
+            e.alive=false;
+            invSpawnParticles(e.x,e.y,1);
+            const pts=10*combo;
+            roundScore+=pts;totalScore+=pts;
+            combo=Math.min(combo+1,8);
+            scoreEl.textContent=roundScore;
+            comboEl.textContent='×'+combo;
+          } else {
+            e.glitchTimer=10;
+          }
+          break;
+        }
+      }
+    }
+  }
+  invBullets=invBullets.filter(b=>!b.hit&&b.y>-10);
   for(let p of invParticles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045;}
   invParticles=invParticles.filter(p=>p.life>0);
   const alive=invEntities.filter(e=>e.alive);
@@ -869,13 +892,23 @@ function invDraw(){
   }
 
   for(let b of invBullets){
-    const bx=b.x+(b.tx-b.x)*b.progress;
-    const by=b.y+(b.ty-b.y)*b.progress;
     invCtx.save();
-    invCtx.globalAlpha=1-b.progress*0.5;
-    invCtx.strokeStyle='rgba(255,255,255,0.8)';
-    invCtx.lineWidth=1;
-    invCtx.beginPath();invCtx.moveTo(bx,by);invCtx.lineTo(bx,by-7);invCtx.stroke();
+    // Trail
+    if(b.trail.length>1){
+      invCtx.strokeStyle='rgba(255,255,255,0.18)';
+      invCtx.lineWidth=1;
+      invCtx.beginPath();
+      invCtx.moveTo(b.trail[0].x,b.trail[0].y);
+      for(let t of b.trail) invCtx.lineTo(t.x,t.y);
+      invCtx.stroke();
+    }
+    // Bullet head
+    invCtx.strokeStyle='rgba(255,255,255,0.95)';
+    invCtx.lineWidth=1.5;
+    invCtx.beginPath();invCtx.moveTo(b.x,b.y);invCtx.lineTo(b.x,b.y+10);invCtx.stroke();
+    // Tip glow
+    invCtx.fillStyle='rgba(255,255,255,0.8)';
+    invCtx.beginPath();invCtx.arc(b.x,b.y,1.5,0,Math.PI*2);invCtx.fill();
     invCtx.restore();
   }
 
@@ -953,6 +986,7 @@ function endRound(){
   const isLast=currentRound===ROUNDS.length-1;
 
   if(!passed){
+    gameScreen.classList.add('active');
     msgEl.textContent=ROUND_FAIL[currentRound];
     totalScore=0;
     return;
@@ -1074,13 +1108,83 @@ const OUTCOME = {
   'void-void':     [1, 1,  'mutual annihilation.'],
 };
 
+
+// ── DUEL SFX (Web Audio procedural) ──
+function duelSFX(type){
+  try{
+    const ctx=getAudio();
+    const now=ctx.currentTime;
+    if(type==='strike'){
+      // Sharp metallic crack
+      const buf=ctx.createBuffer(1,ctx.sampleRate*0.12,ctx.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);
+      const src=ctx.createBufferSource(); src.buffer=buf;
+      const g=ctx.createGain(); g.gain.setValueAtTime(0.6,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.1);
+      const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1800; f.Q.value=0.8;
+      src.connect(f); f.connect(g); g.connect(ctx.destination); src.start();
+    } else if(type==='guard'){
+      // Low thud + shimmer
+      const osc=ctx.createOscillator(); osc.type='triangle'; osc.frequency.setValueAtTime(90,now); osc.frequency.exponentialRampToValueAtTime(40,now+0.18);
+      const g=ctx.createGain(); g.gain.setValueAtTime(0.5,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+      osc.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(now+0.2);
+      // shimmer layer
+      const buf=ctx.createBuffer(1,ctx.sampleRate*0.08,ctx.sampleRate);
+      const dat=buf.getChannelData(0);
+      for(let i=0;i<dat.length;i++) dat[i]=(Math.random()*2-1)*0.3*Math.pow(1-i/dat.length,1.5);
+      const src2=ctx.createBufferSource(); src2.buffer=buf;
+      const g2=ctx.createGain(); g2.gain.setValueAtTime(0.25,now);
+      const f2=ctx.createBiquadFilter(); f2.type='highpass'; f2.frequency.value=3000;
+      src2.connect(f2); f2.connect(g2); g2.connect(ctx.destination); src2.start(now+0.02);
+    } else if(type==='void'){
+      // Deep dissonant drone swell
+      const freqs=[55,82,110];
+      freqs.forEach((fr,i)=>{
+        const osc=ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(fr*(1+i*0.003),now);
+        const g=ctx.createGain(); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(0.18,now+0.06); g.gain.exponentialRampToValueAtTime(0.001,now+0.45);
+        const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=400+i*60;
+        osc.connect(f); f.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(now+0.45);
+      });
+    } else if(type==='hit_player'){
+      // High distorted screech — you took damage
+      const osc=ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(520,now); osc.frequency.exponentialRampToValueAtTime(180,now+0.14);
+      const g=ctx.createGain(); g.gain.setValueAtTime(0.55,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.16);
+      const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=900; f.Q.value=2;
+      osc.connect(f); f.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(now+0.16);
+    } else if(type==='hit_enemy'){
+      // Heavy crunch — void takes damage
+      const buf=ctx.createBuffer(1,ctx.sampleRate*0.14,ctx.sampleRate);
+      const d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=Math.tanh((Math.random()*2-1)*4)*Math.pow(1-i/d.length,1.8);
+      const src=ctx.createBufferSource(); src.buffer=buf;
+      const g=ctx.createGain(); g.gain.setValueAtTime(0.7,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.12);
+      const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=600;
+      src.connect(f); f.connect(g); g.connect(ctx.destination); src.start();
+    } else if(type==='win'){
+      // Slow ascending shimmer
+      [220,330,440,550].forEach((fr,i)=>{
+        const osc=ctx.createOscillator(); osc.type='sine'; osc.frequency.value=fr;
+        const g=ctx.createGain(); g.gain.setValueAtTime(0,now+i*0.1); g.gain.linearRampToValueAtTime(0.22,now+i*0.1+0.08); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.1+0.5);
+        osc.connect(g); g.connect(ctx.destination); osc.start(now+i*0.1); osc.stop(now+i*0.1+0.5);
+      });
+    } else if(type==='death'){
+      // Grinding descent
+      const osc=ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(300,now); osc.frequency.exponentialRampToValueAtTime(30,now+0.6);
+      const g=ctx.createGain(); g.gain.setValueAtTime(0.6,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.65);
+      const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(800,now); f.frequency.exponentialRampToValueAtTime(80,now+0.6);
+      osc.connect(f); f.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(now+0.65);
+    }
+  }catch(e){}
+}
+
 let duelPlayerHP, duelEnemyHP;
 let duelPlayerChoice = null;
 let duelPhase = 'choose'; // choose | reveal | locked
 let duelRaf = null;
 let duelParticles = [];
 let duelShake = 0;
-let duelEntityPhase = 0; // animation clock
+let duelEntityPhase = 0;
+let duelAnimState = {player:{anim:null,frame:0,action:null}, enemy:{anim:null,frame:0,action:null}};
 
 const duelScreen    = document.getElementById('duel-screen');
 const duelCanvas    = document.getElementById('duel-canvas');
@@ -1154,6 +1258,15 @@ function duelResolveTurn(playerAction){
   const key = playerAction+'-'+enemyAction;
   let [pDmg, eDmg, msg] = OUTCOME[key];
 
+  // Fire action SFX
+  duelSFX(playerAction);
+
+  // Trigger animations
+  duelAnimState.player.anim = playerAction;
+  duelAnimState.player.frame = 0;
+  duelAnimState.enemy.anim = enemyAction;
+  duelAnimState.enemy.frame = 0;
+
   // Heal mechanic: guard-guard both recover 1 if below max
   if(playerAction==='guard' && enemyAction==='guard'){
     if(duelPlayerHP < DUEL_PLAYER_MAX){ duelPlayerHP++; msg = 'mutual guard — you recover.'; }
@@ -1165,9 +1278,9 @@ function duelResolveTurn(playerAction){
   duelPlayerHP = Math.max(0, duelPlayerHP);
   duelEnemyHP  = Math.max(0, duelEnemyHP);
 
-  // Shake + particles
-  if(pDmg > 0){ duelShake = 14; duelSpawnParticles('player', 14, '#fff'); }
-  if(eDmg > 0){ duelShake = 10; duelSpawnParticles('enemy',  18, '#fff'); }
+  // Shake + particles + hit SFX
+  if(pDmg > 0){ duelShake = 14; duelSpawnParticles('player', 14, '#fff'); duelSFX('hit_player'); }
+  if(eDmg > 0){ duelShake = 10; duelSpawnParticles('enemy',  18, '#fff'); duelSFX('hit_enemy'); }
 
   duelUpdateBars();
   duelMsgEl.textContent = msg;
@@ -1208,10 +1321,10 @@ function duelEnd(won){
   gameScreen.classList.remove('active');
 
   if(won){
-    // Pass — go to portal
+    duelSFX('win');
     setTimeout(()=>glitchToPortal(), 400);
   } else {
-    // Fail — use existing fail message flow
+    duelSFX('death');
     gameScreen.classList.add('active');
     field.innerHTML='';
     barEl.style.width='0%';
@@ -1251,19 +1364,63 @@ function duelDrawFrame(){
   duelCtx.save();
   duelCtx.translate(px, py);
   if(pAlive){
-    // Simple upward triangle sigil — player presence
+    const pa = duelAnimState.player;
+    pa.frame = (pa.frame||0) + 1;
+    let extraX=0, extraY=0, scaleMod=1, alphaMod=1, skewMod=0;
+    if(pa.anim==='strike'){
+      // Lunge right — jab forward
+      const f=Math.min(pa.frame/8,1);
+      const retract=pa.frame>8?Math.min((pa.frame-8)/8,1):0;
+      extraX = Math.sin(f*Math.PI)*38*(1-retract);
+      extraY = -Math.sin(f*Math.PI)*6*(1-retract);
+      scaleMod = 1+f*0.18*(1-retract);
+      if(pa.frame>18) pa.anim=null;
+    } else if(pa.anim==='guard'){
+      // Shrink inward, brighten
+      const f=Math.min(pa.frame/6,1);
+      const relax=pa.frame>10?Math.min((pa.frame-10)/10,1):0;
+      scaleMod = 1-f*0.22*(1-relax);
+      alphaMod = 1+f*0.4*(1-relax);
+      if(pa.frame>22) pa.anim=null;
+    } else if(pa.anim==='void'){
+      // Expand + skew — void surge
+      const f=Math.min(pa.frame/10,1);
+      const retract=pa.frame>10?Math.min((pa.frame-10)/12,1):0;
+      scaleMod = 1+f*0.55*(1-retract);
+      skewMod = f*0.25*(1-retract);
+      alphaMod = 1+f*0.6*(1-retract);
+      if(pa.frame>24) pa.anim=null;
+    }
+    duelCtx.save();
+    duelCtx.translate(extraX, extraY);
+    duelCtx.scale(scaleMod, scaleMod);
+    duelCtx.transform(1, skewMod, 0, 1, 0, 0);
     const sz = 28 + Math.sin(t*1.1)*2;
-    duelCtx.strokeStyle = 'rgba(255,255,255,0.9)';
-    duelCtx.lineWidth = 1.2;
+    duelCtx.strokeStyle = 'rgba(255,255,255,'+Math.min(1,0.9*alphaMod)+')';
+    duelCtx.lineWidth = 1.2 + (pa.anim?0.8:0);
     duelCtx.beginPath();
     duelCtx.moveTo(0,-sz);
     duelCtx.lineTo(sz*0.87, sz*0.5);
     duelCtx.lineTo(-sz*0.87, sz*0.5);
     duelCtx.closePath();
     duelCtx.stroke();
-    // inner dot
+    // Strike: draw a lance line
+    if(pa.anim==='strike'){
+      const lf=Math.min(pa.frame/6,1);
+      duelCtx.strokeStyle='rgba(255,255,255,'+(lf*0.7)+')';
+      duelCtx.lineWidth=1;
+      duelCtx.beginPath();duelCtx.moveTo(0,0);duelCtx.lineTo(sz*lf*1.4,0);duelCtx.stroke();
+    }
+    // Guard: draw a shield arc
+    if(pa.anim==='guard'){
+      const gf=Math.min(pa.frame/6,1);
+      duelCtx.strokeStyle='rgba(255,255,255,'+(gf*0.5)+')';
+      duelCtx.lineWidth=1.5;
+      duelCtx.beginPath();duelCtx.arc(sz*0.5,0,sz*0.55,-Math.PI*0.7,Math.PI*0.7);duelCtx.stroke();
+    }
     duelCtx.fillStyle='rgba(255,255,255,0.6)';
     duelCtx.beginPath();duelCtx.arc(0,0,2.5,0,Math.PI*2);duelCtx.fill();
+    duelCtx.restore();
   }
   duelCtx.restore();
 
@@ -1271,8 +1428,34 @@ function duelDrawFrame(){
   const ex = cw*0.72, ey = ch*0.5;
   const eAlive = duelEnemyHP > 0;
   const eRatio = duelEnemyHP / DUEL_ENEMY_MAX;
+  // Enemy animation
+  const ea = duelAnimState.enemy;
+  ea.frame = (ea.frame||0) + 1;
+  let eExtraX=0, eScaleMod=1, eAlphaMod=1, eSkewMod=0;
+  if(ea.anim==='strike'){
+    const f=Math.min(ea.frame/8,1);
+    const retract=ea.frame>8?Math.min((ea.frame-8)/8,1):0;
+    eExtraX = -Math.sin(f*Math.PI)*38*(1-retract);
+    eScaleMod = 1+f*0.2*(1-retract);
+    if(ea.frame>18) ea.anim=null;
+  } else if(ea.anim==='guard'){
+    const f=Math.min(ea.frame/6,1);
+    const relax=ea.frame>10?Math.min((ea.frame-10)/10,1):0;
+    eScaleMod = 1-f*0.25*(1-relax);
+    eAlphaMod = 1+f*0.5*(1-relax);
+    if(ea.frame>22) ea.anim=null;
+  } else if(ea.anim==='void'){
+    const f=Math.min(ea.frame/8,1);
+    const retract=ea.frame>10?Math.min((ea.frame-10)/12,1):0;
+    eScaleMod = 1+f*0.7*(1-retract);
+    eAlphaMod = 1+f*0.8*(1-retract);
+    eSkewMod = -f*0.3*(1-retract);
+    if(ea.frame>24) ea.anim=null;
+  }
   duelCtx.save();
-  duelCtx.translate(ex, ey);
+  duelCtx.translate(ex+eExtraX, ey);
+  duelCtx.scale(eScaleMod, eScaleMod);
+  duelCtx.transform(1, eSkewMod, 0, 1, 0, 0);
 
   if(eAlive){
     // Void shape: layered irregular polygon rings that shift with HP
@@ -1324,7 +1507,8 @@ function duelDrawFrame(){
       duelCtx.restore();
     }
   }
-  duelCtx.restore();
+  duelCtx.restore(); // entity scale/skew
+  duelCtx.restore(); // entity translate
 
   // ── Particles ──
   duelParticles.forEach(p=>{
