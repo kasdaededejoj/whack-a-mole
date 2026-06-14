@@ -402,6 +402,7 @@ const failMsgText=document.getElementById('fail-msg-text');
 function showFail(roundIdx){
   // Tear down game state visually
   gameScreen.classList.remove('active');
+  if(typeof duelScreen !== 'undefined') duelScreen.classList.remove('active');
   // Reset fail msg animation
   failMsgText.style.animation='none';
   failMsgText.textContent=ROUND_FAIL[roundIdx];
@@ -409,6 +410,20 @@ function showFail(roundIdx){
   failMsgText.style.animation='fadeUp .8s ease both .2s';
   failOverlay.classList.add('active');
   totalScore=0;
+  // Brief pause then reroute to welcome
+  setTimeout(()=>{
+    failOverlay.classList.remove('active');
+    currentRound=0;
+    // Re-trigger welcome animations
+    const wm=document.querySelector('.welcome-msg');
+    const ws=document.querySelector('.welcome-sub');
+    const wb=document.getElementById('ok-btn');
+    [wm,ws,wb].forEach(el=>{el.style.animation='none';void el.offsetWidth;});
+    wm.style.animation='fadeDown .9s ease both .3s';
+    ws.style.animation='fadeUp .9s ease both .8s';
+    wb.style.animation='btnFadeUp .9s ease both .3s';
+    welcomeScreen.classList.add('active');
+  }, 2800);
 }
 const barEl=document.getElementById('bar');
 const roundOverlay=document.getElementById('round-overlay');
@@ -1195,7 +1210,7 @@ function showPortal(){
 // ══════════════════════════════════════════
 // ── DUEL ENGINE (Round 3) ──
 // ══════════════════════════════════════════
-const DUEL_PLAYER_MAX = 5;
+const DUEL_PLAYER_MAX = 8;
 const DUEL_ENEMY_MAX  = 16;
 const ACTIONS = ['strike','guard','void'];
 
@@ -1288,6 +1303,7 @@ let duelPlayerChoice = null;
 let duelPhase = 'choose'; // choose | reveal | locked
 let duelRaf = null;
 let duelParticles = [];
+let duelPlayerTrails = [];
 let duelShake = 0;
 let duelEntityPhase = 0;
 let duelAnimState = {player:{anim:null,frame:0,action:null}, enemy:{anim:null,frame:0,action:null}};
@@ -1461,6 +1477,33 @@ function duelDrawFrame(){
   const t = Date.now()*0.001;
   duelEntityPhase = t;
 
+  // ── Player phantom trails ──
+  duelPlayerTrails = duelPlayerTrails.filter(tr=>tr.life>0);
+  for(const tr of duelPlayerTrails){
+    duelCtx.save();
+    duelCtx.translate(tr.x, tr.y);
+    duelCtx.scale(tr.scale, tr.scale);
+    duelCtx.transform(1, tr.skew, 0, 1, 0, 0);
+    const trSz=28;
+    duelCtx.globalAlpha=tr.alpha*tr.life*0.45;
+    duelCtx.strokeStyle='#fff';
+    duelCtx.lineWidth=1.5;
+    duelCtx.beginPath();
+    duelCtx.moveTo(0,-trSz);
+    duelCtx.lineTo(trSz*0.87,trSz*0.5);
+    duelCtx.lineTo(-trSz*0.87,trSz*0.5);
+    duelCtx.closePath();
+    duelCtx.stroke();
+    // Slash arc on trail
+    duelCtx.globalAlpha=tr.alpha*tr.life*0.3;
+    duelCtx.lineWidth=1;
+    duelCtx.beginPath();
+    duelCtx.arc(trSz*0.6, 0, trSz*0.7, -Math.PI*0.6, Math.PI*0.3);
+    duelCtx.stroke();
+    duelCtx.restore();
+    tr.life -= 0.14;
+  }
+
   // ── Player sigil (left) ──
   const px = cw*0.25, py = ch*0.5;
   const pAlive = duelPlayerHP > 0;
@@ -1486,13 +1529,34 @@ function duelDrawFrame(){
       alphaMod = 1+f*0.4*(1-relax);
       if(pa.frame>22) pa.anim=null;
     } else if(pa.anim==='void'){
-      // Expand + skew — void surge
-      const f=Math.min(pa.frame/10,1);
-      const retract=pa.frame>10?Math.min((pa.frame-10)/12,1):0;
-      scaleMod = 1+f*0.55*(1-retract);
-      skewMod = f*0.25*(1-retract);
-      alphaMod = 1+f*0.6*(1-retract);
-      if(pa.frame>24) pa.anim=null;
+      // Dawn Warrior phantom slash — burst right, afterimage trail, snap back
+      const BURST=10, HOLD=4, RETRACT=8;
+      const total=BURST+HOLD+RETRACT;
+      if(pa.frame<=BURST){
+        const f=pa.frame/BURST;
+        const ease=1-Math.pow(1-f,3); // ease out — instant burst
+        extraX = ease*80;
+        extraY = -ease*10;
+        scaleMod = 1+ease*0.4;
+        skewMod = ease*0.5;
+        alphaMod = 1+ease*0.5;
+        // Seed player afterimage trail every 2 frames
+        if(pa.frame%2===0){
+          duelPlayerTrails.push({x:px+extraX, y:py+extraY, scale:scaleMod, skew:skewMod, alpha:0.5, life:1});
+        }
+      } else if(pa.frame<=BURST+HOLD){
+        extraX=80; extraY=-10; scaleMod=1.4; skewMod=0.5; alphaMod=1.5;
+      } else {
+        // Elastic snap back
+        const f=(pa.frame-BURST-HOLD)/RETRACT;
+        const snap=Math.pow(f,0.35);
+        extraX = 80*(1-snap);
+        extraY = -10*(1-snap);
+        scaleMod = 1+0.4*(1-snap);
+        skewMod = 0.5*(1-snap);
+        alphaMod = 1+0.5*(1-snap);
+      }
+      if(pa.frame>total) pa.anim=null;
     }
     duelCtx.save();
     duelCtx.translate(extraX, extraY);
@@ -1520,6 +1584,41 @@ function duelDrawFrame(){
       duelCtx.strokeStyle='rgba(255,255,255,'+(gf*0.5)+')';
       duelCtx.lineWidth=1.5;
       duelCtx.beginPath();duelCtx.arc(sz*0.5,0,sz*0.55,-Math.PI*0.7,Math.PI*0.7);duelCtx.stroke();
+    }
+    // Void: phantom slash arc — sweeps from top-right diagonal
+    if(pa.anim==='void'){
+      const BURST=10,HOLD=4;
+      let slashProgress=0;
+      if(pa.frame<=BURST) slashProgress=pa.frame/BURST;
+      else if(pa.frame<=BURST+HOLD) slashProgress=1;
+      else slashProgress=1-Math.pow((pa.frame-BURST-HOLD)/8,0.4);
+      slashProgress=Math.max(0,Math.min(1,slashProgress));
+      // Primary slash arc
+      const arcR=sz*1.6;
+      const arcStart=-Math.PI*0.75;
+      const arcEnd=Math.PI*0.1;
+      const arcSweep=arcEnd-arcStart;
+      duelCtx.save();
+      duelCtx.strokeStyle='rgba(255,255,255,'+(slashProgress*0.9)+')';
+      duelCtx.lineWidth=1.8;
+      duelCtx.beginPath();
+      duelCtx.arc(sz*0.3, sz*0.2, arcR, arcStart, arcStart+arcSweep*slashProgress);
+      duelCtx.stroke();
+      // Secondary thinner echo arc (offset)
+      duelCtx.strokeStyle='rgba(255,255,255,'+(slashProgress*0.3)+')';
+      duelCtx.lineWidth=0.8;
+      duelCtx.beginPath();
+      duelCtx.arc(sz*0.3+4, sz*0.2+2, arcR*0.85, arcStart, arcStart+arcSweep*slashProgress);
+      duelCtx.stroke();
+      // Tip flash at end of arc
+      if(slashProgress>0.7){
+        const tipAngle=arcStart+arcSweep*slashProgress;
+        const tipX=sz*0.3+Math.cos(tipAngle)*arcR;
+        const tipY=sz*0.2+Math.sin(tipAngle)*arcR;
+        duelCtx.fillStyle='rgba(255,255,255,'+(slashProgress*0.8)+')';
+        duelCtx.beginPath();duelCtx.arc(tipX,tipY,2.5,0,Math.PI*2);duelCtx.fill();
+      }
+      duelCtx.restore();
     }
     duelCtx.fillStyle='rgba(255,255,255,0.6)';
     duelCtx.beginPath();duelCtx.arc(0,0,2.5,0,Math.PI*2);duelCtx.fill();
