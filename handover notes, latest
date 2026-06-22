@@ -1,0 +1,463 @@
+# THE REALM — GAME HANDOVER (LATEST STATE)
+
+## Repo
+
+* GitHub: `kasdaededejoj/whack-a-mole`
+* Main file: `index.html`
+* Architecture: almost everything lives inside a single HTML file.
+
+---
+
+# USER WORKFLOW (IMPORTANT)
+
+User has specific coding instructions:
+
+### "find"
+
+Locate exact code sections and provide patch instructions only.
+
+### "complete"
+
+Directly implement all requested changes and provide the modified result.
+
+### File Access
+
+User grants full inspection rights for uploaded files unless explicitly stated otherwise.
+
+---
+
+# CURRENT BUILD STATUS
+
+Work was performed against the June 22 build (NOT the older June 16 build).
+
+Confirmed present:
+
+* Round I: Normal / Noise / Purpality system
+* Round II: Void Invaders
+* Round III: Void Duel
+* Portal sequence
+* Local MP3 audio paths
+* Upgrade modal system
+
+---
+
+# ROUND I — WHACK-A-MOLE
+
+## Enemy Distribution
+
+* Normal (`†`) = 60%
+* Noise (`⌀`) = 30%
+* Purpality (`⊕`) = 10%
+
+## Threshold
+
+```js
+1749
+```
+
+Transitions into Round II at score ≥1749.
+
+---
+
+## STREAK FIX
+
+### Implemented
+
+Normal expiry:
+
+```js
+misses++;
+missEl.textContent=misses;
+```
+
+Purpality expiry:
+
+```js
+misses++;
+missEl.textContent=misses;
+```
+
+### Removed
+
+```js
+combo=1;
+comboEl.textContent='×1';
+```
+
+### Result
+
+| Event             | Combo       |
+| ----------------- | ----------- |
+| Normal expires    | Preserved   |
+| Purpality expires | Preserved   |
+| Noise expires     | Preserved   |
+| Noise hit         | Reset to ×1 |
+
+This was the primary unfinished task from the original handover.
+
+---
+
+# AUDIO
+
+DO NOT TOUCH:
+
+* BGM_URL
+* THUD_URL
+* bgmAudio
+* initAudio()
+* getAudio()
+* preloadThud()
+* playThud()
+* playMiss()
+* Existing SFX call sites
+
+Reason:
+
+Audio previously broke due to GitHub/CORS issues.
+
+Current build uses local asset paths.
+
+---
+
+# ROUND II — VOID INVADERS
+
+## Existing Features
+
+* 5 waves
+* Wave 5 boss (`???`, 57 HP)
+* Upgrade modal after Wave 2
+* Rapid Fire upgrade
+* AOE Missile upgrade
+* Hidden Round I HUD
+* Wave progress bar
+* Missile visual effects
+
+---
+
+# MISSILE CHANGES
+
+## Implemented
+
+### Cooldown
+
+Changed:
+
+```js
+3000ms
+```
+
+to:
+
+```js
+2500ms
+```
+
+---
+
+## AOE Expansion
+
+Previous:
+
+* Narrow vertical strike
+
+Current:
+
+* Roughly 3-row coverage
+* Larger visual blast radius
+* Targets chosen within missile column
+* Additional vertical row band check
+
+Purpose:
+
+Makes missile feel like a true upgrade instead of a precision shot.
+
+---
+
+# UPGRADE SYSTEM
+
+## Existing Wave 2
+
+Choices:
+
+### Rapid Fire
+
+or
+
+### AOE Missile
+
+---
+
+## Wave 4 Upgrade Framework
+
+### Added UI Buttons
+
+```html
+double missile
+rapid + homing
+```
+
+Buttons currently hidden until Wave 4 modal appears.
+
+---
+
+## Added Upgrade Types
+
+```js
+doublemissile
+rapidfire_homing
+```
+
+---
+
+## Upgrade Selection SFX
+
+Added:
+
+```js
+playThud(1.15)
+```
+
+on upgrade selection.
+
+---
+
+# DOUBLE MISSILE
+
+## Implemented
+
+Replaced single projectile spawn:
+
+```js
+spawnBullet(invShooterX)
+```
+
+with:
+
+```js
+spawnBullet(invShooterX-18)
+spawnBullet(invShooterX+18)
+```
+
+when:
+
+```js
+invUpgrade==='doublemissile'
+```
+
+---
+
+# HOMING FIRE
+
+## STATUS
+
+PARTIALLY IMPLEMENTED
+
+### UI
+
+Present.
+
+### Upgrade Type
+
+Present.
+
+### Button
+
+Present.
+
+### Actual Bullet Steering
+
+NOT IMPLEMENTED YET.
+
+Needs modification inside bullet update loop.
+
+Suggested logic:
+
+```js
+if(invUpgrade==='rapidfire_homing'){
+  const target=invEntities.find(e=>e.alive);
+  if(target){
+    const dx=target.x-b.x;
+    b.x+=Math.sign(dx)*1.8;
+  }
+}
+```
+
+Need to integrate into existing projectile movement section.
+
+---
+
+# WAVE 4 MODAL
+
+## STATUS
+
+PARTIALLY IMPLEMENTED
+
+Framework added.
+
+Needs validation:
+
+* Wave 2 still shows:
+
+  * Rapid Fire
+  * AOE Missile
+
+* Wave 4 should show:
+
+  * Double Missile
+  * Rapid + Homing
+
+Needs testing in-game.
+
+---
+
+# ROUND III — VOID DUEL
+
+## Existing
+
+* Player HP = 8
+* Enemy HP = 16
+* Strike / Guard / Void
+* Duel UI functional
+
+---
+
+# GAMBLER'S GAMBIT
+
+## Desired Behavior
+
+At:
+
+```js
+player HP === 1
+```
+
+One-time trigger.
+
+---
+
+### Outcome
+
+40%
+
+```js
+enemy HP = 0
+```
+
+Instant win.
+
+---
+
+60%
+
+```js
+player HP = 0
+```
+
+Instant loss.
+
+---
+
+### Status
+
+NOT IMPLEMENTED.
+
+Need:
+
+```js
+let gamblersGambitUsed=false;
+```
+
+Reset on duel start.
+
+Then inject one-time check inside combat resolution.
+
+---
+
+### Visual
+
+Desired:
+
+* SVG glitch burst
+* CRT distortion
+* White flash
+
+Animation not started.
+
+---
+
+# PORTAL / QR
+
+Confirmed present:
+
+### QR
+
+```text
+https://i.imgur.com/uaa8sAh.png
+```
+
+### Portal Effects
+
+* CRT
+* Scanlines
+* Chromatic aberration
+* Vertical tearing
+* Drone ambience
+* Shimmer overlay
+
+No active work pending.
+
+---
+
+# DEV PANEL
+
+Open:
+
+```text
+Shift + D
+```
+
+Password:
+
+```text
+1221
+```
+
+---
+
+# CURRENT FILE CHAIN
+
+Latest generated file:
+
+```text
+index_patched_v3.html
+```
+
+Contains:
+
+✅ Round I streak preservation
+
+✅ Missile cooldown 2500ms
+
+✅ Expanded AOE
+
+✅ Upgrade SFX
+
+✅ Wave 4 upgrade framework
+
+✅ Double Missile framework
+
+❌ Homing logic unfinished
+
+❌ Gambler's Gambit unfinished
+
+❌ Wave 4 testing not completed
+
+---
+
+# NEXT PRIORITY ORDER
+
+1. Verify Wave 4 modal appears correctly.
+2. Finish homing projectile steering.
+3. Finish Gambler's Gambit logic.
+4. Add Gambler's Gambit glitch animation.
+5. Playtest Wave 5 boss balance after Double Missile/Homing upgrades.
