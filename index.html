@@ -1803,7 +1803,7 @@ function whack(mole,ptsEl){
   cssGlitch(mole.el);
   const pitchMult=type==='purpality'?1.3+Math.min(combo,8)*0.04:0.9+Math.min(combo,8)*0.04;
   try{playThud(pitchMult);}catch(e){}
-  combo=Math.min(combo+1,8);
+  combo=Math.min(combo+1,7.5);
   let pts;
   if(type==='purpality'){
     const streak=combo>=3;
@@ -2055,7 +2055,7 @@ function invFire(){
   const ch=invCanvas.height;
   const spawnBullet=(x)=>invBullets.push({x:x,y:ch-67,vy:-INV_BULLET_SPEED,trail:[],hit:false});
   if(invUpgrade==='doublemissile'){
-    spawnBullet(invShooterX-18); spawnBullet(invShooterX+18);
+    spawnBullet(invShooterX-20); spawnBullet(invShooterX+20);
   }else{
     spawnBullet(invShooterX);
   }
@@ -2233,26 +2233,45 @@ function invDraw(){
     invCtx.restore();
   }
 
-  for(let b of invBullets){
-    invCtx.save();
-    // Trail
-    if(b.trail.length>1){
-      invCtx.strokeStyle='rgba(255,255,255,0.18)';
-      invCtx.lineWidth=1;
-      invCtx.beginPath();
-      invCtx.moveTo(b.trail[0].x,b.trail[0].y);
-      for(let t of b.trail) invCtx.lineTo(t.x,t.y);
-      invCtx.stroke();
-    }
-    // Bullet head
-    invCtx.strokeStyle='rgba(255,255,255,0.95)';
-    invCtx.lineWidth=1.5;
-    invCtx.beginPath();invCtx.moveTo(b.x,b.y);invCtx.lineTo(b.x,b.y+10);invCtx.stroke();
-    // Tip glow
-    invCtx.fillStyle='rgba(255,255,255,0.8)';
-    invCtx.beginPath();invCtx.arc(b.x,b.y,1.5,0,Math.PI*2);invCtx.fill();
-    invCtx.restore();
+for(let b of invBullets){
+  invCtx.save();
+
+  // Missile trail
+  if(b.trail.length>1){
+    invCtx.strokeStyle='rgba(255,220,90,0.35)';
+    invCtx.lineWidth=4;
+    invCtx.beginPath();
+    invCtx.moveTo(b.trail[0].x,b.trail[0].y);
+    for(let t of b.trail) invCtx.lineTo(t.x,t.y);
+    invCtx.stroke();
   }
+
+  invCtx.shadowColor='#ffe45a';
+  invCtx.shadowBlur=20;
+
+  // Missile body
+  invCtx.fillStyle='#ffd84a';
+  invCtx.fillRect(b.x-4,b.y-18,8,18);
+
+  // Fins
+  invCtx.fillRect(b.x-9,b.y-10,5,3);
+  invCtx.fillRect(b.x+4,b.y-10,5,3);
+
+  // Nose cone
+  invCtx.beginPath();
+  invCtx.moveTo(b.x,b.y-28);
+  invCtx.lineTo(b.x-6,b.y-18);
+  invCtx.lineTo(b.x+6,b.y-18);
+  invCtx.closePath();
+  invCtx.fill();
+
+  // Core glow
+  invCtx.beginPath();
+  invCtx.arc(b.x,b.y-8,2.5,0,Math.PI*2);
+  invCtx.fill();
+
+  invCtx.restore();
+}
 
   for(let e of invEntities){
     if(!e.alive)continue;
