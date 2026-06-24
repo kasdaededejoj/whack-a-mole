@@ -1739,7 +1739,7 @@ function spawnMole(){
   el.className='mole-el'+(type==='purpality'?' purpality':type==='noise'?' noise':'');
 
   // Purpality: 40px, faster speed (ratio 0.43 of base speed)
-  const spd=type==='purpality'?Math.round(round.speed*0.43):round.speed;
+  const spd=type==='purpality'?Math.round(round.speed*0.65):round.speed;
 
   el.style.left=pos.x+'%';el.style.top=pos.y+'%';
   const inner=document.createElement('span');
@@ -1760,12 +1760,19 @@ function spawnMole(){
       if(type==='noise'){
         // Noise expires: no miss penalty, just disappears with reverse anim
         noiseGlitchDisappear(el);
-      } else {
-        misses++;combo=1;
-        missEl.textContent=misses;comboEl.textContent='×1';
-        try{playMiss();}catch(e){}
-        setTimeout(()=>el.remove(),220);
-      }
+      } else if(type==='purpality'){
+  misses++;
+  missEl.textContent=misses;
+  try{playMiss();}catch(e){}
+  setTimeout(()=>el.remove(),220);
+} else {
+  misses++;
+  combo=1;
+  missEl.textContent=misses;
+  comboEl.textContent='×1';
+  try{playMiss();}catch(e){}
+  setTimeout(()=>el.remove(),220);
+}
     }
   },spd);
 }
