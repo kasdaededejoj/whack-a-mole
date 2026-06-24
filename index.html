@@ -1767,9 +1767,9 @@ function spawnMole(){
   setTimeout(()=>el.remove(),220);
 } else {
   misses++;
-  combo=1;
+  combo=Math.max(1,combo-1);
   missEl.textContent=misses;
-  comboEl.textContent='×1';
+  comboEl.textContent='×'+combo;
   try{playMiss();}catch(e){}
   setTimeout(()=>el.remove(),220);
 }
