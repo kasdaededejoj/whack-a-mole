@@ -10,7 +10,11 @@
 </style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+<<<<<<< Updated upstream
 :root{--bg:#000;--text:#fff;--muted:#555;--frakturQZ:'BlackChancery',serif;--thestral:'Thestral',serif;--num:'Coolvetica',ui-sans-serif,system-ui,sans-serif}
+=======
+:root{--bg:#000;--text:#fff;--muted:#555;--fraktur:'BlackChancery',serif;--thestral:'Thestral',serif;--num:'Coolvetica',ui-sans-serif,system-ui,sans-serif}
+>>>>>>> Stashed changes
 html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospace;overflow-x:hidden}
 
 #score,#combo,#misses,.duel-hp-num,#duel-player-hp,#duel-enemy-hp,#nuka-keycap-inner,.portal-timer,.dev-audio-val{font-family:var(--num);font-variant-numeric:tabular-nums;font-feature-settings:'tnum';}
@@ -60,7 +64,11 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 .mole-el.purpality .mole-glyph{font-size:22px;color:rgba(180,100,255,0.9)}
 /* purpality SVG img */
 .mole-el.purpality{width:40px;height:40px}
+<<<<<<< Updated upstream
 .mole-el.purpality img{width:100%;height:100%;object-fit:contain;object-position:center;pointer-events:none;transform:scale(1.12)}
+=======
+.mole-el.purpality img, .mole-el.purpality svg{width:100%;height:100%;object-fit:contain;object-position:center;pointer-events:none;transform:scale(1.12)}
+>>>>>>> Stashed changes
 .mole-el.purpality::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1.5px solid rgba(160,80,255,0.85);box-shadow:0 0 6px 1px rgba(140,60,240,0.5),inset 0 0 4px rgba(140,60,240,0.2);pointer-events:none}
 /* noise target — chromatic aberration shimmer on the glyph */
 @keyframes chromaShimmer{
@@ -1209,8 +1217,10 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initGame } from './js/game.js';
 
+<<<<<<< Updated upstream
 const ROUNDS=[
   {speed:1400, max:3, dur:30000, threshold:1749, type:'mole'},
   {dur:120000, threshold:0, type:'invaders'},
@@ -3588,6 +3598,12 @@ window.addEventListener('resize',()=>{
 });
 // ══════════════════════════════════════════
 
+=======
+// Initialize game on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initGame();
+});
+>>>>>>> Stashed changes
 </script>
 </body>
 </html>
