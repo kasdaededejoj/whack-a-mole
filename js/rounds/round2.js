@@ -1,4 +1,9 @@
 // ── VOID INVADERS ENGINE ──
+import { state } from '../state.js';
+import { field, msgEl, setComboValue, showFail } from '../ui.js';
+import { playThud } from '../audio.js';
+import { endRound } from '../game.js';
+
 let invCanvas=null,invCtx=null,invRaf=null;
 let invEntities=[],invBullets=[],invParticles=[];
 let invShooterX=0,invDescentY=0,invMouseDown=false,invFireInterval=null;
@@ -211,7 +216,7 @@ function nextInvaderWave(){
 }
 
 function showUpgradeModal(mode='wave2'){
-  running=false;
+  state.running=false;
   // Kill the rAF loop cleanly so it doesn't ghost-run
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
   const modal=document.getElementById('upgrade-modal');
@@ -239,7 +244,7 @@ function showUpgradeModal(mode='wave2'){
     try{playThud(1.15);}catch(e){}
     if(type==='aoe') invAoeCooldown=Date.now();
     modal.style.display='none';
-    running=true;
+    state.running=true;
     invTransitioning=false;
     if(type==='nuka'){
       startNukaSkill(true);
@@ -274,18 +279,18 @@ function stopInvaders(){
 }
 
 function invHandleMove(e){
-  if(!running)return;
+  if(!state.running)return;
   const r=invCanvas.getBoundingClientRect();
   invShooterX+=(e.clientX-r.left-invShooterX)*0.18;
 }
 
 function invHandleMouseDown(e){
-  if(!running)return;
+  if(!state.running)return;
   invMouseDown=true;
   invFire();
   const rate=invUpgrade==='machina'?INV_FIRE_RATE/3.2:invUpgrade==='rapidfire'?INV_FIRE_RATE/2:INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
-    if(!running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
+    if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
     invFire();
   },rate);
 }
@@ -296,14 +301,14 @@ function invHandleMouseUp(){
 }
 
 function invHandleSingleClick(e){
-  if(!running)return;
+  if(!state.running)return;
   const r=invCanvas.getBoundingClientRect();
   invShooterX=e.clientX-r.left;
   invFire();
 }
 
 function invFire(){
-  if(!running||!invCanvas||invNukaSkillActive)return;
+  if(!state.running||!invCanvas||invNukaSkillActive)return;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
     const isMissile=invUpgrade==='aoe'||invUpgrade==='doublemissile'||invUpgrade==='rapidfire_homing';
@@ -319,7 +324,7 @@ function invFire(){
 }
 
 function startNukaSkill(respawnWave=false){
-  if(!running||!invCanvas||invNukaSkillActive||Date.now()<invNukaCooldownUntil){return;}
+  if(!state.running||!invCanvas||invNukaSkillActive||Date.now()<invNukaCooldownUntil){return;}
   invMouseDown=false;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   invNukaSkillActive=true;
@@ -340,7 +345,7 @@ function startNukaCooldown(delay, isFail=false){
 }
 
 function resolveNukaInput(key){
-  if(!invNukaSkillActive||!running)return;
+  if(!invNukaSkillActive||!state.running)return;
   const pressed=String(key).toUpperCase();
   invNukaSkillActive=false;
   if(pressed===invNukaPromptLetter){
@@ -354,8 +359,8 @@ function resolveNukaInput(key){
         if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.col===undefined||!cols.includes(laneEnemy.col))continue;
         laneEnemy.alive=false;
         invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
-        combo=Math.min(combo+1,8);
-        setComboValue('×'+combo);
+        state.combo=Math.min(state.combo+1,8);
+        setComboValue('×'+state.combo);
       }
     }
     showNukaPrompt(invNukaPromptLetter, 'success');
@@ -375,7 +380,7 @@ function invSpawnParticles(x,y,alpha){
 }
 
 function invLoop(){
-  if(!running||!invCanvas){return;}
+  if(!state.running||!invCanvas){return;}
   invUpdate();invDraw();
   invRaf=requestAnimationFrame(invLoop);
 }
@@ -401,8 +406,8 @@ function invUpdate(){
       e.flicker+=0.012;
       if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*8;}else{e.glitchOffset=0;}
       if(e.y>ch-100){
-        running=false;clearInterval(bTimer);
-        showFail(currentRound);return;
+        state.running=false;clearInterval(state.bTimer);
+        showFail(state.currentRound);return;
       }
     } else {
       e.x=e.baseX;
@@ -410,8 +415,8 @@ function invUpdate(){
       e.flicker+=0.008;
       if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*5;}else{e.glitchOffset=0;}
       if(e.y>ch-80){
-        running=false;clearInterval(bTimer);
-        showFail(currentRound);return;
+        state.running=false;clearInterval(state.bTimer);
+        showFail(state.currentRound);return;
       }
     }
   }
@@ -443,8 +448,8 @@ function invUpdate(){
           if(e.hp<=0){
             e.alive=false;
             invSpawnParticles(e.x,e.y,1);
-            combo=Math.min(combo+1,8);
-            setComboValue('×'+combo);
+            state.combo=Math.min(state.combo+1,8);
+            setComboValue('×'+state.combo);
           } else {
             e.glitchTimer=10;
           }
@@ -476,8 +481,8 @@ function invUpdate(){
               if(!laneEnemy.alive || laneEnemy.isBoss || laneEnemy.col===undefined || !cols.includes(laneEnemy.col))continue;
               laneEnemy.alive=false;
               invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
-              combo=Math.min(combo+1,8);
-              setComboValue('×'+combo);
+              state.combo=Math.min(state.combo+1,8);
+              setComboValue('×'+state.combo);
             }
           } else {
             const damage=e.isBoss?((b.kind==='missile'||b.kind==='nuka')?7:0.5):1;
@@ -485,8 +490,8 @@ function invUpdate(){
             if(e.hp<=0){
               e.alive=false;
               invSpawnParticles(e.x,e.y,1);
-              combo=Math.min(combo+1,8);
-              setComboValue('×'+combo);
+              state.combo=Math.min(state.combo+1,8);
+              setComboValue('×'+state.combo);
               // Boss death display
               if(isBossWave){
                 msgEl.textContent='';
@@ -516,7 +521,7 @@ function invUpdate(){
       nextInvaderWave();
     } else {
       // All 6 waves cleared — pass R2
-      running=false;clearInterval(bTimer);endRound();
+      state.running=false;clearInterval(state.bTimer);endRound();
     }
   }
 }

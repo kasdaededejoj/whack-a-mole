@@ -1,5 +1,10 @@
 // ── DUEL ENGINE (Round 3) ──
 // ══════════════════════════════════════════
+import { state } from '../state.js';
+import { gameScreen, showFail } from '../ui.js';
+import { getAudio } from '../audio.js';
+import { glitchToPortal } from '../game.js';
+
 const DUEL_PLAYER_MAX = 8;
 const DUEL_ENEMY_MAX  = 16;
 const ACTIONS = ['strike','guard','void'];
@@ -21,7 +26,7 @@ const OUTCOME = {
 
 // ── DUEL SFX (Web Audio procedural) ──
 function duelSFX(type){
-  if(sfxMuted)return;
+  if(state.sfxMuted)return;
   try{
     const ctx=getAudio();
     const now=ctx.currentTime;
@@ -98,6 +103,7 @@ let duelShake = 0;
 let duelEntityPhase = 0;
 let duelAnimState = {player:{anim:null,frame:0,action:null}, enemy:{anim:null,frame:0,action:null}};
 let duelVoidTrails = []; // Dawn Warrior afterimage trail for void strike
+let gamblersGambitUsed = false;
 
 const duelScreen    = document.getElementById('duel-screen');
 const duelCanvas    = document.getElementById('duel-canvas');
@@ -575,11 +581,14 @@ function duelDrawFrame(){
   }
 
   duelCtx.restore();
+
+  if (duelRaf !== null) duelRaf = requestAnimationFrame(duelDrawFrame);
 }
 
 function startDuel() {
   duelPlayerHP = DUEL_PLAYER_MAX;
   duelEnemyHP = DUEL_ENEMY_MAX;
+  gamblersGambitUsed = false;
   duelPlayerChoice = null;
   duelPhase = 'choose';
   duelParticles = [];
@@ -592,12 +601,13 @@ function startDuel() {
   duelUpdateBars();
   duelPhaseEl.textContent = 'choose';
   duelMsgEl.textContent = '';
+  duelHighlight(null);
   duelSetButtons(true);
   
   duelScreen.classList.add('active');
   duelResizeCanvas();
   window.addEventListener('resize', duelResizeCanvas);
-  if (!duelRaf) duelDrawFrame();
+  if (!duelRaf) duelRaf = requestAnimationFrame(duelDrawFrame);
 }
 
 function stopDuel() {
