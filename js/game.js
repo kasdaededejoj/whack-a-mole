@@ -1,5 +1,5 @@
 // Main Game Orchestration
-import * as state from './state.js';
+import { state } from './state.js';
 import { initAudio } from './audio.js';
 import { initHomepage } from './homepage.js';
 import { 
@@ -12,6 +12,7 @@ import { spawnLoop } from './rounds/round1.js';
 import { startInvaders, stopInvaders } from './rounds/round2.js';
 import { startDuel, stopDuel } from './rounds/round3.js';
 import { getAudio } from './audio.js';
+import { initDevPanel } from './devpanel.js';
 
 // Round configurations
 const ROUNDS = [
@@ -328,6 +329,9 @@ export function initGame() {
   
   // Initialize homepage glitch effect
   initHomepage();
+  
+  // Initialize hidden dev/debug panel (Shift+D to open)
+  initDevPanel();
   
   // Wire up begin button to start game
   document.getElementById('ok-btn').addEventListener('click', () => {

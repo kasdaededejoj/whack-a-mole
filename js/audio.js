@@ -1,5 +1,5 @@
 // Audio System
-import * as state from './state.js';
+import { state } from './state.js';
 
 function reverseBuffer(ctx, buffer) {
   const reversed = ctx.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);

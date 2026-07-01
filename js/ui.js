@@ -1,5 +1,5 @@
 // UI and HUD Management
-import * as state from './state.js';
+import { state } from './state.js';
 
 // DOM references - lazy-loaded to ensure DOM is ready
 let field, scoreEl, missEl, comboEl, msgEl, failOverlay, failMsgText;

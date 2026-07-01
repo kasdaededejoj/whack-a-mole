@@ -1,5 +1,5 @@
 // Round 1: Whack-a-Mole
-import * as state from '../state.js';
+import { state } from '../state.js';
 import { randPos, rollTargetType } from '../utils.js';
 import { sonidoAppear, cssGlitch, noiseGlitchDisappear } from '../effects.js';
 import { playThud, playMiss } from '../audio.js';
