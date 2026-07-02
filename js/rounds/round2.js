@@ -675,6 +675,15 @@ function invDraw(){
   const cw=invCanvas.width,ch=invCanvas.height;
   invCtx.clearRect(0,0,cw,ch);
 
+  // TEMP DEBUG READOUT — shows the live descentSpeed value this browser
+  // actually loaded, to rule caching in/out. Remove once confirmed.
+  invCtx.save();
+  invCtx.font='11px monospace';
+  invCtx.fillStyle='rgba(255,255,255,0.55)';
+  const liveSpeed=(INV_WAVE_CONFIG[invWave]?.descentSpeed ?? 0).toFixed(2);
+  invCtx.fillText(`[debug] wave ${invWave+1} · descentSpeed=${liveSpeed} · bulletSpeed=${INV_BULLET_SPEED}`, 10, ch-10);
+  invCtx.restore();
+
   for(let p of invParticles){
     invCtx.save();
     if(p.isAoe){
