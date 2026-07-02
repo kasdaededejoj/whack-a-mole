@@ -352,11 +352,13 @@ function resolveNukaInput(key){
     const ch=invCanvas.height;
     const laneCenter=invShooterX;
     invBullets.push({x:laneCenter,y:ch-67,vy:-INV_BULLET_SPEED*0.85,trail:[],hit:false,kind:'nuka'});
-    const hitCol=invEntities.find(e=>e.alive&&e.col!==undefined)?.col;
-    if(hitCol!==undefined){
-      const cols=[hitCol-1,hitCol,hitCol+1];
+    // Clear the 3 rows (vertical "waves") closest to failing — highest row
+    // index is the row furthest down / most advanced toward the fail line.
+    const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss&&e.row!==undefined).map(e=>e.row))].sort((a,b)=>b-a);
+    const targetRows=aliveRows.slice(0,3);
+    if(targetRows.length){
       for(let laneEnemy of invEntities){
-        if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.col===undefined||!cols.includes(laneEnemy.col))continue;
+        if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.row===undefined||!targetRows.includes(laneEnemy.row))continue;
         laneEnemy.alive=false;
         invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
         state.combo=Math.min(state.combo+1,8);
@@ -364,7 +366,7 @@ function resolveNukaInput(key){
       }
     }
     showNukaPrompt(invNukaPromptLetter, 'success');
-    startNukaCooldown(2000, false);
+    startNukaCooldown(3500, false);
   } else {
     showNukaPrompt(invNukaPromptLetter, 'fail');
     startNukaCooldown(7000, true);
@@ -769,4 +771,15 @@ function invDraw(){
   invCtx.save();invCtx.globalAlpha=0.02;invCtx.fillStyle='#fff';invCtx.fillRect(0,scanY,cw,2);invCtx.restore();
 }
 
-export { startInvaders, stopInvaders, resolveNukaInput };
+function handleInvaderKeydown(e){
+  if(invNukaSkillActive && /^[a-zA-Z]$/.test(e.key)){
+    e.preventDefault();
+    resolveNukaInput(e.key);
+  }
+  if(e.code==='Space' && invUpgrade==='nuka' && state.running && state.currentRound===1 && !invNukaSkillActive && Date.now()>=invNukaCooldownUntil){
+    e.preventDefault();
+    startNukaSkill(false);
+  }
+}
+
+export { startInvaders, stopInvaders, resolveNukaInput, handleInvaderKeydown };

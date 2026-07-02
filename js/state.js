@@ -22,12 +22,15 @@ const INV_GLYPHS_W4 = ['⎎', '⍫', '⎍', '⍪', '⎌', '⍩', '⎋', '⍨'];
 const INV_GLYPHS_W5 = ['⍧', '⍦', '⍥', '⍤', '⍣', '⍢', '⍡', '⍠'];
 const INV_GLYPH_SETS = [INV_GLYPHS_W1, INV_GLYPHS_W2, INV_GLYPHS_W3, INV_GLYPHS_W4, INV_GLYPHS_W5];
 
+// Descent speeds tuned so mobs drop one row (44px, see cellH in round2.js)
+// roughly every N seconds at 60fps, ramping up progressively per wave:
+// wave1 ≈3.0s/row, wave2 ≈2.5s, wave3 ≈2.0s, wave4 ≈1.6s, wave5 ≈1.3s
 const INV_WAVE_CONFIG = [
-  {cols: 8, rows: 4, descentSpeed: 0.12, hpTop: 2, hpRest: 1},
-  {cols: 8, rows: 4, descentSpeed: 0.18, hpTop: 2, hpRest: 1},
-  {cols: 9, rows: 4, descentSpeed: 0.26, hpTop: 3, hpRest: 1},
-  {cols: 9, rows: 5, descentSpeed: 0.35, hpTop: 3, hpRest: 2},
-  {cols: 10, rows: 5, descentSpeed: 0.48, hpTop: 4, hpRest: 2},
+  {cols: 8, rows: 4, descentSpeed: 0.244, hpTop: 2, hpRest: 1},
+  {cols: 8, rows: 4, descentSpeed: 0.293, hpTop: 2, hpRest: 1},
+  {cols: 9, rows: 4, descentSpeed: 0.367, hpTop: 3, hpRest: 1},
+  {cols: 9, rows: 5, descentSpeed: 0.458, hpTop: 3, hpRest: 2},
+  {cols: 10, rows: 5, descentSpeed: 0.564, hpTop: 4, hpRest: 2},
   null,
 ];
 
@@ -56,7 +59,7 @@ const state = {
   invCanvas: null, invCtx: null, invRaf: null,
   invEntities: [], invBullets: [], invParticles: [],
   invShooterX: 0, invDescentY: 0, invMouseDown: false, invFireInterval: null,
-  INV_BULLET_SPEED: 7, INV_FIRE_RATE: 120,
+  INV_BULLET_SPEED: 5.25, INV_FIRE_RATE: 120,
   INV_GLYPHS_W1, INV_GLYPHS_W2, INV_GLYPHS_W3, INV_GLYPHS_W4, INV_GLYPHS_W5,
   INV_GLYPH_SETS, INV_WAVE_CONFIG, INV_BOSS_HP: 313,
   invWave: 0,

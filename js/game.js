@@ -9,7 +9,7 @@ import {
   setScoreValue, setComboValue, setMissesValue, showHudActive, showFail
 } from './ui.js';
 import { spawnLoop } from './rounds/round1.js';
-import { startInvaders, stopInvaders } from './rounds/round2.js';
+import { startInvaders, stopInvaders, handleInvaderKeydown } from './rounds/round2.js';
 import { startDuel, stopDuel } from './rounds/round3.js';
 import { getAudio } from './audio.js';
 import { initDevPanel } from './devpanel.js';
@@ -332,6 +332,9 @@ export function initGame() {
   
   // Initialize hidden dev/debug panel (Shift+D to open)
   initDevPanel();
+  
+  // Nuka skill keyboard input (Space to activate, a-z to resolve prompt)
+  document.addEventListener('keydown', handleInvaderKeydown);
   
   // Wire up begin button to start game
   document.getElementById('ok-btn').addEventListener('click', () => {
