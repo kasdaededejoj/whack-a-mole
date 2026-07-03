@@ -1,4 +1,4 @@
-# AGENTS.md
+# agent.md
 
 ## Project Rules
 
@@ -12,6 +12,27 @@ When modifying the project:
 * Avoid duplicate logic.
 * Reuse existing rendering functions.
 * Preserve gameplay unless explicitly instructed.
+
+---
+
+## Canonical Documentation
+
+This repository intentionally uses these documentation filenames:
+
+* `READ ME.md` — project overview and setup orientation.
+* `agent.md` — AI/developer implementation rules.
+* `PROJECT.md` — current project status and milestones.
+* `HANDOVER.md` — long-running handoff notes when needed.
+
+Do not assume `README.md` or `AGENTS.md` exists. If another AI asks for those
+files, read `READ ME.md` and `agent.md` instead unless the repository has been
+renamed.
+
+For every change pushed to GitHub, update `READ ME.md`, `agent.md`, or
+`PROJECT.md` when the change affects setup, architecture, workflow, status, or
+project direction. Use `HANDOVER.md` mainly for extended handoff context,
+complex session notes, unresolved work, or when nearing the end of the active
+assistant context window.
 
 ---
 
