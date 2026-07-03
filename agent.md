@@ -17,7 +17,11 @@ When modifying the project:
 
 ## Architecture
 
-* Single-file `index.html`.
+* Modular vanilla JS: `index.html` (markup/CSS) + `js/` (state.js, game.js,
+  ui.js, audio.js, effects.js, devpanel.js, homepage.js, utils.js,
+  js/rounds/round1.js, round2.js, round3.js).
+* `state.js` exports a single mutable `state` object — import it via
+  `import { state } from './state.js'`, never `import * as state`.
 * Vanilla HTML/CSS/JavaScript.
 * No frameworks.
 * No unnecessary abstraction.

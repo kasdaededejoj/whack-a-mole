@@ -9,6 +9,68 @@
 
 ---
 
+## Round 2 Nuka Freeze Fix + Cleanup — 2026-07-03
+
+## Fixed, staged (not yet pushed — see Process notes)
+
+- **Round 2 Nuka freeze (open bug #1 from 2026-07-02, now fixed).** Root
+  cause: `invLoop()` only checked `state.running`/`invCanvas` at the top
+  of the function, before calling `invUpdate()`. But `invUpdate()` can
+  itself stop the round mid-call — specifically, clearing wave 4 calls
+  `nextInvaderWave()` → `showUpgradeModal()`, which sets
+  `state.running=false` and nulls `invRaf` to "kill the loop cleanly."
+  Control then returns into the *same* `invLoop()` invocation, which
+  didn't re-check anything — it called `invDraw()` and unconditionally
+  did `invRaf=requestAnimationFrame(invLoop)`, silently overwriting the
+  `null` that was just set. That queued one "ghost" frame; when it fired
+  (~16ms later, while the upgrade modal was still up), it saw
+  `state.running` was false and returned early — but without resetting
+  `invRaf`, leaving it holding a stale, already-fired, non-null ID
+  forever. When the player then picked the Nuka upgrade,
+  `startNukaSkill()`'s `if(!invRaf) invLoop()` restart check saw a
+  non-null `invRaf` and never restarted the loop — permanently freezing
+  the render/update cycle while the wave still spawned in memory and the
+  (DOM-based, loop-independent) Nuka keycap prompt still displayed,
+  matching the reported symptom exactly. Fixed by re-checking
+  `state.running`/`invCanvas` immediately after `invUpdate()` returns,
+  before `invDraw()`/rescheduling.
+- Nuka keycap glyph centering + border, in `index.html`: border thinned
+  from `1px solid rgba(255,255,255,0.2)` to `0.75px solid
+  rgba(255,255,255,0.14)`; added `line-height:1` + `padding-top:0.09em`
+  as a fixed optical-center nudge (flexbox centers by line-box, not
+  glyph visual weight, which is why straight vs. curved characters sat
+  differently). Note: this is an approximate, uniform nudge — true
+  per-glyph centering would need per-character metrics, not attempted.
+- Removed the temporary debug label from `invDraw()` in `round2.js`
+  (`[debug] wave N · descentSpeed=... · bulletSpeed=...` canvas text),
+  flagged for removal since `f889ca3`.
+- Docs: `agent.md` and `READ ME.md` architecture sections updated from
+  "Single-file `index.html`" to reflect the actual modular `js/` split.
+
+## Known residual, not addressed this session
+
+- `state.js` declares `invNukaSkillActive`, `invNukaCooldownUntil`,
+  `invNukaPromptLetter`, `invNukaCooldownTimer`, `invNukaCooldownRaf` on
+  the shared `state` object, but `round2.js` never reads/writes them —
+  it keeps its own identically-named local closure variables instead.
+  Dead/confusing duplication left over from the refactor; worth removing
+  from `state.js` in a future pass, but not touched here to keep this
+  batch surgical.
+
+## Process notes
+
+- Standing instruction from Adam: **update this file at the end of every
+  session by default**, not just when asked — he's running multiple AI
+  sessions/devices against this repo, so this file is the only shared
+  source of truth between them.
+- This session's edits are sitting in the sandbox only — no GitHub
+  connector is available in this chat surface, and pushing needs a
+  fresh fine-grained PAT (Contents: Read and write, scoped to this repo,
+  shortest expiry) pasted in-conversation for a one-time push, revoked
+  immediately after use per the existing rule below.
+
+---
+
 ## Round 2/3 Refactor Fixes — 2026-07-02
 
 ## Committed & pushed to `main` (live on GitHub)

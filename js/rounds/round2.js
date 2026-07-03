@@ -383,7 +383,15 @@ function invSpawnParticles(x,y,alpha){
 
 function invLoop(){
   if(!state.running||!invCanvas){return;}
-  invUpdate();invDraw();
+  invUpdate();
+  // invUpdate() can itself stop the round mid-call (e.g. showUpgradeModal
+  // on wave clear, or endRound on final wave) and null out invRaf. Re-check
+  // here before drawing/rescheduling — otherwise this same invLoop() call
+  // queues one more "ghost" frame that overwrites the null, leaving invRaf
+  // non-null forever and preventing startNukaSkill()'s `if(!invRaf)` restart
+  // check from ever firing again.
+  if(!state.running||!invCanvas){return;}
+  invDraw();
   invRaf=requestAnimationFrame(invLoop);
 }
 
@@ -674,15 +682,6 @@ function drawProjectileVisual(b){
 function invDraw(){
   const cw=invCanvas.width,ch=invCanvas.height;
   invCtx.clearRect(0,0,cw,ch);
-
-  // TEMP DEBUG READOUT — shows the live descentSpeed value this browser
-  // actually loaded, to rule caching in/out. Remove once confirmed.
-  invCtx.save();
-  invCtx.font='11px monospace';
-  invCtx.fillStyle='rgba(255,255,255,0.55)';
-  const liveSpeed=(INV_WAVE_CONFIG[invWave]?.descentSpeed ?? 0).toFixed(2);
-  invCtx.fillText(`[debug] wave ${invWave+1} · descentSpeed=${liveSpeed} · bulletSpeed=${INV_BULLET_SPEED}`, 10, ch-10);
-  invCtx.restore();
 
   for(let p of invParticles){
     invCtx.save();
