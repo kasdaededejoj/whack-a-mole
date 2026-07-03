@@ -63,6 +63,12 @@
   session by default**, not just when asked — he's running multiple AI
   sessions/devices against this repo, so this file is the only shared
   source of truth between them.
+- Adam's stance on the PAT-in-chat push workflow: he's aware pasting a
+  token in-conversation exposes it, and is fine with that risk for this
+  repo specifically — it's a game/marketing artifact, not a production
+  or sensitive system. Still generate scoped, short-expiry tokens and
+  revoke after use as a baseline habit, but don't over-flag the
+  exposure itself in future sessions.
 - This session's edits are sitting in the sandbox only — no GitHub
   connector is available in this chat surface, and pushing needs a
   fresh fine-grained PAT (Contents: Read and write, scoped to this repo,
