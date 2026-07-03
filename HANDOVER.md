@@ -9,6 +9,72 @@
 
 ---
 
+## Round 2 Nuka Freeze Sync Check — 2026-07-03
+
+## Committed & pushed to `main`
+
+- **`10fd34f`** — Removed stale Round 2/Nuka duplicate fields from
+  `state.js` after checking the current JavaScript files against the
+  Nuka freeze fix.
+
+## Files modified
+
+- `js/state.js`
+- `HANDOVER.md`
+
+## What changed
+
+- Confirmed the actual Nuka freeze fix is present in `js/rounds/round2.js`:
+  `invLoop()` now re-checks `state.running`/`invCanvas` immediately after
+  `invUpdate()` returns, before drawing or scheduling another
+  `requestAnimationFrame`.
+- Confirmed `game.js` imports `handleInvaderKeydown` from `round2.js` and
+  attaches it during `initGame()`, so Space/Nuka prompt keyboard handling is
+  wired through the module graph.
+- Removed unused invader/Nuka state copies from `state.js`:
+  `invCanvas`, `invCtx`, `invRaf`, invader entity/bullet/particle fields,
+  invader config constants, `invWave`, `invUpgrade`, AOE fields, and Nuka
+  cooldown/prompt fields.
+- `round2.js` remains the active owner of Round 2 runtime state and config.
+
+## Root cause / sync issue
+
+- The Nuka freeze fix was already synced into the active Round 2 engine, but
+  `state.js` still contained duplicate invader/Nuka fields left over from the
+  modular refactor.
+- Those duplicated fields were not read or written by `round2.js`, `game.js`,
+  or other modules, which made `state.js` look like a competing source of
+  truth even though it was dead data.
+
+## Solution implemented
+
+- Searched the repository for `state.INV_WAVE_CONFIG`,
+  `state.INV_BULLET_SPEED`, `state.invRaf`, and
+  `state.invNukaSkillActive`; no live references were found.
+- Removed the stale duplicates from `state.js` instead of rewiring Round 2,
+  preserving the existing working Round 2 module ownership.
+
+## Remaining known issues
+
+- Local browser/dev-server QA was not available in this Codex workspace; user
+  will verify through GitHub Pages.
+- `READ ME.md` still points to `AGENTS.md`, but the actual repository file is
+  `agent.md`. This was observed during session startup and is a small future
+  documentation cleanup.
+- Round II still needs a full live playtest from Wave 1 through Boss before
+  feature lock.
+
+## Follow-up tasks
+
+- Test Round II through GitHub Pages, specifically choosing Nuka at Wave 4 and
+  confirming the loop continues after the skill prompt resolves.
+- If Round II pacing still feels slow, check `js/rounds/round2.js` directly;
+  it is the current source of truth for invader wave speeds.
+- Consider correcting the `READ ME.md` project-direction link from
+  `AGENTS.md` to `agent.md` in a future docs pass.
+
+---
+
 ## Round 2 Nuka Freeze Fix + Cleanup — 2026-07-03
 
 ## Fixed, staged (not yet pushed — see Process notes)
