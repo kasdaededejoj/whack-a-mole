@@ -1,4 +1,15 @@
-# Handover — Round 2/3 Refactor Fixes
+# Handover — The Realm
+
+> **Standing rule:** update this file after every change made in any
+> session — new fixes, new bugs found, anything left uncommitted, and
+> any process notes worth passing on. Treat it as the shared memory
+> between sessions, since Claude chats don't share live state with each
+> other (see "Process notes" at the bottom). Keep old entries; add new
+> ones under a dated heading rather than overwriting history.
+
+---
+
+## Round 2/3 Refactor Fixes — 2026-07-02
 
 ## Committed & pushed to `main` (live on GitHub)
 
