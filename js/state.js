@@ -23,11 +23,11 @@ const INV_GLYPHS_W5 = ['⍧', '⍦', '⍥', '⍤', '⍣', '⍢', '⍡', '⍠'];
 const INV_GLYPH_SETS = [INV_GLYPHS_W1, INV_GLYPHS_W2, INV_GLYPHS_W3, INV_GLYPHS_W4, INV_GLYPHS_W5];
 
 const INV_WAVE_CONFIG = [
-  {cols: 8, rows: 4, descentSpeed: 0.48, hpTop: 2, hpRest: 1},
-  {cols: 8, rows: 4, descentSpeed: 0.72, hpTop: 2, hpRest: 1},
-  {cols: 9, rows: 4, descentSpeed: 1.04, hpTop: 3, hpRest: 1},
-  {cols: 9, rows: 5, descentSpeed: 1.40, hpTop: 3, hpRest: 2},
-  {cols: 10, rows: 5, descentSpeed: 1.92, hpTop: 4, hpRest: 2},
+  {cols: 8, rows: 4, descentSpeed: 0.36, hpTop: 2, hpRest: 1},
+  {cols: 8, rows: 4, descentSpeed: 0.54, hpTop: 2, hpRest: 1},
+  {cols: 9, rows: 4, descentSpeed: 0.78, hpTop: 3, hpRest: 1},
+  {cols: 9, rows: 5, descentSpeed: 1.05, hpTop: 3, hpRest: 2},
+  {cols: 10, rows: 5, descentSpeed: 1.44, hpTop: 4, hpRest: 2},
   null,
 ];
 
