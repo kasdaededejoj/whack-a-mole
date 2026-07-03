@@ -328,7 +328,8 @@ function invFire(){
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
     const isMissile=invUpgrade==='aoe'||invUpgrade==='doublemissile'||invUpgrade==='rapidfire_homing';
-    invBullets.push({x:x,y:ch-67,vy:-INV_BULLET_SPEED,trail:[],hit:false,kind:isMissile?'missile':'bullet'});
+    const speed=invUpgrade==='aoe'?INV_BULLET_SPEED*0.75:INV_BULLET_SPEED;
+    invBullets.push({x:x,y:ch-67,vy:-speed,trail:[],hit:false,kind:isMissile?'missile':'bullet'});
   };
   if(invUpgrade==='machina'){
     spawnBullet(invShooterX-10); spawnBullet(invShooterX+10);
@@ -367,18 +368,41 @@ function resolveNukaInput(key){
   if(pressed===invNukaPromptLetter){
     const ch=invCanvas.height;
     const laneCenter=invShooterX;
-    invBullets.push({x:laneCenter,y:ch-67,vy:-INV_BULLET_SPEED*0.85,trail:[],hit:false,kind:'nuka'});
-    // Clear the 3 rows (vertical "waves") closest to failing — highest row
-    // index is the row furthest down / most advanced toward the fail line.
-    const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss&&e.row!==undefined).map(e=>e.row))].sort((a,b)=>b-a);
-    const targetRows=aliveRows.slice(0,3);
-    if(targetRows.length){
-      for(let laneEnemy of invEntities){
-        if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.row===undefined||!targetRows.includes(laneEnemy.row))continue;
-        laneEnemy.alive=false;
-        invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
+    invBullets.push({x:laneCenter,y:ch-67,vy:-INV_BULLET_SPEED*0.5,trail:[],hit:false,kind:'nuka'});
+    if(invWave===5){
+      // Boss wave: no grid rows to target, and the bullet traveling
+      // straight up rarely connects with the boss's side-to-side drift —
+      // so a successful check deals a guaranteed direct hit instead.
+      const boss=invEntities.find(e=>e.isBoss&&e.alive);
+      if(boss){
+        boss.hp-=25;
+        invParticles.push({x:boss.x,y:boss.y,vx:0,vy:0,life:1,alpha:1,isNukaBomb:true});
+        if(boss.hp<=0){
+          boss.hp=0;
+          boss.alive=false;
+          invSpawnParticles(boss.x,boss.y,1);
+          msgEl.textContent='';
+        } else {
+          boss.glitchTimer=10;
+          const hpText=(boss.hp%1===0?boss.hp:boss.hp.toFixed(1))+' / '+INV_BOSS_HP;
+          msgEl.textContent=hpText;
+        }
         state.combo=Math.min(state.combo+1,8);
         setComboValue('×'+state.combo);
+      }
+    } else {
+      // Clear the 3 rows (vertical "waves") closest to failing — highest row
+      // index is the row furthest down / most advanced toward the fail line.
+      const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss&&e.row!==undefined).map(e=>e.row))].sort((a,b)=>b-a);
+      const targetRows=aliveRows.slice(0,3);
+      if(targetRows.length){
+        for(let laneEnemy of invEntities){
+          if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.row===undefined||!targetRows.includes(laneEnemy.row))continue;
+          laneEnemy.alive=false;
+          invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
+          state.combo=Math.min(state.combo+1,8);
+          setComboValue('×'+state.combo);
+        }
       }
     }
     showNukaPrompt(invNukaPromptLetter, 'success');
@@ -702,7 +726,21 @@ function invDraw(){
 
   for(let p of invParticles){
     invCtx.save();
-    if(p.isAoe){
+    if(p.isNukaBomb){
+      // Purple haze bomb — soft expanding radial glow + shockwave ring
+      const bx=Math.round(p.x), by=Math.round(p.y);
+      const glowR=80*(1.6-p.life*0.6);
+      const grad=invCtx.createRadialGradient(bx,by,0,bx,by,glowR);
+      grad.addColorStop(0,'rgba(168,85,247,'+(p.life*0.55)+')');
+      grad.addColorStop(1,'rgba(168,85,247,0)');
+      invCtx.globalAlpha=1;
+      invCtx.fillStyle=grad;
+      invCtx.beginPath();invCtx.arc(bx,by,glowR,0,Math.PI*2);invCtx.fill();
+      invCtx.globalAlpha=p.life*0.8;
+      invCtx.strokeStyle='#c084fc';
+      invCtx.lineWidth=2.5;
+      invCtx.beginPath();invCtx.arc(bx,by,60*(2-p.life*1.3),0,Math.PI*2);invCtx.stroke();
+    } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
       // Column fill
