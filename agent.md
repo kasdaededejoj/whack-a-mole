@@ -30,9 +30,24 @@ renamed.
 
 For every change pushed to GitHub, update `READ ME.md`, `agent.md`, or
 `PROJECT.md` when the change affects setup, architecture, workflow, status, or
-project direction. Use `HANDOVER.md` mainly for extended handoff context,
-complex session notes, unresolved work, or when nearing the end of the active
-assistant context window.
+project direction.
+
+Use this rule for `HANDOVER.md`:
+
+* Small changes do not need a handover entry unless they alter workflow or
+  future AI decision-making. A small change is something the next assistant can
+  understand without extra story: typo fixes, broken doc links, label wording,
+  tiny visual tweaks, or obvious dead-code cleanup.
+* Big changes should receive a handover entry. A big change is anything where
+  the next assistant would ask why the project behaves that way: gameplay bug
+  fixes, round behavior changes, architecture/module wiring changes, new
+  features, removed or moved code, startup flow changes, event listener changes,
+  scoring/timing/difficulty/wave/cooldown changes, or bug fixes with a root
+  cause.
+* In short: update `HANDOVER.md` when a change affects gameplay, architecture,
+  bug history, testing status, workflow, or future AI decision-making. Also use
+  it for extended handoff context, unresolved work, complex sessions, or when
+  nearing the end of the active assistant context window.
 
 ---
 
