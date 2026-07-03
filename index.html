@@ -77,12 +77,12 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 /* ── WAVE PROGRESS BAR ── */
 .wave-progress{display:flex;gap:3px;height:2px;margin-bottom:.8rem;flex-shrink:0}
 .wave-seg{flex:1;height:100%;background:#1a1a1a;transition:background .4s ease}
-#nuka-keycap{display:none;position:fixed;right:1.35rem;bottom:calc(18% + 10px);z-index:75;pointer-events:none}
+#nuka-keycap{display:none;position:fixed;left:0;top:0;transform:translate(-50%,-50%);z-index:75;pointer-events:none}
 #nuka-keycap.active{display:block}
 #nuka-keycap-inner{width:64px;height:64px;border:0.75px solid rgba(255,255,255,0.14);background:rgba(12,12,12,0.92);display:flex;align-items:center;justify-content:center;font-family:var(--num);font-size:30px;font-weight:700;letter-spacing:0.04em;line-height:1;padding-top:0.09em;color:#ececec;border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,0.35), inset 0 -1px 0 rgba(255,255,255,0.08);text-transform:uppercase}
 #nuka-keycap-inner.success{border-color:rgba(120,170,118,0.65);color:#cfe5c6}
 #nuka-keycap-inner.fail{border-color:rgba(170,90,90,0.75);color:#f3c4c4}
-#nuka-cooldown{display:none;position:fixed;right:1.35rem;bottom:18%;width:64px;height:3px;border-radius:999px;overflow:hidden;background:rgba(142,56,56,0.16);z-index:74;pointer-events:none;opacity:1;transition:opacity .2s ease}
+#nuka-cooldown{display:none;position:fixed;left:0;top:0;transform:translate(-50%,0);width:64px;height:3px;border-radius:999px;overflow:hidden;background:rgba(142,56,56,0.16);z-index:74;pointer-events:none;opacity:1;transition:opacity .2s ease}
 #nuka-cooldown.active{display:block;opacity:1}
 #nuka-cooldown:not(.active){opacity:0}
 #nuka-cooldown.fail{background:rgba(100,40,40,0.22)}

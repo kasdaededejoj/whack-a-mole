@@ -63,6 +63,18 @@ function setInvaderMessage(text,color='rgba(255,255,255,0.92)', timeout=0){
   }
 }
 
+function positionNukaUI(){
+  const wrap=document.getElementById('nuka-keycap');
+  const cd=document.getElementById('nuka-cooldown');
+  if(!invCanvas||(!wrap&&!cd))return;
+  const r=invCanvas.getBoundingClientRect();
+  const shooterPageX=r.left+invShooterX;
+  const shooterPageY=r.top+(invCanvas.height-54);
+  const offsetX=52; // clear of the shooter sprite, to its right
+  if(wrap){wrap.style.left=(shooterPageX+offsetX)+'px';wrap.style.top=shooterPageY+'px';}
+  if(cd){cd.style.left=(shooterPageX+offsetX)+'px';cd.style.top=(shooterPageY+34)+'px';}
+}
+
 function showNukaPrompt(letter, mode='prompt'){
   const wrap=document.getElementById('nuka-keycap');
   const box=document.getElementById('nuka-keycap-inner');
@@ -117,8 +129,11 @@ function startInvaders(){
   hideNukaPrompt();
   setNukaCooldown(false);
   if(invNukaCooldownTimer){clearTimeout(invNukaCooldownTimer);invNukaCooldownTimer=null;}
-  // Hide Round I scoring HUD, show wave progress bar
-  document.querySelector('.hud').style.visibility='hidden';
+  // Hide Round I scoring HUD + timer bar (display:none, not just
+  // visibility:hidden, so they don't reserve layout space and push
+  // Round II's field down the page), show wave progress bar
+  document.querySelector('.hud').style.display='none';
+  document.querySelector('.bar-wrap').style.display='none';
   const wp=document.getElementById('wave-progress');
   wp.style.display='flex';
   for(let i=0;i<6;i++) document.getElementById('wseg-'+i).className='wave-seg';
@@ -266,7 +281,8 @@ function stopInvaders(){
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   invMouseDown=false;
-  document.querySelector('.hud').style.visibility='';
+  document.querySelector('.hud').style.display='';
+  document.querySelector('.bar-wrap').style.display='';
   document.getElementById('wave-progress').style.display='none';
   if(invCanvas){
     invCanvas.removeEventListener('mousemove',invHandleMove);
@@ -397,6 +413,7 @@ function invLoop(){
 
 function invUpdate(){
   if(invTransitioning)return;
+  positionNukaUI();
   const now=Date.now();
   const ch=invCanvas.height;
   const cfg=INV_WAVE_CONFIG[invWave];
