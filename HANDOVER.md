@@ -10,6 +10,39 @@
 
 ---
 
+## Round 2 Layout Fix + Nuka UI Tracking — 2026-07-03
+
+## Committed & pushed to `main` (b1d455f)
+
+- **Field now starts at the true top of the screen.** Root cause:
+  `startInvaders()` hid Round I's `.hud` via `visibility='hidden'`, which
+  keeps its layout space reserved even though nothing renders there, and
+  never hid `.bar-wrap` (Round I's countdown timer bar) at all — both
+  sat in the flex column above `.field`, pushing Round II's canvas down.
+  Fixed by switching to `display='none'` for both in `startInvaders()`,
+  restored via `display=''` in `stopInvaders()`.
+- **Nuka keycap + cooldown bar now track the shooter sprite** instead of
+  being pinned to a fixed bottom-right screen position. Added
+  `positionNukaUI()` in `round2.js`, called every frame from
+  `invUpdate()`, which reads the canvas's bounding rect + `invShooterX`
+  and positions `#nuka-keycap`/`#nuka-cooldown` (now `left/top` +
+  `transform:translate(...)` driven, previously static `right/bottom`
+  CSS) just to the right of the sprite as it follows the mouse.
+
+## Still open
+
+- Nuka keycap glyph centering (the letter *inside* the keycap box) —
+  Adam confirmed the `padding-top:0.09em` nudge from the previous
+  session made no visible difference. Needs a fresh look once the
+  reposition above is confirmed working, ideally with a screenshot
+  since further blind CSS nudges without visual feedback aren't
+  reliable.
+- `state.js` invader-state duplicate cleanup already done by Codex
+  (see `10fd34f`) — confirmed safe, nothing outside `round2.js` read
+  those fields.
+
+---
+
 ## Documentation Workflow Definitions — 2026-07-03
 
 ## Committed & pushed to `main`
