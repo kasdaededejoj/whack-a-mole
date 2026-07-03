@@ -1,11 +1,65 @@
 # Handover — The Realm
 
-> **Standing rule:** update this file after every change made in any
-> session — new fixes, new bugs found, anything left uncommitted, and
-> any process notes worth passing on. Treat it as the shared memory
-> between sessions, since Claude chats don't share live state with each
-> other (see "Process notes" at the bottom). Keep old entries; add new
-> ones under a dated heading rather than overwriting history.
+> **Standing rule:** keep this file for handoff-worthy context: gameplay,
+> architecture, bug history, testing status, workflow changes, unresolved work,
+> complex sessions, or notes another AI would need to understand why the repo is
+> the way it is. Tiny wording-only or obvious cleanup changes do not require a
+> handover entry unless they change workflow or future AI decision-making. Keep
+> old entries; add new ones under a dated heading rather than overwriting
+> history.
+
+---
+
+## Documentation Workflow Definitions — 2026-07-03
+
+## Committed & pushed to `main`
+
+- Updated `agent.md` with the project's small-change vs big-change documentation
+  rules.
+
+## Files modified
+
+- `agent.md`
+- `HANDOVER.md`
+
+## What changed
+
+- Defined a **small change** as something the next assistant can understand
+  without extra story: typo fixes, broken doc links, label wording, tiny visual
+  tweaks, or obvious dead-code cleanup.
+- Defined a **big change** as anything where the next assistant would ask why
+  the project behaves that way: gameplay bug fixes, round behavior changes,
+  architecture/module wiring changes, new features, removed or moved code,
+  startup flow changes, event listener changes, scoring/timing/difficulty/wave/
+  cooldown changes, or bug fixes with a root cause.
+- Clarified that `HANDOVER.md` should be updated when a change affects gameplay,
+  architecture, bug history, testing status, workflow, or future AI
+  decision-making. Also use it for extended handoff context, unresolved work,
+  complex sessions, or when nearing the end of the active assistant context
+  window.
+- Updated this file's standing rule so it no longer says every tiny change must
+  always receive a handover entry.
+
+## Root cause / workflow issue
+
+- The previous standing instruction treated every change as handover-worthy,
+  which created unnecessary documentation overhead and could make the handover
+  noisy for non-coding collaborators and future AI sessions.
+
+## Solution implemented
+
+- Added a practical small/big change rule to `agent.md`.
+- Mirrored the workflow change in this `HANDOVER.md` entry because it affects
+  how future assistants should decide what to document.
+
+## Remaining known issues
+
+- None for this documentation workflow change.
+
+## Follow-up tasks
+
+- Future assistants should apply this rule when deciding whether to update
+  `HANDOVER.md` after a pushed change.
 
 ---
 
