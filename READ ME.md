@@ -16,7 +16,13 @@ Modular vanilla JS — `index.html` for markup/CSS, plus a `js/` directory
 
 ## Development
 
-Project direction is documented in:
+Canonical project direction is documented in:
 
-- AGENTS.md
-- PROJECT.md
+- `READ ME.md` — project overview and setup orientation
+- `agent.md` — AI/developer implementation rules
+- `PROJECT.md` — current project status and milestones
+- `HANDOVER.md` — long-running session notes when needed
+
+Note: this repository intentionally uses `READ ME.md` and `agent.md` as the
+canonical filenames. Do not assume `README.md` or `AGENTS.md` exists unless the
+repository is explicitly renamed later.
