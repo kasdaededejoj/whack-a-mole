@@ -10,6 +10,37 @@
 
 ---
 
+## Bullet Speed Tuning + Nuka Boss Fix — 2026-07-03
+
+## Committed & pushed to `main` (b368ad8)
+
+- **AOE upgrade bullets** now fire at `INV_BULLET_SPEED*0.75` (25% slower)
+  instead of the flat speed shared with every other bullet type.
+- **Nuka bullet** speed changed from `×0.85` to `×0.5` (50% slower).
+- **Nuka in the boss wave now actually does something.** Root cause:
+  Nuka's payoff is an instant grid row-clear (`aliveRows`/`.row`-based),
+  but the boss entity has no `.row`, so a successful check found nothing
+  to clear. The only remaining effect was the Nuka bullet itself, fired
+  straight up from wherever the shooter happened to be — while the boss
+  drifts side to side — so it almost always missed. Net effect: the
+  skill felt broken/unavailable against the boss even though it was
+  technically still activating. Fixed by branching in
+  `resolveNukaInput()`: on `invWave===5`, a successful check now deals a
+  **guaranteed flat 25 damage** directly to the boss (bypassing the
+  bullet-collision path entirely), mirrors the existing boss-hit/death
+  handling (HP display in `msgEl`, combo increment, death cleanup), and
+  spawns a new **purple haze bomb** particle effect (`isNukaBomb`, radial
+  gradient glow + expanding ring in `invDraw()`) at the boss's position
+  for a proper payoff visual, since there was no existing boss-specific
+  VFX for this skill to reuse.
+- Balance number (25 dmg) came directly from Adam — boss has
+  `INV_BOSS_HP=313`, a normal bullet hit deals `7`, so this is a
+  meaningfully bigger, guaranteed hit that still requires ~13 successful
+  checks to solo the boss with Nuka alone (cooldown-gated, ~3.5s per
+  success), not a one-shot.
+
+---
+
 ## Round 2 Layout Fix + Nuka UI Tracking — 2026-07-03
 
 ## Committed & pushed to `main` (b1d455f)
