@@ -10,6 +10,28 @@
 
 ---
 
+## GitHub Pages Deployment Fix — 2026-07-03
+
+## Root cause found and fixed
+
+Every fix pushed earlier today (freeze fix, layout fix, Nuka boss fix,
+VFX) looked "not there" on the live site because **the deploy was
+silently failing**, not because of caching. Repo Pages settings had
+`build_type: "legacy"` (deploy-from-branch) while a `pages build and
+deployment` Actions workflow was also trying to deploy — the two
+collided, the build step always succeeded but the deploy step failed on
+every single push. Fixed by Adam changing Settings → Pages → Source from
+"Deploy from a branch" to "GitHub Actions". Confirmed via API
+(`GET /repos/.../pages`) that `build_type` is now `"workflow"`.
+
+Re-triggering a deploy requires either re-running the failed Actions job
+(needs Actions:write on the PAT, which the current one doesn't have) or
+a fresh push (works fine with the existing Contents:write PAT) — used
+the latter. If deploys still show red after this, check
+Settings → Pages again first before assuming it's a code bug.
+
+---
+
 ## Bullet Speed Tuning + Nuka Boss Fix — 2026-07-03
 
 ## Committed & pushed to `main` (b368ad8)
