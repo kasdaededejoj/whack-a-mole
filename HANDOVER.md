@@ -10,6 +10,28 @@
 
 ---
 
+## Bullet Speed Revert + No-Cache Fix — 2026-07-03
+
+## Committed & pushed to `main` (2711555)
+
+- **AOE bullet speed reduction reverted.** Earlier today `spawnBullet()`
+  was changed to fire AOE-upgrade bullets at `×0.75` speed — Adam
+  clarified the intent: only the **Nuka bullet** (`×0.5`) should be
+  slowed. All other bullets (including AOE/missile upgrade bullets) fire
+  at full `INV_BULLET_SPEED=7`. `getRound2DebugInfo()` updated to match.
+- **No-cache meta tags added to `index.html`.** Root cause of the
+  recurring "changes aren't visible" issue: GitHub Pages CDN was serving
+  stale `index.html` (and by extension stale JS modules) after deploys.
+  Added `Cache-Control: no-cache, no-store, must-revalidate` + `Pragma`
+  + `Expires` meta tags. These instruct browsers to always revalidate
+  the HTML on load, which in turn forces fresh fetches of all JS
+  modules. Won't affect load performance meaningfully (assets still
+  served from CDN edge; only the revalidation check is added). If
+  caching issues persist after this, the next step would be a GitHub
+  Pages `_headers` file or query-string versioning on each JS import.
+
+---
+
 ## Live Dev Overlay + Deploy Flakiness Note — 2026-07-03
 
 ## Committed & pushed to `main` (ec17f9d)
