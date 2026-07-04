@@ -328,8 +328,7 @@ function invFire(){
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
     const isMissile=invUpgrade==='aoe'||invUpgrade==='doublemissile'||invUpgrade==='rapidfire_homing';
-    const speed=invUpgrade==='aoe'?INV_BULLET_SPEED*0.75:INV_BULLET_SPEED;
-    invBullets.push({x:x,y:ch-67,vy:-speed,trail:[],hit:false,kind:isMissile?'missile':'bullet'});
+    invBullets.push({x:x,y:ch-67,vy:-INV_BULLET_SPEED,trail:[],hit:false,kind:isMissile?'missile':'bullet'});
   };
   if(invUpgrade==='machina'){
     spawnBullet(invShooterX-10); spawnBullet(invShooterX+10);
@@ -847,13 +846,11 @@ function handleInvaderKeydown(e){
 
 function getRound2DebugInfo() {
   const cfg = INV_WAVE_CONFIG[invWave];
-  const effectiveBulletSpeed = invUpgrade === 'aoe' ? INV_BULLET_SPEED * 0.75 : INV_BULLET_SPEED;
   return {
     wave: invWave + 1,
     isBossWave: invWave === 5,
     descentSpeed: cfg ? cfg.descentSpeed : null,
     baseBulletSpeed: INV_BULLET_SPEED,
-    effectiveBulletSpeed,
     nukaBulletSpeed: INV_BULLET_SPEED * 0.5,
     upgrade: invUpgrade,
     running: state.running,
