@@ -7,7 +7,7 @@ import { endRound } from '../game.js';
 let invCanvas=null,invCtx=null,invRaf=null;
 let invEntities=[],invBullets=[],invParticles=[];
 let invShooterX=0,invDescentY=0,invMouseDown=false,invFireInterval=null;
-const INV_BULLET_SPEED=7,INV_FIRE_RATE=120;
+const INV_BULLET_SPEED=28,INV_FIRE_RATE=120;
 
 // Glyph sets — increasingly abstract per wave
 const INV_GLYPHS_W1=['⌖','⊕','⊗','◈','⌬','⍟','⎔','⊞'];
@@ -19,11 +19,11 @@ const INV_GLYPH_SETS=[INV_GLYPHS_W1,INV_GLYPHS_W2,INV_GLYPHS_W3,INV_GLYPHS_W4,IN
 
 // Wave config: {cols, rows, descentSpeed, hp_top, hp_rest}
 const INV_WAVE_CONFIG=[
-  {cols:8,rows:4,descentSpeed:0.12,hpTop:2,hpRest:1},  // wave 1 — baseline
-  {cols:8,rows:4,descentSpeed:0.18,hpTop:2,hpRest:1},  // wave 2 — faster
-  {cols:9,rows:4,descentSpeed:0.26,hpTop:3,hpRest:1},  // wave 3 — more cols, faster
-  {cols:9,rows:5,descentSpeed:0.35,hpTop:3,hpRest:2},  // wave 4 — more rows, faster, tougher
-  {cols:10,rows:5,descentSpeed:0.48,hpTop:4,hpRest:2}, // wave 5 — bridge pressure
+  {cols:8,rows:4,descentSpeed:0.5,hpTop:2,hpRest:1},   // wave 1 — baseline
+  {cols:8,rows:4,descentSpeed:0.75,hpTop:2,hpRest:1},  // wave 2 — faster
+  {cols:9,rows:4,descentSpeed:1.08,hpTop:3,hpRest:1},  // wave 3 — more cols, faster
+  {cols:9,rows:5,descentSpeed:1.46,hpTop:3,hpRest:2},  // wave 4 — more rows, faster, tougher
+  {cols:10,rows:5,descentSpeed:2.0,hpTop:4,hpRest:2},  // wave 5 — bridge pressure
   null,                                                  // wave 6 — boss (special)
 ];
 const INV_BOSS_HP=313;
@@ -45,6 +45,7 @@ let invNukaSkillActive=false;
 let invNukaPromptLetter='';
 let invNukaCooldownTimer=null;
 let invNukaCooldownRaf=null;
+let invNukaKeycapRaf=null;
 let invMessageTimer=null;
 
 function setInvaderMessage(text,color='rgba(255,255,255,0.92)', timeout=0){
@@ -75,6 +76,25 @@ function positionNukaUI(){
   if(cd){cd.style.left=(shooterPageX+offsetX)+'px';cd.style.top=(shooterPageY+34)+'px';}
 }
 
+const NUKA_COOLDOWN_OPACITY=0.35; // how opaque the keycap goes during cooldown
+const NUKA_LERP_DURATION=400;     // ms for the fade in/out transition
+
+function lerpNukaKeycapOpacity(fromOpacity, toOpacity, duration, onDone){
+  if(invNukaKeycapRaf){cancelAnimationFrame(invNukaKeycapRaf);invNukaKeycapRaf=null;}
+  const wrap=document.getElementById('nuka-keycap');
+  if(!wrap)return;
+  const start=performance.now();
+  const step=(now)=>{
+    const t=Math.min(1,(now-start)/duration);
+    // ease-in-out cubic
+    const ease=t<0.5?4*t*t*t:(1-Math.pow(-2*t+2,3)/2);
+    wrap.style.opacity=fromOpacity+(toOpacity-fromOpacity)*ease;
+    if(t<1){invNukaKeycapRaf=requestAnimationFrame(step);}
+    else{invNukaKeycapRaf=null;if(onDone)onDone();}
+  };
+  invNukaKeycapRaf=requestAnimationFrame(step);
+}
+
 function showNukaPrompt(letter, mode='prompt'){
   const wrap=document.getElementById('nuka-keycap');
   const box=document.getElementById('nuka-keycap-inner');
@@ -85,11 +105,26 @@ function showNukaPrompt(letter, mode='prompt'){
   if(mode==='success'){box.classList.add('success');}
   else if(mode==='fail'){box.classList.add('fail');}
   else {box.classList.remove('success','fail');}
+  // Fade in from whatever current opacity to fully opaque
+  lerpNukaKeycapOpacity(parseFloat(wrap.style.opacity)||0, 1, NUKA_LERP_DURATION, null);
+}
+
+function showNukaKeycapCooldown(){
+  // Fade to semi-opaque to signal cooldown
+  lerpNukaKeycapOpacity(1, NUKA_COOLDOWN_OPACITY, NUKA_LERP_DURATION, null);
+}
+
+function restoreNukaKeycapOpacity(){
+  // Fade back to fully opaque when cooldown ends
+  const wrap=document.getElementById('nuka-keycap');
+  const currentOpacity=wrap?parseFloat(wrap.style.opacity)||NUKA_COOLDOWN_OPACITY:NUKA_COOLDOWN_OPACITY;
+  lerpNukaKeycapOpacity(currentOpacity, 1, NUKA_LERP_DURATION, null);
 }
 
 function hideNukaPrompt(){
+  if(invNukaKeycapRaf){cancelAnimationFrame(invNukaKeycapRaf);invNukaKeycapRaf=null;}
   const wrap=document.getElementById('nuka-keycap');
-  if(wrap) wrap.classList.remove('active');
+  if(wrap){wrap.classList.remove('active');wrap.style.opacity='';}
 }
 
 function setNukaCooldown(active, duration=2000, isFail=false){
@@ -279,6 +314,7 @@ function showUpgradeModal(mode='wave2'){
 
 function stopInvaders(){
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  if(invNukaKeycapRaf){cancelAnimationFrame(invNukaKeycapRaf);invNukaKeycapRaf=null;}
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   invMouseDown=false;
   document.querySelector('.hud').style.display='';
@@ -352,11 +388,16 @@ function startNukaSkill(respawnWave=false){
 
 function startNukaCooldown(delay, isFail=false){
   invNukaCooldownUntil=Date.now()+delay;
-  if(invNukaCooldownTimer){clearTimeout(invNukaCooldownTimer);} 
+  if(invNukaCooldownTimer){clearTimeout(invNukaCooldownTimer);}
+  showNukaKeycapCooldown(); // lerp keycap to semi-opaque — signals cooldown visually
   setNukaCooldown(true, delay, isFail);
   invNukaCooldownTimer=setTimeout(()=>{
     invNukaCooldownTimer=null;
-    if(!invNukaSkillActive){hideNukaPrompt();setNukaCooldown(false);}
+    if(!invNukaSkillActive){
+      restoreNukaKeycapOpacity(); // lerp keycap back to full opacity — ready again
+      hideNukaPrompt();
+      setNukaCooldown(false);
+    }
   },delay);
 }
 
@@ -440,7 +481,7 @@ function invUpdate(){
   const now=Date.now();
   const ch=invCanvas.height;
   const cfg=INV_WAVE_CONFIG[invWave];
-  const speed=cfg?cfg.descentSpeed:0.12;
+  const speed=cfg?cfg.descentSpeed:0.5;
   invDescentY+=speed;
   const drop=Math.floor(invDescentY/20)*20;
 
