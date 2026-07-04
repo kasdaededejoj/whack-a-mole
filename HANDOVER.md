@@ -10,6 +10,58 @@
 
 ---
 
+## Live Dev Overlay + Deploy Flakiness Note — 2026-07-03
+
+## Committed & pushed to `main` (ec17f9d)
+
+- **New "live overlay" toggle inside the existing Shift+D dev panel.**
+  Unlike opening the dev panel itself (which still pauses the game via
+  `state.running=false`), this toggle does NOT pause anything — it drops
+  a small fixed corner HUD (`#dev-live-overlay`, updated every 200ms via
+  `setInterval`) that keeps running during actual gameplay. Shows,
+  per active round:
+  - Round 1: spawn interval (ms), max alive, moles alive
+  - Round 2: wave number (+ boss flag), descent speed, base vs.
+    effective bullet speed (accounts for the AOE ×0.75 multiplier),
+    Nuka bullet speed, active upgrade, whether the render loop
+    (`invRaf`) is alive — this last one directly surfaces the exact
+    ghost-rAF failure mode from earlier today if it ever recurs.
+  - Round 3: player/enemy HP, current phase.
+  Implemented via small `getRoundNDebugInfo()` getters exported from
+  each round module (`round1.js`, `round2.js`, `round3.js`), read by
+  `devpanel.js`. Purely additive — no existing exports/behavior changed.
+
+## Deploy flakiness observed, not fully explained
+
+- Since fixing the Pages source/workflow setup, deploys have gone
+  failure → success → failure → success in immediate alternation, always
+  with the same generic `"Deployment failed, try again later."` message
+  and no other error detail. The workflow config itself matches GitHub's
+  official templates exactly (checkout → configure-pages →
+  upload-pages-artifact → deploy-pages, correct permissions). Current
+  read: this is backend flakiness on GitHub's end, not a config problem
+  — but if it keeps failing more than ~50% of the time going forward,
+  worth revisiting (possibly the `github-pages` environment still
+  settling after the source-type switch, or genuine Pages incident).
+  Retry pattern that's worked so far: push again (a trivial commit is
+  enough) rather than trying to re-run the failed job via API — the API
+  re-run endpoint needs `actions: write` PAT scope, which hasn't been
+  granted.
+
+## Open thread carried into next session
+
+- Adam reported the game feeling globally slower starting from **Round
+  1, wave 1** — before any Round 2/Nuka-specific code even runs. No
+  code in this session touched Round 1 or base movement speed, and
+  `INV_WAVE_CONFIG` values are unchanged from before today. Leading
+  theory was stale cache, but this needs to actually be re-tested now
+  that the live overlay exists — check Round 1's reported
+  `spawnIntervalMs` against the hardcoded `800` in `round1.js` to
+  confirm whether the runtime value itself is off, or whether it's a
+  perception/deploy-timing issue.
+
+---
+
 ## GitHub Pages Deployment Fix — 2026-07-03
 
 ## Root cause found and fixed
