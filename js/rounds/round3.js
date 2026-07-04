@@ -619,4 +619,13 @@ function stopDuel() {
   window.removeEventListener('resize', duelResizeCanvas);
 }
 
-export { startDuel, stopDuel, duelSFX, enemyChoose, duelSetButtons, duelHighlight, duelUpdateBars, duelSpawnParticles, duelResolveTurn, duelEnd, duelResizeCanvas, duelDrawFrame };
+function getRound3DebugInfo() {
+  return {
+    playerHP: duelPlayerHP,
+    enemyHP: duelEnemyHP,
+    phase: duelPhase,
+    running: state.running
+  };
+}
+
+export { startDuel, stopDuel, duelSFX, enemyChoose, duelSetButtons, duelHighlight, duelUpdateBars, duelSpawnParticles, duelResolveTurn, duelEnd, duelResizeCanvas, duelDrawFrame, getRound3DebugInfo };

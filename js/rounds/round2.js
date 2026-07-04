@@ -845,4 +845,20 @@ function handleInvaderKeydown(e){
   }
 }
 
-export { startInvaders, stopInvaders, resolveNukaInput, handleInvaderKeydown };
+function getRound2DebugInfo() {
+  const cfg = INV_WAVE_CONFIG[invWave];
+  const effectiveBulletSpeed = invUpgrade === 'aoe' ? INV_BULLET_SPEED * 0.75 : INV_BULLET_SPEED;
+  return {
+    wave: invWave + 1,
+    isBossWave: invWave === 5,
+    descentSpeed: cfg ? cfg.descentSpeed : null,
+    baseBulletSpeed: INV_BULLET_SPEED,
+    effectiveBulletSpeed,
+    nukaBulletSpeed: INV_BULLET_SPEED * 0.5,
+    upgrade: invUpgrade,
+    running: state.running,
+    invRafAlive: invRaf !== null
+  };
+}
+
+export { startInvaders, stopInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };

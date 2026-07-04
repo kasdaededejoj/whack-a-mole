@@ -4,15 +4,53 @@
 // screen, and tweak/mute BGM & SFX while testing.
 import { state } from './state.js';
 import { field, welcomeScreen, portalScreen, gameScreen, glitchTrans, roundOverlay } from './ui.js';
-import { stopInvaders } from './rounds/round2.js';
-import { stopDuel } from './rounds/round3.js';
+import { stopInvaders, getRound2DebugInfo } from './rounds/round2.js';
+import { stopDuel, getRound3DebugInfo } from './rounds/round3.js';
+import { getRound1DebugInfo } from './rounds/round1.js';
 import { startRound, showPortal } from './game.js';
 
 const DEV_PASSWORD = '1221';
 
 let devPanel, devPwInput, devPwError, devControls;
 let devBgmVol, devBgmVolVal, devSfxVol, devSfxVolVal, devBgmToggle, devSfxToggle, devBgmRestart;
+let devLiveToggle, devLiveOverlay, devLiveInterval = null;
 let shiftHeld = false;
+
+function updateLiveOverlay() {
+  let lines = [`round ${state.currentRound + 1} · running=${state.running}`];
+  if (state.currentRound === 0) {
+    const d = getRound1DebugInfo();
+    lines.push(`spawn interval: ${d.spawnIntervalMs}ms`, `max alive: ${d.maxAlive}`, `moles alive: ${d.molesAlive}`);
+  } else if (state.currentRound === 1) {
+    const d = getRound2DebugInfo();
+    lines.push(
+      `wave: ${d.wave}${d.isBossWave ? ' (boss)' : ''}`,
+      `descent speed: ${d.descentSpeed}`,
+      `bullet speed: base=${d.baseBulletSpeed} effective=${d.effectiveBulletSpeed.toFixed(2)}`,
+      `nuka bullet speed: ${d.nukaBulletSpeed.toFixed(2)}`,
+      `upgrade: ${d.upgrade || 'none'}`,
+      `render loop alive: ${d.invRafAlive}`
+    );
+  } else if (state.currentRound === 2) {
+    const d = getRound3DebugInfo();
+    lines.push(`player hp: ${d.playerHP}`, `enemy hp: ${d.enemyHP}`, `phase: ${d.phase}`);
+  }
+  devLiveOverlay.textContent = lines.join('\n');
+}
+
+function setLiveOverlay(on) {
+  devLiveToggle.classList.toggle('on', on);
+  devLiveToggle.textContent = on ? 'on' : 'off';
+  devLiveOverlay.classList.toggle('active', on);
+  if (on) {
+    if (devLiveInterval) clearInterval(devLiveInterval);
+    devLiveInterval = setInterval(updateLiveOverlay, 200);
+    updateLiveOverlay();
+  } else if (devLiveInterval) {
+    clearInterval(devLiveInterval);
+    devLiveInterval = null;
+  }
+}
 
 function openDevPanel() {
   // Pause running game if mid-round
@@ -101,6 +139,8 @@ export function initDevPanel() {
   devBgmToggle = document.getElementById('dev-bgm-toggle');
   devSfxToggle = document.getElementById('dev-sfx-toggle');
   devBgmRestart = document.getElementById('dev-bgm-restart');
+  devLiveToggle = document.getElementById('dev-live-toggle');
+  devLiveOverlay = document.getElementById('dev-live-overlay');
 
   // ── Shift+D to open, Escape to close ──
   document.addEventListener('keydown', (e) => {
@@ -151,5 +191,10 @@ export function initDevPanel() {
     state.bgmAudio.play().catch(e => {});
     devBgmToggle.classList.add('on');
     devBgmToggle.textContent = 'on';
+  });
+
+  // ── Live state overlay (does NOT pause the game, unlike opening this panel) ──
+  devLiveToggle.addEventListener('click', () => {
+    setLiveOverlay(!devLiveToggle.classList.contains('on'));
   });
 }

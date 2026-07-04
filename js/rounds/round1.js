@@ -113,6 +113,16 @@ export function whack(mole, ptsEl) {
   msgEl.textContent = tag;
 }
 
+export function getRound1DebugInfo() {
+  const round = ROUNDS[state.currentRound];
+  return {
+    spawnIntervalMs: round ? round.speed : null,
+    maxAlive: round ? round.max : null,
+    molesAlive: state.moles.filter(m => m.alive).length,
+    running: state.running
+  };
+}
+
 export function spawnLoop() {
   if (!state.running) return;
   state.moles = state.moles.filter(m => m.alive);

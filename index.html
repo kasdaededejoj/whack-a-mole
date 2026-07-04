@@ -145,6 +145,24 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
   border:1px solid #1a1a1a;
 }
 #dev-panel.open{display:flex}
+#dev-live-overlay{
+  display:none;
+  position:fixed;
+  top:10px;
+  left:10px;
+  z-index:9998;
+  background:rgba(0,0,0,0.75);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:6px;
+  padding:8px 11px;
+  font-family:monospace;
+  font-size:11px;
+  line-height:1.5;
+  color:#9ee79e;
+  white-space:pre;
+  pointer-events:none;
+}
+#dev-live-overlay.active{display:block}
 #dev-panel-inner{
   display:flex;
   flex-direction:column;
@@ -1203,10 +1221,16 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
         <span class="dev-audio-label">bgm restart</span>
         <button class="dev-toggle" id="dev-bgm-restart">↺</button>
       </div>
+      <div class="dev-toggle-row">
+        <span class="dev-audio-label">live overlay</span>
+        <button class="dev-toggle" id="dev-live-toggle">off</button>
+      </div>
     </div>
     <button id="dev-close">dismiss</button>
   </div>
 </div>
+
+<div id="dev-live-overlay"></div>
 
 <script type="module">
 import { initGame } from './js/game.js';
