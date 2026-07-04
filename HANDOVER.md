@@ -10,6 +10,27 @@
 
 ---
 
+## Round 2 Speed Tuning + Nuka Keycap Lerp — 2026-07-03
+
+## Committed & pushed to `main` (31ff9a5)
+
+- **Descent speeds scaled ×4.17** — all `INV_WAVE_CONFIG` `descentSpeed`
+  values raised proportionally from the 0.12 baseline to 0.5:
+  wave 1: 0.12→0.5, wave 2: 0.18→0.75, wave 3: 0.26→1.08,
+  wave 4: 0.35→1.46, wave 5: 0.48→2.0. Fallback also updated to 0.5.
+- **`INV_BULLET_SPEED` raised from 7 to 28** (×4 multiplier, matching
+  the descent scale to keep relative feel consistent). Nuka bullet
+  still fires at `×0.5` (14px/frame). All other bullets at full 28.
+- **Nuka keycap lerped opacity on cooldown.** Added
+  `lerpNukaKeycapOpacity()` (cubic ease-in-out, 400ms), called by two
+  new helpers: `showNukaKeycapCooldown()` fades keycap to 0.35 opacity
+  on cooldown start; `restoreNukaKeycapOpacity()` fades it back to 1.0
+  when cooldown ends. Both called from `startNukaCooldown()`.
+  `hideNukaPrompt()` and `stopInvaders()` cancel the lerp rAF cleanly.
+- **Nuka keycap letter `font-weight` 700→400** for a thinner glyph.
+
+---
+
 ## Bullet Speed Revert + No-Cache Fix — 2026-07-03
 
 ## Committed & pushed to `main` (2711555)
