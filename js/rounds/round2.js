@@ -19,11 +19,11 @@ const INV_GLYPH_SETS=[INV_GLYPHS_W1,INV_GLYPHS_W2,INV_GLYPHS_W3,INV_GLYPHS_W4,IN
 
 // Wave config: {cols, rows, descentSpeed, hp_top, hp_rest}
 const INV_WAVE_CONFIG=[
-  {cols:8,rows:4,descentSpeed:0.5,hpTop:2,hpRest:1},   // wave 1 — baseline
-  {cols:8,rows:4,descentSpeed:0.75,hpTop:2,hpRest:1},  // wave 2 — faster
-  {cols:9,rows:4,descentSpeed:1.08,hpTop:3,hpRest:1},  // wave 3 — more cols, faster
-  {cols:9,rows:5,descentSpeed:1.46,hpTop:3,hpRest:2},  // wave 4 — more rows, faster, tougher
-  {cols:10,rows:5,descentSpeed:1.7,hpTop:4,hpRest:2},  // wave 5 — bridge pressure
+  {cols:8,rows:4,descentSpeed:0.3,hpTop:2,hpRest:1},   // wave 1 — baseline
+  {cols:8,rows:4,descentSpeed:0.55,hpTop:2,hpRest:1},  // wave 2 — faster
+  {cols:9,rows:4,descentSpeed:0.88,hpTop:3,hpRest:1},  // wave 3 — more cols, faster
+  {cols:9,rows:5,descentSpeed:1.26,hpTop:3,hpRest:2},  // wave 4 — more rows, faster, tougher
+  {cols:10,rows:5,descentSpeed:1.5,hpTop:4,hpRest:2},  // wave 5 — bridge pressure
   null,                                                  // wave 6 — boss (special)
 ];
 const INV_BOSS_HP=313;
@@ -483,7 +483,7 @@ function invUpdate(){
   const now=Date.now();
   const ch=invCanvas.height;
   const cfg=INV_WAVE_CONFIG[invWave];
-  const speed=cfg?cfg.descentSpeed:0.5;
+  const speed=cfg?cfg.descentSpeed:0.3;
   invDescentY+=speed;
   const drop=Math.floor(invDescentY/20)*20;
 
