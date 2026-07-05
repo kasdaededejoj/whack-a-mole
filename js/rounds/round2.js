@@ -23,7 +23,7 @@ const INV_WAVE_CONFIG=[
   {cols:8,rows:4,descentSpeed:0.75,hpTop:2,hpRest:1},  // wave 2 — faster
   {cols:9,rows:4,descentSpeed:1.08,hpTop:3,hpRest:1},  // wave 3 — more cols, faster
   {cols:9,rows:5,descentSpeed:1.46,hpTop:3,hpRest:2},  // wave 4 — more rows, faster, tougher
-  {cols:10,rows:5,descentSpeed:2.0,hpTop:4,hpRest:2},  // wave 5 — bridge pressure
+  {cols:10,rows:5,descentSpeed:1.7,hpTop:4,hpRest:2},  // wave 5 — bridge pressure
   null,                                                  // wave 6 — boss (special)
 ];
 const INV_BOSS_HP=313;
@@ -408,7 +408,7 @@ function resolveNukaInput(key){
   if(pressed===invNukaPromptLetter){
     const ch=invCanvas.height;
     const laneCenter=invShooterX;
-    invBullets.push({x:laneCenter,y:ch-67,vy:-INV_BULLET_SPEED*0.5,trail:[],hit:false,kind:'nuka'});
+    invBullets.push({x:laneCenter,y:ch-67,vy:-INV_BULLET_SPEED*0.25,trail:[],hit:false,kind:'nuka'});
     if(invWave===5){
       // Boss wave: no grid rows to target, and the bullet traveling
       // straight up rarely connects with the boss's side-to-side drift —
@@ -440,6 +440,8 @@ function resolveNukaInput(key){
           if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.row===undefined||!targetRows.includes(laneEnemy.row))continue;
           laneEnemy.alive=false;
           invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
+          // Purple haze burst on each cleared entity — small version of the boss bomb
+          invParticles.push({x:laneEnemy.x,y:laneEnemy.y,vx:0,vy:0,life:0.7,alpha:1,isNukaBomb:true,nukaBombR:28});
           state.combo=Math.min(state.combo+1,8);
           setComboValue('×'+state.combo);
         }
@@ -768,8 +770,10 @@ function invDraw(){
     invCtx.save();
     if(p.isNukaBomb){
       // Purple haze bomb — soft expanding radial glow + shockwave ring
+      // nukaBombR controls max radius: large for boss hit, small for row-clear entities
+      const maxR = p.nukaBombR || 80;
       const bx=Math.round(p.x), by=Math.round(p.y);
-      const glowR=80*(1.6-p.life*0.6);
+      const glowR=maxR*(1.6-p.life*0.6);
       const grad=invCtx.createRadialGradient(bx,by,0,bx,by,glowR);
       grad.addColorStop(0,'rgba(168,85,247,'+(p.life*0.55)+')');
       grad.addColorStop(1,'rgba(168,85,247,0)');
@@ -779,7 +783,7 @@ function invDraw(){
       invCtx.globalAlpha=p.life*0.8;
       invCtx.strokeStyle='#c084fc';
       invCtx.lineWidth=2.5;
-      invCtx.beginPath();invCtx.arc(bx,by,60*(2-p.life*1.3),0,Math.PI*2);invCtx.stroke();
+      invCtx.beginPath();invCtx.arc(bx,by,maxR*0.75*(2-p.life*1.3),0,Math.PI*2);invCtx.stroke();
     } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
