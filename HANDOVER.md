@@ -10,6 +10,28 @@
 
 ---
 
+## Wave 5 Speed + Nuka Row-Clear VFX — 2026-07-03
+
+## Committed & pushed to `main` (01ce952)
+
+- **Wave 5 descent speed 2.0→1.7** per Adam's preference.
+- **Nuka bullet slowed from ×0.5 to ×0.25 of base** (`28×0.25=7px/frame`).
+  Root cause of "instant wipe, no VFX": at ×0.5 (14px/frame) the bullet
+  crossed the screen fast enough that `b.trail` never built up more than
+  1 point before collision, so `if(b.trail.length>1)` never passed and
+  the missile silhouette rendered for only 1–2 frames before targets
+  disappeared — looked instant. Slowing to ×0.25 gives the missile
+  enough flight time to be visually tracked.
+- **Purple haze burst on each row-clear entity.** `invSpawnParticles`
+  was already firing white dots per entity, but they're tiny and barely
+  visible. Added `isNukaBomb:true, nukaBombR:28` particle on each
+  cleared enemy — same purple radial glow + ring as the boss-hit bomb,
+  scaled to `r=28` vs the boss bomb's `r=80`. `isNukaBomb` renderer
+  updated to respect an optional `nukaBombR` field so boss and
+  row-clear bursts can differ in size.
+
+---
+
 ## Round 2 Speed Tuning + Nuka Keycap Lerp — 2026-07-03
 
 ## Committed & pushed to `main` (31ff9a5)
