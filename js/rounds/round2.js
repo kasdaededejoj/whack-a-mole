@@ -81,14 +81,6 @@ function damagePlayer(amount){
     showFail(state.currentRound);
   }
 }
-let invUpgrade=null;
-// null
-// rapidfire
-// aoe
-// doublemissile
-// rapidfire_homing
-// nuka
-// machina
 let invAoeCooldown=0; // ms timestamp of last AOE fire
 const INV_AOE_INTERVAL=2500, INV_AOE_RADIUS=40;
 let invNukaCooldownUntil=0;
@@ -598,6 +590,7 @@ function invHandleSingleClick(e){
 
 function invFire(){
   if(!state.running||!invCanvas||invNukaSkillActive)return;
+  const activeUpgrade=invBossUpgrade||invUpgrade;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
     const isMissile=activeUpgrade==='aoe'||activeUpgrade==='doublemissile'||activeUpgrade==='rapidfire_homing';
@@ -1083,7 +1076,7 @@ function invDraw(){
       invCtx.font="42px 'BlackChancery', serif";
       invCtx.fillStyle='#fff';
       invCtx.textAlign='center';invCtx.textBaseline='middle';
-      invCtx.fillText('???',0,0);
+      invCtx.fillText(e.glyph,0,0);
       // HP bar under boss
       const barW=100;
       invCtx.globalAlpha=0.3;
