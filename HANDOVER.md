@@ -10,6 +10,16 @@
 
 ---
 
+## Wave Descent Speeds −0.2 — 2026-07-03
+
+## Committed & pushed to `main` (076a02f)
+
+All descent speeds reduced by 0.2 flat:
+wave 1: 0.5→0.3, wave 2: 0.75→0.55, wave 3: 1.08→0.88,
+wave 4: 1.46→1.26, wave 5: 1.7→1.5. Fallback 0.5→0.3.
+
+---
+
 ## Wave 5 Speed + Nuka Row-Clear VFX — 2026-07-03
 
 ## Committed & pushed to `main` (01ce952)
