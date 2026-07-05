@@ -79,6 +79,11 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 
 /* ── WAVE PROGRESS BAR ── */
 .wave-progress{display:flex;gap:3px;height:2px;margin-bottom:.8rem;flex-shrink:0}
+#player-hp-wrap{display:flex;align-items:center;gap:8px;margin-bottom:.6rem;flex-shrink:0;width:min(600px,100%);margin-left:auto;margin-right:auto}
+#player-hp-bar{flex:1;height:2px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden;position:relative}
+#player-hp-bar::after{content:'';position:absolute;inset:0;background:#fff;transform-origin:left;transform:scaleX(1);transition:transform .25s ease,background .3s ease;border-radius:999px}
+#player-hp-bar.damaged::after{background:rgba(220,80,80,0.9)}
+#player-hp-text{font-family:var(--num);font-size:10px;letter-spacing:.06em;color:rgba(255,255,255,0.3);white-space:nowrap;min-width:56px;text-align:right}
 .wave-seg{flex:1;height:100%;background:#1a1a1a;transition:background .4s ease}
 #nuka-keycap{display:none;position:fixed;left:0;top:0;transform:translate(-50%,-50%);z-index:75;pointer-events:none}
 #nuka-keycap.active{display:block}
@@ -1116,6 +1121,10 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
     <div class="wave-seg" id="wseg-4"></div>
     <div class="wave-seg" id="wseg-5"></div>
   </div>
+  <div id="player-hp-wrap" style="display:none">
+    <div id="player-hp-bar"></div>
+    <span id="player-hp-text">100 / 100</span>
+  </div>
   <!-- UPGRADE MODAL -->
   <div id="upgrade-modal" style="display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;padding:1.4rem 1.6rem">
     <div style="font-family:var(--fraktur);font-size:11px;letter-spacing:.12em;color:#333;text-transform:uppercase">augment</div>
@@ -1128,6 +1137,14 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
       <button class="btn" id="upgrade-machina" style="min-width:8.6rem;padding:0.72rem 1rem">machina.</button>
     </div>
     <div style="font-family:var(--fraktur);font-size:11px;letter-spacing:-.04em;color:#333;text-align:center;max-width:340px;line-height:1.4;opacity:0.9" id="upgrade-desc">—</div>
+  </div>
+  <div id="boss-upgrade-modal" style="display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,0.95);align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;padding:1.4rem 1.6rem">
+    <div style="font-family:var(--fraktur);font-size:11px;letter-spacing:.12em;color:#444;text-transform:uppercase">final augment</div>
+    <div style="font-family:var(--fraktur);font-size:11px;letter-spacing:-.04em;color:#333;text-align:center;max-width:320px;line-height:1.6;opacity:0.9">the void.<br>choose your final augment.</div>
+    <div style="display:flex;gap:0.8rem;flex-wrap:wrap;justify-content:center;align-items:center">
+      <button class="btn" id="boss-upgrade-nuka" style="min-width:8.6rem;padding:0.72rem 1rem">nuka.</button>
+      <button class="btn" id="boss-upgrade-machina" style="min-width:8.6rem;padding:0.72rem 1rem">machina.</button>
+    </div>
   </div>
   <div id="nuka-keycap"><div id="nuka-keycap-inner"></div></div>
   <div id="nuka-cooldown"><div id="nuka-cooldown-bar"></div></div>

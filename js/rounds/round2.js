@@ -19,17 +19,68 @@ const INV_GLYPH_SETS=[INV_GLYPHS_W1,INV_GLYPHS_W2,INV_GLYPHS_W3,INV_GLYPHS_W4,IN
 
 // Wave config: {cols, rows, descentSpeed, hp_top, hp_rest}
 const INV_WAVE_CONFIG=[
-  {cols:8,rows:4,descentSpeed:0.3,hpTop:2,hpRest:1},   // wave 1 — baseline
-  {cols:8,rows:4,descentSpeed:0.55,hpTop:2,hpRest:1},  // wave 2 — faster
-  {cols:9,rows:4,descentSpeed:0.88,hpTop:3,hpRest:1},  // wave 3 — more cols, faster
-  {cols:9,rows:5,descentSpeed:1.26,hpTop:3,hpRest:2},  // wave 4 — more rows, faster, tougher
-  {cols:10,rows:5,descentSpeed:1.5,hpTop:4,hpRest:2},  // wave 5 — bridge pressure
-  null,                                                  // wave 6 — boss (special)
+  {cols:8,rows:4,descentSpeed:0.2,hpTop:2,hpRest:1},   // wave 1
+  {cols:8,rows:4,descentSpeed:0.4,hpTop:2,hpRest:1},   // wave 2
+  {cols:9,rows:4,descentSpeed:0.6,hpTop:3,hpRest:1},   // wave 3
+  {cols:9,rows:5,descentSpeed:0.8,hpTop:3,hpRest:2},   // wave 4
+  {cols:10,rows:5,descentSpeed:1.0,hpTop:4,hpRest:2},  // wave 5
+  null,                                                  // wave 6 — boss
 ];
 const INV_BOSS_HP=313;
 
+// Player HP
+const PLAYER_MAX_HP=100;
+let invPlayerHp=PLAYER_MAX_HP;
+
+// Boss abilities
+let bossShockwaves=[];
+let bossPincers=[];
+let bossShockwaveTimer=null;
+let bossPincerTimer=null;
+let bossPhase2=false;
+const BOSS_SHOCKWAVE_INTERVAL=3500;
+const BOSS_PINCER_CD=4000;
+const BOSS_SHOCKWAVE_R_MAX_P1=120;
+const BOSS_SHOCKWAVE_DURATION=4000;
+const BOSS_PINCER_SPEED=3.5;
+
+// Boss sprite pool — one chosen at random on spawn
+const BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ'];
+
 let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
+let invUpgrade=null;
+let invBossUpgrade=null; // additional upgrade chosen at boss start
+
+function updatePlayerHpBar(){
+  const wrap=document.getElementById('player-hp-wrap');
+  const bar=document.getElementById('player-hp-bar');
+  const txt=document.getElementById('player-hp-text');
+  if(!wrap||!bar||!txt)return;
+  const pct=Math.max(0,invPlayerHp/PLAYER_MAX_HP);
+  bar.style.setProperty('--hp-scale',pct);
+  bar.style.cssText=bar.style.cssText; // force repaint
+  // Drive width via ::after scaleX — set via inline style on the bar
+  bar.querySelector && (bar.style.setProperty('--hp',pct));
+  // Use direct child approach instead
+  if(!bar._fill){
+    bar._fill=document.createElement('div');
+    bar._fill.style.cssText='position:absolute;inset:0;background:#fff;transform-origin:left;border-radius:999px;transition:transform .25s ease,background .3s ease';
+    bar.appendChild(bar._fill);
+  }
+  bar._fill.style.transform=`scaleX(${pct})`;
+  bar._fill.style.background=invPlayerHp<=30?'rgba(220,80,80,0.9)':'#fff';
+  txt.textContent=`${Math.max(0,invPlayerHp)} / ${PLAYER_MAX_HP}`;
+}
+
+function damagePlayer(amount){
+  invPlayerHp=Math.max(0,invPlayerHp-amount);
+  updatePlayerHpBar();
+  if(invPlayerHp<=0){
+    state.running=false;clearInterval(state.bTimer);
+    showFail(state.currentRound);
+  }
+}
 let invUpgrade=null;
 // null
 // rapidfire
@@ -157,6 +208,7 @@ function startInvaders(){
   invWave=0;
   invTransitioning=false;
   invUpgrade=null;
+  invBossUpgrade=null;
   invAoeCooldown=0;
   invNukaCooldownUntil=0;
   invNukaSkillActive=false;
@@ -164,11 +216,19 @@ function startInvaders(){
   hideNukaPrompt();
   setNukaCooldown(false);
   if(invNukaCooldownTimer){clearTimeout(invNukaCooldownTimer);invNukaCooldownTimer=null;}
+  // Player HP
+  invPlayerHp=PLAYER_MAX_HP;
+  updatePlayerHpBar();
+  // Boss abilities
+  bossShockwaves=[];bossPincers=[];bossPhase2=false;
+  if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
+  if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
   // Hide Round I scoring HUD + timer bar (display:none, not just
   // visibility:hidden, so they don't reserve layout space and push
   // Round II's field down the page), show wave progress bar
   document.querySelector('.hud').style.display='none';
   document.querySelector('.bar-wrap').style.display='none';
+  document.getElementById('player-hp-wrap').style.display='flex';
   const wp=document.getElementById('wave-progress');
   wp.style.display='flex';
   for(let i=0;i<6;i++) document.getElementById('wseg-'+i).className='wave-seg';
@@ -197,12 +257,13 @@ function spawnInvaderWave(waveIdx){
 
   if(waveIdx===5){
     // ── BOSS WAVE ──
+    const bossGlyph=BOSS_SPRITES[Math.floor(Math.random()*BOSS_SPRITES.length)];
     invEntities.push({
       isBoss:true,
       baseX:cw/2, baseY:80,
       x:cw/2, y:80,
       alive:true,
-      glyph:'???',
+      glyph:bossGlyph,
       flicker:0,
       glitchTimer:0,glitchOffset:0,
       hp:INV_BOSS_HP,
@@ -258,6 +319,12 @@ function nextInvaderWave(){
     return;
   }
 
+  // Boss wave — show the additional boss upgrade modal
+  if(completedWave===4){
+    showBossUpgradeModal();
+    return;
+  }
+
   // No overlay — just spawn next wave directly
   setTimeout(()=>{
     invTransitioning=false;
@@ -281,12 +348,15 @@ function showUpgradeModal(mode='wave2'){
   const machinaBtn=document.getElementById('upgrade-machina');
   if(mode==='wave2'){
     rapidBtn.style.display=''; aoeBtn.style.display='';
-    dblBtn.style.display='none'; homingBtn.style.display='none'; nukaBtn.style.display='none'; machinaBtn.style.display='none';
+    dblBtn.style.display='none'; homingBtn.style.display='none';
+    nukaBtn.style.display='none'; machinaBtn.style.display='none';
     desc.textContent='choose your augment.';
   }else{
+    // Wave 4 — all options EXCEPT nuka/machina (those are boss-only)
     rapidBtn.style.display='none'; aoeBtn.style.display='none';
-    dblBtn.style.display='none'; homingBtn.style.display='none'; nukaBtn.style.display=''; machinaBtn.style.display='';
-    desc.innerHTML='wave 4.<br>choose your upgrade.<br>nuka.<br>tactical missile skill check.<br>machina.<br>parallel twin rounds.';
+    dblBtn.style.display=''; homingBtn.style.display='';
+    nukaBtn.style.display='none'; machinaBtn.style.display='none';
+    desc.innerHTML='wave 4.<br>choose your augment.<br>double missile.<br>rapid + homing.';
   }
 
   function pickUpgrade(type){
@@ -296,30 +366,196 @@ function showUpgradeModal(mode='wave2'){
     modal.style.display='none';
     state.running=true;
     invTransitioning=false;
-    if(type==='nuka'){
-      startNukaSkill(true);
-    } else {
-      spawnInvaderWave(invWave);
-      invLoop();
-    }
+    spawnInvaderWave(invWave);
+    invLoop();
   }
 
-  document.getElementById('upgrade-rapidfire').onclick=()=>pickUpgrade('rapidfire');
-  document.getElementById('upgrade-aoe').onclick=()=>pickUpgrade('aoe');
-  document.getElementById('upgrade-doublemissile').onclick=()=>pickUpgrade('doublemissile');
-  document.getElementById('upgrade-homing').onclick=()=>pickUpgrade('rapidfire_homing');
-  document.getElementById('upgrade-nuka').onclick=()=>pickUpgrade('nuka');
-  document.getElementById('upgrade-machina').onclick=()=>pickUpgrade('machina');
+  rapidBtn.onclick=()=>pickUpgrade('rapidfire');
+  aoeBtn.onclick=()=>pickUpgrade('aoe');
+  dblBtn.onclick=()=>pickUpgrade('doublemissile');
+  homingBtn.onclick=()=>pickUpgrade('rapidfire_homing');
+  nukaBtn.onclick=()=>pickUpgrade('nuka');
+  machinaBtn.onclick=()=>pickUpgrade('machina');
+}
+
+function startBossAbilities(){
+  if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
+  if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
+  bossShockwaves=[];bossPincers=[];bossPhase2=false;
+  // Shockwave starts immediately, cycles every 3.5s
+  function spawnShockwave(){
+    const boss=invEntities.find(e=>e.isBoss&&e.alive);
+    if(!boss||!state.running)return;
+    bossShockwaves.push({x:boss.x,y:boss.y,r:20,born:Date.now()});
+  }
+  spawnShockwave();
+  bossShockwaveTimer=setInterval(spawnShockwave, BOSS_SHOCKWAVE_INTERVAL);
+}
+
+function spawnPincer(){
+  const boss=invEntities.find(e=>e.isBoss&&e.alive);
+  if(!boss||!state.running||!invCanvas)return;
+  const tx=invShooterX;
+  const ty=invCanvas.height-60;
+  const dx=tx-boss.x, dy=ty-boss.y;
+  const dist=Math.hypot(dx,dy)||1;
+  bossPincers.push({
+    x:boss.x, y:boss.y,
+    vx:(dx/dist)*BOSS_PINCER_SPEED*(bossPhase2?1.3:1),
+    vy:(dy/dist)*BOSS_PINCER_SPEED*(bossPhase2?1.3:1),
+    tx, ty, // target snapshot for homing correction
+    age:0,
+    alive:true
+  });
+}
+
+function schedulePincer(){
+  bossPincerTimer=setTimeout(()=>{
+    if(!state.running){return;}
+    spawnPincer();
+    schedulePincer();
+  }, BOSS_PINCER_CD);
+}
+
+function stopBossAbilities(){
+  if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
+  if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
+  bossShockwaves=[];bossPincers=[];
+}
+
+function updateBossAbilities(){
+  const boss=invEntities.find(e=>e.isBoss&&e.alive);
+  if(!boss||!invCanvas)return;
+
+  // Phase 2 transition at ≤50% HP
+  if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
+    bossPhase2=true;
+    // Unlock pincer
+    schedulePincer();
+    // Immediately spawn a shockwave at the new expanded scale
+    bossShockwaves.push({x:boss.x,y:boss.y,r:20,born:Date.now()});
+  }
+
+  const now=Date.now();
+  const maxR=bossPhase2?BOSS_SHOCKWAVE_R_MAX_P1*1.5:BOSS_SHOCKWAVE_R_MAX_P1;
+  const durationScale=bossPhase2?1/1.3:1;
+  const ch=invCanvas.height;
+
+  // Update shockwaves
+  for(let s of bossShockwaves){
+    const elapsed=now-s.born;
+    const t=Math.min(1,elapsed/(BOSS_SHOCKWAVE_DURATION*durationScale));
+    s.r=20+(maxR-20)*t;
+    // Check player hit — shooter is at (invShooterX, ch-54)
+    const dx=invShooterX-s.x, dy=(ch-54)-s.y;
+    const dist=Math.hypot(dx,dy);
+    if(Math.abs(dist-s.r)<18&&!s.hit){
+      s.hit=true;
+      const dmg=30+Math.floor(Math.random()*8); // 30-37
+      damagePlayer(dmg);
+    }
+  }
+  bossShockwaves=bossShockwaves.filter(s=>{
+    const elapsed=now-s.born;
+    return elapsed<BOSS_SHOCKWAVE_DURATION*(bossPhase2?1/1.3:1)+200;
+  });
+
+  // Update pincers
+  for(let p of bossPincers){
+    // Soft homing — gradually steer toward shooter's live position
+    p.age++;
+    if(p.age%4===0){
+      const tx=invShooterX, ty=ch-54;
+      const dx=tx-p.x, dy=ty-p.y;
+      const dist=Math.hypot(dx,dy)||1;
+      const speed=Math.hypot(p.vx,p.vy);
+      p.vx+=(dx/dist*speed-p.vx)*0.08;
+      p.vy+=(dy/dist*speed-p.vy)*0.08;
+    }
+    p.x+=p.vx; p.y+=p.vy;
+    // Player hit
+    if(Math.hypot(p.x-invShooterX,p.y-(ch-54))<20&&!p.hit){
+      p.hit=true;
+      const dmg=12+Math.floor(Math.random()*4); // 12-15
+      damagePlayer(dmg);
+    }
+    if(p.y>ch+20)p.alive=false;
+  }
+  bossPincers=bossPincers.filter(p=>p.alive&&!p.hit);
+}
+
+function drawBossAbilities(){
+  if(!invCtx)return;
+  const ch=invCanvas.height;
+  for(let s of bossShockwaves){
+    const maxR=bossPhase2?BOSS_SHOCKWAVE_R_MAX_P1*1.5:BOSS_SHOCKWAVE_R_MAX_P1;
+    const t=Math.min(1,s.r/maxR);
+    const alpha=(1-t)*0.55+0.1;
+    invCtx.save();
+    invCtx.globalAlpha=alpha;
+    invCtx.strokeStyle='rgba(255,255,255,0.9)';
+    invCtx.lineWidth=1.5;
+    invCtx.beginPath();invCtx.arc(s.x,s.y,s.r,0,Math.PI*2);invCtx.stroke();
+    invCtx.globalAlpha=alpha*0.3;
+    invCtx.beginPath();invCtx.arc(s.x,s.y,s.r+6,0,Math.PI*2);invCtx.stroke();
+    invCtx.restore();
+  }
+  for(let p of bossPincers){
+    invCtx.save();
+    invCtx.globalAlpha=0.85;
+    invCtx.strokeStyle='rgba(200,160,255,0.9)';
+    invCtx.lineWidth=2;
+    const angle=Math.atan2(p.vy,p.vx);
+    invCtx.translate(p.x,p.y);
+    invCtx.rotate(angle);
+    // Curved slicer arc — 20px arc shape
+    invCtx.beginPath();
+    invCtx.arc(0,0,10,Math.PI*0.75,Math.PI*1.25);
+    invCtx.stroke();
+    invCtx.strokeStyle='rgba(255,255,255,0.5)';
+    invCtx.lineWidth=1;
+    invCtx.beginPath();invCtx.moveTo(-10,0);invCtx.lineTo(10,0);invCtx.stroke();
+    invCtx.restore();
+  }
+}
+
+function showBossUpgradeModal(){
+  // Additional pick at boss start — Nuka or Machina only
+  state.running=false;
+  if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  const modal=document.getElementById('boss-upgrade-modal');
+  modal.style.display='flex';
+
+  function pickBossUpgrade(type){
+    invBossUpgrade=type;
+    try{playThud(1.15);}catch(e){}
+    modal.style.display='none';
+    state.running=true;
+    invTransitioning=false;
+    // Start boss abilities
+    startBossAbilities();
+    // If the boss upgrade is nuka, activate it right away
+    if(type==='nuka') startNukaSkill(true);
+    else if(type==='machina') invLoop();
+    else invLoop();
+  }
+
+  document.getElementById('boss-upgrade-nuka').onclick=()=>pickBossUpgrade('nuka');
+  document.getElementById('boss-upgrade-machina').onclick=()=>pickBossUpgrade('machina');
 }
 
 function stopInvaders(){
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
   if(invNukaKeycapRaf){cancelAnimationFrame(invNukaKeycapRaf);invNukaKeycapRaf=null;}
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
+  stopBossAbilities();
   invMouseDown=false;
+  invUpgrade=null;
+  invBossUpgrade=null;
   document.querySelector('.hud').style.display='';
   document.querySelector('.bar-wrap').style.display='';
   document.getElementById('wave-progress').style.display='none';
+  document.getElementById('player-hp-wrap').style.display='none';
   if(invCanvas){
     invCanvas.removeEventListener('mousemove',invHandleMove);
     invCanvas.removeEventListener('mousedown',invHandleMouseDown);
@@ -340,7 +576,8 @@ function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
   invFire();
-  const rate=invUpgrade==='machina'?INV_FIRE_RATE/3.2:invUpgrade==='rapidfire'?INV_FIRE_RATE/2:INV_FIRE_RATE;
+  const activeUpgrade=invBossUpgrade||invUpgrade;
+  const rate=activeUpgrade==='machina'?INV_FIRE_RATE/3.2:activeUpgrade==='rapidfire'?INV_FIRE_RATE/2:INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
     invFire();
@@ -363,12 +600,12 @@ function invFire(){
   if(!state.running||!invCanvas||invNukaSkillActive)return;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
-    const isMissile=invUpgrade==='aoe'||invUpgrade==='doublemissile'||invUpgrade==='rapidfire_homing';
+    const isMissile=activeUpgrade==='aoe'||activeUpgrade==='doublemissile'||activeUpgrade==='rapidfire_homing';
     invBullets.push({x:x,y:ch-67,vy:-INV_BULLET_SPEED,trail:[],hit:false,kind:isMissile?'missile':'bullet'});
   };
-  if(invUpgrade==='machina'){
+  if(activeUpgrade==='machina'){
     spawnBullet(invShooterX-10); spawnBullet(invShooterX+10);
-  } else if(invUpgrade==='doublemissile'){
+  } else if(activeUpgrade==='doublemissile'){
     spawnBullet(invShooterX-18); spawnBullet(invShooterX+18);
   }else{
     spawnBullet(invShooterX);
@@ -513,6 +750,9 @@ function invUpdate(){
       }
     }
   }
+
+  // Boss abilities (shockwave + pincer) — update every frame during boss wave
+  if(isBossWave) updateBossAbilities();
 
   // AOE missile — fires every 2.5s, hits all entities within radius of shooter X
   if(invUpgrade==='aoe'){
@@ -766,6 +1006,9 @@ function invDraw(){
   const cw=invCanvas.width,ch=invCanvas.height;
   invCtx.clearRect(0,0,cw,ch);
 
+  // Boss ability visuals drawn below everything else
+  if(invWave===5) drawBossAbilities();
+
   for(let p of invParticles){
     invCtx.save();
     if(p.isNukaBomb){
@@ -883,7 +1126,7 @@ function handleInvaderKeydown(e){
     e.preventDefault();
     resolveNukaInput(e.key);
   }
-  if(e.code==='Space' && invUpgrade==='nuka' && state.running && state.currentRound===1 && !invNukaSkillActive && Date.now()>=invNukaCooldownUntil){
+  if(e.code==='Space' && (invUpgrade==='nuka'||invBossUpgrade==='nuka') && state.running && state.currentRound===1 && !invNukaSkillActive && Date.now()>=invNukaCooldownUntil){
     e.preventDefault();
     startNukaSkill(false);
   }
