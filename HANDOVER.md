@@ -10,6 +10,26 @@
 
 ---
 
+## Boss Overhaul + Player HP — 2026-07-03
+
+## Committed & pushed to `main` (182a227)
+
+- **Descent speeds** reset to linear 0.2–1.0: wave 1→0.2, 2→0.4, 3→0.6, 4→0.8, 5→1.0. Fallback 0.2.
+- **Player HP bar** — 100/100, shown during all of Round 2, hidden on exit. `damagePlayer(n)` handles damage + HP update + fail trigger. Bar turns red below 30HP.
+- **Wave 4 upgrade modal** — Nuka and Machina removed from pool; now shows Double Missile + Rapid+Homing only.
+- **Boss upgrade modal** (`#boss-upgrade-modal`) — triggers after wave 5 clears (completedWave===4), before boss spawns. Offers Nuka + Machina as an *additional* pick. Player keeps their wave-4 upgrade too. Active upgrade is resolved via `activeUpgrade=invBossUpgrade||invUpgrade` throughout the fire/spawn logic.
+- **Random boss sprite** — picked from `BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ']` at spawn instead of static `???`. Font must support these Yi Syllables codepoints — `BlackChancery` fallback is `serif`, so browsers without the font will show tofu; worth testing.
+- **Boss abilities:**
+  - Phase 1 (>50% HP): shockwave only — expands 20px→120px over 4s, cycles every 3.5s. Player hit if shooter passes through the ring radius (±18px tolerance): 30–37 dmg.
+  - Phase 2 (≤50% HP): shockwave range ×1.5 (→180px), speed ×1.3. Pincer unlocks — soft-homing curved arc projectile launched every 4s, steers toward shooter's live position every 4 frames. Hit radius 20px: 12–15 dmg.
+  - All boss abilities cleaned up in `stopBossAbilities()`, called from `stopInvaders()`.
+
+## Known risk
+
+- Yi Syllable glyphs in `BOSS_SPRITES` may render as tofu on devices without font support. If this is an issue, swap to characters guaranteed by `BlackChancery` or the existing glyph sets.
+
+---
+
 ## Wave Descent Speeds −0.2 — 2026-07-03
 
 ## Committed & pushed to `main` (076a02f)
