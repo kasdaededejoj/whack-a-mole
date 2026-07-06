@@ -1,7 +1,8 @@
 // ── VOID INVADERS ENGINE ──
 import { state } from '../state.js';
 import { field, msgEl, setComboValue, showFail } from '../ui.js';
-import { playThud } from '../audio.js';
+import { playThud, playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
+  playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess } from '../audio.js';
 import { endRound } from '../game.js';
 
 let invCanvas=null,invCtx=null,invRaf=null;
@@ -160,8 +161,9 @@ function showNukaKeycapCooldown(){
 }
 
 function restoreNukaKeycapOpacity(){
-  // Fade back to fully opaque when cooldown ends
+  // Re-show and fade back to fully opaque when cooldown ends
   const wrap=document.getElementById('nuka-keycap');
+  if(wrap) wrap.classList.add('active');
   const currentOpacity=wrap?parseFloat(wrap.style.opacity)||NUKA_COOLDOWN_OPACITY:NUKA_COOLDOWN_OPACITY;
   lerpNukaKeycapOpacity(currentOpacity, 1, NUKA_LERP_DURATION, null);
 }
@@ -294,6 +296,7 @@ function spawnInvaderWave(waveIdx){
 function nextInvaderWave(){
   invTransitioning=true;
   invBullets=[];
+  try{playWaveClear();}catch(e){}
   const completedWave=invWave;
   invWave++;
 
@@ -355,7 +358,7 @@ function showUpgradeModal(mode='wave2'){
 
   function pickUpgrade(type){
     invUpgrade=type;
-    try{playThud(1.15);}catch(e){}
+    try{playUpgradePick();}catch(e){}
     if(type==='aoe') invAoeCooldown=Date.now();
     modal.style.display='none';
     state.running=true;
@@ -541,7 +544,7 @@ function showBossUpgradeModal(){
 
   function pickBossUpgrade(type){
     invBossUpgrade=type;
-    try{playThud(1.15);}catch(e){}
+    try{playUpgradePick();}catch(e){}
     modal.style.display='none';
     state.running=true;
     invTransitioning=false;
@@ -622,10 +625,16 @@ function invFire(){
   };
   if(activeUpgrade==='machina'){
     spawnBullet(invShooterX-10); spawnBullet(invShooterX+10);
+    try{playMachinaBurst();}catch(e){}
   } else if(activeUpgrade==='doublemissile'){
     spawnBullet(invShooterX-18); spawnBullet(invShooterX+18);
-  }else{
+    try{playMissileFire();}catch(e){}
+  } else if(activeUpgrade==='rapidfire_homing'||activeUpgrade==='aoe'){
     spawnBullet(invShooterX);
+    try{playMissileFire();}catch(e){}
+  } else {
+    spawnBullet(invShooterX);
+    try{playBulletFire();}catch(e){}
   }
 }
 
@@ -636,6 +645,7 @@ function startNukaSkill(respawnWave=false){
   invNukaSkillActive=true;
   invNukaPromptLetter=String.fromCharCode(65+Math.floor(Math.random()*26));
   showNukaPrompt(invNukaPromptLetter);
+  try{playNukaActivate();}catch(e){}
   if(respawnWave) spawnInvaderWave(invWave);
   if(!invRaf) invLoop();
 }
@@ -702,6 +712,7 @@ function resolveNukaInput(key){
       }
     }
     showNukaPrompt(invNukaPromptLetter, 'success');
+    try{playNukaSuccess();}catch(e){}
     startNukaCooldown(3500, false);
   } else {
     showNukaPrompt(invNukaPromptLetter, 'fail');
@@ -783,6 +794,7 @@ function invUpdate(){
       }
 
       invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
+      try{playAoeTrigger();}catch(e){}
 
       for(let e of invEntities){
         if(!e.alive)continue;
@@ -795,6 +807,7 @@ function invUpdate(){
           if(e.hp<=0){
             e.alive=false;
             invSpawnParticles(e.x,e.y,1);
+            try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
             state.combo=Math.min(state.combo+1,8);
             setComboValue('×'+state.combo);
           } else {
@@ -828,6 +841,7 @@ function invUpdate(){
               if(!laneEnemy.alive || laneEnemy.isBoss || laneEnemy.col===undefined || !cols.includes(laneEnemy.col))continue;
               laneEnemy.alive=false;
               invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
+              try{playEnemyDeath(0.7+Math.random()*0.5);}catch(ex){}
               state.combo=Math.min(state.combo+1,8);
               setComboValue('×'+state.combo);
             }
@@ -837,6 +851,7 @@ function invUpdate(){
             if(e.hp<=0){
               e.alive=false;
               invSpawnParticles(e.x,e.y,1);
+              try{playEnemyDeath(e.isBoss?0.4:0.7+Math.random()*0.5);}catch(ex){}
               state.combo=Math.min(state.combo+1,8);
               setComboValue('×'+state.combo);
               // Boss death display
