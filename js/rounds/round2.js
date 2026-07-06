@@ -38,6 +38,8 @@ let bossPincers=[];
 let bossShockwaveTimer=null;
 let bossPincerTimer=null;
 let bossPhase2=false;
+let bossTeleportTimer=null;
+let bossTeleportFlash=0; // frames remaining for landing flash
 const BOSS_SHOCKWAVE_INTERVAL=3500;
 const BOSS_PINCER_CD=4000;
 const BOSS_SHOCKWAVE_R_MAX_P1=120;
@@ -220,7 +222,7 @@ function startInvaders(){
   // Round II's field down the page), show wave progress bar
   document.querySelector('.hud').style.display='none';
   document.querySelector('.bar-wrap').style.display='none';
-  document.getElementById('player-hp-wrap').style.display='flex';
+  document.getElementById('player-hp-wrap').style.display='none';
   const wp=document.getElementById('wave-progress');
   wp.style.display='flex';
   for(let i=0;i<6;i++) document.getElementById('wseg-'+i).className='wave-seg';
@@ -370,10 +372,27 @@ function showUpgradeModal(mode='wave2'){
   machinaBtn.onclick=()=>pickUpgrade('machina');
 }
 
+function triggerBossTeleport(){
+  if(!invCanvas)return;
+  const boss=invEntities.find(e=>e.isBoss&&e.alive);
+  if(!boss)return;
+  const cw=invCanvas.width, ch=invCanvas.height;
+  const padX=cw*0.10;
+  const newX=padX+Math.random()*(cw-padX*2);
+  const newY=20+Math.random()*(ch*0.5-20);
+  boss.baseX=newX;
+  boss.baseY=newY;
+  boss.orbitAngle=0;
+  bossTeleportFlash=12; // ~12 frames of flash at 60fps
+}
+
 function startBossAbilities(){
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
+  if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
+  bossTeleportFlash=0;
+  bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
   // Shockwave starts immediately, cycles every 3.5s
   function spawnShockwave(){
     const boss=invEntities.find(e=>e.isBoss&&e.alive);
@@ -412,7 +431,8 @@ function schedulePincer(){
 function stopBossAbilities(){
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
-  bossShockwaves=[];bossPincers=[];
+  if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
+  bossShockwaves=[];bossPincers=[];bossTeleportFlash=0;
 }
 
 function updateBossAbilities(){
@@ -513,6 +533,7 @@ function drawBossAbilities(){
 
 function showBossUpgradeModal(){
   // Additional pick at boss start — Nuka or Machina only
+  document.getElementById('player-hp-wrap').style.display='flex';
   state.running=false;
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
   const modal=document.getElementById('boss-upgrade-modal');
@@ -569,7 +590,10 @@ function invHandleMouseDown(e){
   invMouseDown=true;
   invFire();
   const activeUpgrade=invBossUpgrade||invUpgrade;
-  const rate=activeUpgrade==='machina'?INV_FIRE_RATE/3.2:activeUpgrade==='rapidfire'?INV_FIRE_RATE/2:INV_FIRE_RATE;
+  const rate=activeUpgrade==='machina'?INV_FIRE_RATE/3.2
+    :activeUpgrade==='rapidfire'?INV_FIRE_RATE/2
+    :activeUpgrade==='doublemissile'?1500
+    :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
     invFire();
@@ -722,16 +746,13 @@ function invUpdate(){
   for(let e of invEntities){
     if(!e.alive)continue;
     if(isBossWave){
-      // Boss drifts side to side
+      // Boss drifts in sine loop around its current baseX/baseY anchor (set by teleport)
       e.orbitAngle+=0.009;
       e.x=e.baseX+Math.sin(e.orbitAngle)*72;
-      e.y=e.baseY+Math.sin(e.orbitAngle*0.46)*16+drop*0.34;
+      e.y=e.baseY+Math.sin(e.orbitAngle*0.46)*16;
       e.flicker+=0.012;
+      if(bossTeleportFlash>0)bossTeleportFlash--;
       if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*8;}else{e.glitchOffset=0;}
-      if(e.y>ch-100){
-        state.running=false;clearInterval(state.bTimer);
-        showFail(state.currentRound);return;
-      }
     } else {
       e.x=e.baseX;
       e.y=e.baseY+drop+Math.sin(e.flicker+now*0.001)*1.5;
@@ -1070,6 +1091,12 @@ function invDraw(){
         invCtx.globalAlpha=0.25;
         invCtx.fillStyle='#fff';
         invCtx.fillRect(-44,-28,88,56);
+      }
+      // Teleport landing flash
+      if(bossTeleportFlash>0){
+        invCtx.globalAlpha=(bossTeleportFlash/12)*0.7;
+        invCtx.fillStyle='#fff';
+        invCtx.fillRect(-60,-40,120,80);
       }
       // Boss glyph
       invCtx.globalAlpha=bossAlpha;
