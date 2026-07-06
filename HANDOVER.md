@@ -1,5 +1,38 @@
 # Handover — The Realm
 
+---
+
+## Bug fixes + Boss phase rework — 2026-07-06
+
+### Committed & pushed to `main` (94a55bd)
+
+**Root cause of game not loading at all:**
+`round2.js` had a duplicate `let invUpgrade = null;` declaration (lines 52 and 84). ES modules always run in strict mode; `let` disallows redeclaration in strict mode — this was a `SyntaxError` that killed the entire module before a single line executed. `game.js` failing to import from `round2.js` meant `initGame()` never ran, so no welcome screen, no Shift+D, nothing.
+
+**Three bugs fixed in `round2.js` (commit `79a8a88`):**
+1. Duplicate `let invUpgrade` — removed second declaration and its comment block.
+2. `activeUpgrade` used as a bare reference inside `invFire()` — was only declared inside `invHandleMouseDown()`. Added `const activeUpgrade = invBossUpgrade || invUpgrade;` at the top of `invFire()`.
+3. Boss glyph hardcoded as `'???'` in `invDraw()` — changed to `e.glyph` so the random Yi Syllable from `BOSS_SPRITES` actually renders.
+
+**`.nojekyll` added (commit `7595022`):**
+No Jekyll config was ever present; Jekyll was passing through silently. `.nojekyll` is harmless and best practice for plain static sites on GitHub Pages. The game being broken was entirely the `let invUpgrade` SyntaxError, not Jekyll.
+
+**Boss phase rework (commit `94a55bd`):**
+- **HP bar now boss-phase only.** Hidden at `startInvaders()`, shown when `showBossUpgradeModal()` fires (entry to wave 5). Previously shown for the entire round.
+- **Boss no longer descends.** Removed `+ drop * 0.34` from boss Y calculation. Boss stays in his sine drift (±72px X, ±16px Y) anchored in the upper area — he cannot drift to the bottom. Removed the `e.y > ch - 100` fail check (dead code now that he can't descend).
+- **Boss teleports every 3 seconds.** `triggerBossTeleport()` picks a new random anchor: X within 10% padding from each edge (`padX = cw * 0.10`), Y between 20px and `canvas.height / 2`. Resets `orbitAngle` to 0 so drift resumes cleanly from the new position. Timer started in `startBossAbilities()`, cleared in `stopBossAbilities()`.
+- **Teleport flash.** On each teleport, `bossTeleportFlash = 12` (frames). `invDraw()` renders a white rect overlay over the boss sprite that fades linearly over those 12 frames (`alpha = flash/12 * 0.7`).
+- **Wave 4 missile upgrade: 1500ms fire rate.** `doublemissile` now fires at 1500ms intervals instead of `INV_FIRE_RATE` (120ms). Two missiles per shot at ±18px spread. The `kind: 'missile'` rendering was already correct.
+
+### Deploy note
+Two consecutive deploy failures on `79a8a88` and `6890b48` — known GitHub Pages backend flakiness. Second retry (`1f25814`) succeeded. `94a55bd` (the main content commit) deployed green first try.
+
+### Testing status
+- Game loads and Shift+D confirmed working post `.nojekyll` + bug fixes.
+- Boss phase changes (`94a55bd`) deployed but not yet playtested by Adam.
+
+---
+
 > **Standing rule:** keep this file for handoff-worthy context: gameplay,
 > architecture, bug history, testing status, workflow changes, unresolved work,
 > complex sessions, or notes another AI would need to understand why the repo is
