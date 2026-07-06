@@ -396,14 +396,25 @@ function startBossAbilities(){
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
   bossTeleportFlash=0;
   bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
-  // Shockwave starts immediately, cycles every 3.5s
-  function spawnShockwave(){
+  // Travelling wave — fires at player position, cycles every 3.5s
+  function spawnWave(){
     const boss=invEntities.find(e=>e.isBoss&&e.alive);
-    if(!boss||!state.running)return;
-    bossShockwaves.push({x:boss.x,y:boss.y,r:20,born:Date.now()});
+    if(!boss||!state.running||!invCanvas)return;
+    const ch=invCanvas.height;
+    const tx=invShooterX, ty=ch-54; // player's current position at fire time
+    const dx=tx-boss.x, dy=ty-boss.y;
+    const dist=Math.hypot(dx,dy)||1;
+    const speed=3.2*(bossPhase2?1.3:1);
+    bossShockwaves.push({
+      x:boss.x, y:boss.y,
+      vx:(dx/dist)*speed, vy:(dy/dist)*speed,
+      r:20, targetDist:dist,
+      travelledDist:0,
+      hit:false, alive:true
+    });
   }
-  spawnShockwave();
-  bossShockwaveTimer=setInterval(spawnShockwave, BOSS_SHOCKWAVE_INTERVAL);
+  spawnWave();
+  bossShockwaveTimer=setInterval(spawnWave, BOSS_SHOCKWAVE_INTERVAL);
 }
 
 function spawnPincer(){
@@ -445,35 +456,38 @@ function updateBossAbilities(){
   // Phase 2 transition at ≤50% HP
   if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
     bossPhase2=true;
-    // Unlock pincer
     schedulePincer();
-    // Immediately spawn a shockwave at the new expanded scale
-    bossShockwaves.push({x:boss.x,y:boss.y,r:20,born:Date.now()});
-  }
-
-  const now=Date.now();
-  const maxR=bossPhase2?BOSS_SHOCKWAVE_R_MAX_P1*1.5:BOSS_SHOCKWAVE_R_MAX_P1;
-  const durationScale=bossPhase2?1/1.3:1;
-  const ch=invCanvas.height;
-
-  // Update shockwaves
-  for(let s of bossShockwaves){
-    const elapsed=now-s.born;
-    const t=Math.min(1,elapsed/(BOSS_SHOCKWAVE_DURATION*durationScale));
-    s.r=20+(maxR-20)*t;
-    // Check player hit — shooter is at (invShooterX, ch-54)
-    const dx=invShooterX-s.x, dy=(ch-54)-s.y;
-    const dist=Math.hypot(dx,dy);
-    if(Math.abs(dist-s.r)<18&&!s.hit){
-      s.hit=true;
-      const dmg=30+Math.floor(Math.random()*8); // 30-37
-      damagePlayer(dmg);
+    // Immediate wave at phase 2 onset
+    if(invCanvas){
+      const ch=invCanvas.height;
+      const tx=invShooterX, ty=ch-54;
+      const dx=tx-boss.x, dy=ty-boss.y;
+      const dist=Math.hypot(dx,dy)||1;
+      const speed=3.2*1.3;
+      bossShockwaves.push({x:boss.x,y:boss.y,vx:(dx/dist)*speed,vy:(dy/dist)*speed,
+        r:20,targetDist:dist,travelledDist:0,hit:false,alive:true});
     }
   }
-  bossShockwaves=bossShockwaves.filter(s=>{
-    const elapsed=now-s.born;
-    return elapsed<BOSS_SHOCKWAVE_DURATION*(bossPhase2?1/1.3:1)+200;
-  });
+
+  const ch=invCanvas.height;
+
+  // Update travelling waves
+  for(let s of bossShockwaves){
+    s.x+=s.vx; s.y+=s.vy;
+    s.travelledDist+=Math.hypot(s.vx,s.vy);
+    // Expand from r=20 to r=120 as it closes on targetDist
+    const progress=Math.min(1, s.travelledDist/s.targetDist);
+    s.r=20+(120-20)*progress;
+    // Player hit — shooter at (invShooterX, ch-54)
+    if(!s.hit && Math.hypot(s.x-invShooterX, s.y-(ch-54))<s.r*0.55){
+      s.hit=true;
+      const dmg=31+Math.floor(Math.random()*4); // 31-34
+      damagePlayer(dmg);
+    }
+    // Despawn once past the bottom or well past target
+    if(s.y>ch+40 || s.travelledDist>s.targetDist+200) s.alive=false;
+  }
+  bossShockwaves=bossShockwaves.filter(s=>s.alive);
 
   // Update pincers
   for(let p of bossPincers){
@@ -503,16 +517,13 @@ function drawBossAbilities(){
   if(!invCtx)return;
   const ch=invCanvas.height;
   for(let s of bossShockwaves){
-    const maxR=bossPhase2?BOSS_SHOCKWAVE_R_MAX_P1*1.5:BOSS_SHOCKWAVE_R_MAX_P1;
-    const t=Math.min(1,s.r/maxR);
-    const alpha=(1-t)*0.55+0.1;
+    const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
+    const alpha=0.25+progress*0.65; // fades in as it closes
     invCtx.save();
     invCtx.globalAlpha=alpha;
-    invCtx.strokeStyle='rgba(255,255,255,0.9)';
+    invCtx.strokeStyle='rgba(255,255,255,0.95)';
     invCtx.lineWidth=1.5;
     invCtx.beginPath();invCtx.arc(s.x,s.y,s.r,0,Math.PI*2);invCtx.stroke();
-    invCtx.globalAlpha=alpha*0.3;
-    invCtx.beginPath();invCtx.arc(s.x,s.y,s.r+6,0,Math.PI*2);invCtx.stroke();
     invCtx.restore();
   }
   for(let p of bossPincers){
