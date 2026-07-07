@@ -609,9 +609,15 @@ function showBossUpgradeModal(){
     invTransitioning=false;
     // Start boss abilities
     startBossAbilities();
+    // Restart fire interval so new upgrade rate takes effect immediately
+    if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
+    const newRate=type==='machina'?INV_FIRE_RATE/3.2:INV_FIRE_RATE;
+    invFireInterval=setInterval(()=>{
+      if(!state.running){clearInterval(invFireInterval);invFireInterval=null;return;}
+      invFire();
+    },newRate);
     // If the boss upgrade is nuka, activate it right away
     if(type==='nuka') startNukaSkill(true);
-    else if(type==='machina') invLoop();
     else invLoop();
   }
 
@@ -651,11 +657,10 @@ function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
   invFire();
-  const activeUpgrade=invBossUpgrade||invUpgrade;
   const activeUpgradeForRate=invBossUpgrade||invUpgrade;
   const rate=activeUpgradeForRate==='machina'?INV_FIRE_RATE/3.2
     :activeUpgradeForRate==='rapidfire'?INV_FIRE_RATE/4
-    :activeUpgradeForRate==='doublemissile'?1500
+    :activeUpgradeForRate==='doublemissile'?400
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
