@@ -2,6 +2,46 @@
 
 ---
 
+## Boss travelling wave + SFX — 2026-07-06 (continued)
+
+### Committed & pushed to `main` (2e6dd03)
+
+**Boss shockwave replaced with travelling wave:**
+Old behaviour: a static ring expanding outward from the boss's position at spawn time — never moved, player could ignore it.
+New behaviour: on each cycle (`BOSS_SHOCKWAVE_INTERVAL` = 3500ms), boss snaps the player's current `(invShooterX, ch-54)` position at fire time and launches a projectile directly toward that point. Player has to dodge. Mechanics:
+- Starts at `r=20`, expands linearly to `r=120` as it closes the distance (`progress = travelledDist / targetDist`)
+- Speed: `3.2px/frame` (×1.3 in phase 2)
+- Hit detection: `Math.hypot(wave.x - invShooterX, wave.y - (ch-54)) < wave.r * 0.55`
+- Damage: 31–34 HP on contact
+- Despawns when `y > ch + 40` or `travelledDist > targetDist + 200`
+- Draw: single white circle stroke (`rgba(255,255,255,0.95)`), alpha fades in `0.25 → 0.9` as it closes — minimalist, readable
+
+Phase 2 transition also spawns an immediate travelling wave (not old-style `born` object).
+
+**HANDOVER note on boss abilities:** shockwave is now the travelling wave above. Pincer is phase-2-only (≤50% boss HP), soft-homing curved arc projectile (`BOSS_PINCER_CD` = 4000ms, speed 3.5). Pincer draw: small purple arc + white line, rotates to travel direction. Neither has SFX yet — paused pending Adam's direction on ability vibe.
+
+---
+
+## Round 2 SFX + Nuka cycling fix — 2026-07-06
+
+### Committed & pushed to `main` (20f98eb)
+
+**All SFX are procedural Web Audio (no files). Added to `audio.js`, imported into `round2.js`:**
+- `playBulletFire()` — short square-wave snap, 900→300Hz over 70ms
+- `playMissileFire()` — deeper sawtooth, 320→80Hz over 150ms; used for doublemissile, AOE, rapidfire_homing
+- `playMachinaBurst()` — rapid triple square stutter (600/680/760Hz, 40ms apart)
+- `playEnemyDeath(pitchMult)` — bandpass noise thud, pitch-randomised per kill; boss death uses 0.4× pitch
+- `playWaveClear()` — sine sweep 300→900Hz over 450ms, fires at `nextInvaderWave()`
+- `playUpgradePick()` — three ascending sine tones (520/660/880Hz); fires on both wave-4 and boss upgrade modal picks
+- `playAoeTrigger()` — wide lowpass noise boom (~140Hz), fires each AOE cycle
+- `playNukaActivate()` — sawtooth charge-up 80→440Hz over 500ms, fires when Space activates Nuka
+- `playNukaSuccess()` — heavy lowpass noise detonation (~200Hz), fires on correct letter resolve
+
+**Nuka cycling fix (`restoreNukaKeycapOpacity`):**
+Previously: `hideNukaPrompt()` removed `.active` from `#nuka-keycap` (CSS `display:none`). `restoreNukaKeycapOpacity()` only lerped opacity back to 1 — element stayed hidden. Fix: `restoreNukaKeycapOpacity()` now re-adds `.active` before the opacity lerp, so the keycap reappears after each 3.5s cooldown.
+
+---
+
 ## Bug fixes + Boss phase rework — 2026-07-06
 
 ### Committed & pushed to `main` (94a55bd)
@@ -24,12 +64,11 @@ No Jekyll config was ever present; Jekyll was passing through silently. `.nojeky
 - **Teleport flash.** On each teleport, `bossTeleportFlash = 12` (frames). `invDraw()` renders a white rect overlay over the boss sprite that fades linearly over those 12 frames (`alpha = flash/12 * 0.7`).
 - **Wave 4 missile upgrade: 1500ms fire rate.** `doublemissile` now fires at 1500ms intervals instead of `INV_FIRE_RATE` (120ms). Two missiles per shot at ±18px spread. The `kind: 'missile'` rendering was already correct.
 
-### Deploy note
-Two consecutive deploy failures on `79a8a88` and `6890b48` — known GitHub Pages backend flakiness. Second retry (`1f25814`) succeeded. `94a55bd` (the main content commit) deployed green first try.
-
 ### Testing status
-- Game loads and Shift+D confirmed working post `.nojekyll` + bug fixes.
-- Boss phase changes (`94a55bd`) deployed but not yet playtested by Adam.
+- Game loads and Shift+D confirmed working.
+- All SFX confirmed working by Adam.
+- Boss travelling wave deployed but not yet playtested — first live build of this mechanic.
+- Pincer (phase 2 only, ≤50% HP) not yet playtested.
 
 ---
 
