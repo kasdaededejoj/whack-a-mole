@@ -9,6 +9,7 @@ let invCanvas=null,invCtx=null,invRaf=null;
 let invEntities=[],invBullets=[],invParticles=[];
 let invShooterX=0,invDescentY=0,invMouseDown=false,invFireInterval=null;
 const INV_BULLET_SPEED=28,INV_FIRE_RATE=120;
+const INV_BULLET_SPEED_UPGRADED=INV_BULLET_SPEED*1.25;
 
 // Glyph sets — increasingly abstract per wave
 const INV_GLYPHS_W1=['⌖','⊕','⊗','◈','⌬','⍟','⎔','⊞'];
@@ -518,12 +519,24 @@ function drawBossAbilities(){
   const ch=invCanvas.height;
   for(let s of bossShockwaves){
     const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
-    const alpha=0.25+progress*0.65; // fades in as it closes
+    const alpha=0.25+progress*0.65;
+    const angle=Math.atan2(s.vy,s.vx); // travel direction
     invCtx.save();
+    invCtx.translate(s.x,s.y);
+    invCtx.rotate(angle-Math.PI/2); // orient crescent to face travel direction
     invCtx.globalAlpha=alpha;
     invCtx.strokeStyle='rgba(255,255,255,0.95)';
-    invCtx.lineWidth=1.5;
-    invCtx.beginPath();invCtx.arc(s.x,s.y,s.r,0,Math.PI*2);invCtx.stroke();
+    invCtx.lineWidth=2;
+    // Outer crescent arc — bottom-facing (π*0.1 to π*0.9)
+    invCtx.beginPath();
+    invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);
+    invCtx.stroke();
+    // Inner concave — tighter radius, opposite arc segment to fake blade hollow
+    invCtx.globalAlpha=alpha*0.4;
+    invCtx.lineWidth=1;
+    invCtx.beginPath();
+    invCtx.arc(0,s.r*0.18,s.r*0.82,Math.PI*0.15,Math.PI*0.85);
+    invCtx.stroke();
     invCtx.restore();
   }
   for(let p of bossPincers){
@@ -605,7 +618,7 @@ function invHandleMouseDown(e){
   invFire();
   const activeUpgrade=invBossUpgrade||invUpgrade;
   const rate=activeUpgrade==='machina'?INV_FIRE_RATE/3.2
-    :activeUpgrade==='rapidfire'?INV_FIRE_RATE/2
+    :activeUpgrade==='rapidfire'?INV_FIRE_RATE/4
     :activeUpgrade==='doublemissile'?1500
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
@@ -632,7 +645,8 @@ function invFire(){
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
     const isMissile=activeUpgrade==='aoe'||activeUpgrade==='doublemissile'||activeUpgrade==='rapidfire_homing';
-    invBullets.push({x:x,y:ch-67,vy:-INV_BULLET_SPEED,trail:[],hit:false,kind:isMissile?'missile':'bullet'});
+    const spd=isMissile?INV_BULLET_SPEED:INV_BULLET_SPEED_UPGRADED;
+    invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
   if(activeUpgrade==='machina'){
     spawnBullet(invShooterX-10); spawnBullet(invShooterX+10);
@@ -845,8 +859,8 @@ function invUpdate(){
       for(let e of invEntities){
         if(!e.alive)continue;
         if(Math.abs(b.x-e.x)<e.cellW*0.48&&Math.abs(b.y-e.y)<e.cellH*0.52){
-          b.hit=true;
           if((b.kind==='missile' || b.kind==='nuka') && !e.isBoss && e.col!==undefined){
+            b.hit=true;
             const cols=b.kind==='nuka'?[e.col-1,e.col,e.col+1]:[e.col];
             for(let laneEnemy of invEntities){
               if(!laneEnemy.alive || laneEnemy.isBoss || laneEnemy.col===undefined || !cols.includes(laneEnemy.col))continue;
@@ -856,7 +870,17 @@ function invUpdate(){
               state.combo=Math.min(state.combo+1,8);
               setComboValue('×'+state.combo);
             }
+          } else if(b.kind==='bullet' && b.pierceLeft>0 && !e.isBoss){
+            b.pierceLeft--;
+            if(b.pierceLeft<=0) b.hit=true;
+            e.alive=false;
+            invSpawnParticles(e.x,e.y,1);
+            try{playEnemyDeath(0.7+Math.random()*0.5);}catch(ex){}
+            state.combo=Math.min(state.combo+1,8);
+            setComboValue('×'+state.combo);
+            break;
           } else {
+            b.hit=true;
             const damage=e.isBoss?((b.kind==='missile'||b.kind==='nuka')?7:0.5):1;
             e.hp-=damage;
             if(e.hp<=0){
