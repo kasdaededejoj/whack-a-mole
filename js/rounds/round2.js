@@ -2,7 +2,8 @@
 import { state } from '../state.js';
 import { field, msgEl, setComboValue, showFail } from '../ui.js';
 import { playThud, playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
-  playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess } from '../audio.js';
+  playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
+  playPlayerDamage } from '../audio.js';
 import { endRound } from '../game.js';
 
 let invCanvas=null,invCtx=null,invRaf=null;
@@ -78,12 +79,46 @@ function updatePlayerHpBar(){
 }
 
 function damagePlayer(amount){
+  const prevHp=invPlayerHp;
   invPlayerHp=Math.max(0,invPlayerHp-amount);
+  try{playPlayerDamage();}catch(e){}
+  triggerHpDrainAnimation(prevHp, invPlayerHp);
   updatePlayerHpBar();
   if(invPlayerHp<=0){
     state.running=false;clearInterval(state.bTimer);
     showFail(state.currentRound);
   }
+}
+
+function triggerHpDrainAnimation(fromHp, toHp){
+  const bar=document.getElementById('player-hp-bar');
+  if(!bar)return;
+  // Ensure _fill exists
+  if(!bar._fill){
+    bar._fill=document.createElement('div');
+    bar._fill.style.cssText='position:absolute;inset:0;background:#fff;transform-origin:left;border-radius:999px;transition:transform .25s ease,background .3s ease';
+    bar.appendChild(bar._fill);
+  }
+  // Create or reuse drain overlay
+  if(!bar._drain){
+    bar._drain=document.createElement('div');
+    bar._drain.style.cssText='position:absolute;top:0;left:0;height:100%;background:rgba(220,80,80,0.7);transform-origin:left;border-radius:999px;pointer-events:none;transition:none';
+    bar.appendChild(bar._drain);
+  }
+  const fromPct=fromHp/PLAYER_MAX_HP;
+  const toPct=Math.max(0,toHp/PLAYER_MAX_HP);
+  // Drain overlay sits from toPct to fromPct, then fades
+  bar._drain.style.transition='none';
+  bar._drain.style.opacity='1';
+  bar._drain.style.left=(toPct*100)+'%';
+  bar._drain.style.width=((fromPct-toPct)*100)+'%';
+  // Let it settle one frame then fade
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      bar._drain.style.transition='opacity 0.55s ease';
+      bar._drain.style.opacity='0';
+    });
+  });
 }
 let invAoeCooldown=0; // ms timestamp of last AOE fire
 const INV_AOE_INTERVAL=2500, INV_AOE_RADIUS=40;
@@ -543,17 +578,17 @@ function drawBossAbilities(){
     invCtx.save();
     invCtx.globalAlpha=0.85;
     invCtx.strokeStyle='rgba(200,160,255,0.9)';
-    invCtx.lineWidth=2;
+    invCtx.lineWidth=3.5;
     const angle=Math.atan2(p.vy,p.vx);
     invCtx.translate(p.x,p.y);
     invCtx.rotate(angle);
-    // Curved slicer arc — 20px arc shape
+    // Curved slicer arc — 2x scale (was 10, now 20)
     invCtx.beginPath();
-    invCtx.arc(0,0,10,Math.PI*0.75,Math.PI*1.25);
+    invCtx.arc(0,0,20,Math.PI*0.75,Math.PI*1.25);
     invCtx.stroke();
     invCtx.strokeStyle='rgba(255,255,255,0.5)';
-    invCtx.lineWidth=1;
-    invCtx.beginPath();invCtx.moveTo(-10,0);invCtx.lineTo(10,0);invCtx.stroke();
+    invCtx.lineWidth=1.5;
+    invCtx.beginPath();invCtx.moveTo(-20,0);invCtx.lineTo(20,0);invCtx.stroke();
     invCtx.restore();
   }
 }

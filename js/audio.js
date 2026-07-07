@@ -264,6 +264,59 @@ function playNukaSuccess() {
   } catch(e) {}
 }
 
+// Player takes damage — 5 semitones down from ~207Hz base = ~155Hz
+// Heavy lowpass + sub-bass oscillator at 40Hz for infrasonic feel
+function playPlayerDamage() {
+  if (state.sfxMuted) return;
+  try {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+
+    // Layer 1: lowpass noise burst — bandpass centred at 155Hz (207 * 2^(-5/12))
+    const bufLen = Math.floor(ctx.sampleRate * 0.45);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 0.5);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 80; // heavy low emphasis
+    lp.Q.value = 2.5;
+    const g1 = ctx.createGain();
+    g1.gain.setValueAtTime(0.6 * state.sfxVolScale, now);
+    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    src.connect(lp); lp.connect(g1); g1.connect(ctx.destination);
+    src.start(now); src.stop(now + 0.5);
+
+    // Layer 2: sub-bass oscillator at 40Hz — infrasonic rumble
+    const sub = ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(40, now);
+    sub.frequency.exponentialRampToValueAtTime(25, now + 0.4);
+    const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0.001, now);
+    g2.gain.linearRampToValueAtTime(0.45 * state.sfxVolScale, now + 0.04);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    sub.connect(g2); g2.connect(ctx.destination);
+    sub.start(now); sub.stop(now + 0.45);
+
+    // Layer 3: pitched thud at 155Hz — the 5-semitone-down hit body
+    const thud = ctx.createOscillator();
+    thud.type = 'triangle';
+    thud.frequency.setValueAtTime(155, now);
+    thud.frequency.exponentialRampToValueAtTime(60, now + 0.18);
+    const g3 = ctx.createGain();
+    g3.gain.setValueAtTime(0.3 * state.sfxVolScale, now);
+    g3.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    thud.connect(g3); g3.connect(ctx.destination);
+    thud.start(now); thud.stop(now + 0.22);
+  } catch(e) {}
+}
+
 export { reverseBuffer, getAudio, preloadThud, playThud, playMiss, initAudio,
   playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
-  playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess };
+  playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
+  playPlayerDamage };
