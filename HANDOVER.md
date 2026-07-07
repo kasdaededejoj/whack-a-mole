@@ -2,6 +2,46 @@
 
 ---
 
+## Machina, bullet, pincer, HP bar — 2026-07-07
+
+### Committed & pushed to `main` (60baa5f)
+
+**Machina skip-to-R3 fix (root cause):**
+`pickBossUpgrade` was calling `invLoop()` without first calling `spawnInvaderWave(invWave)`. First frame of `invUpdate` found `invEntities` empty → `alive.length === 0` → `invWave === 5` → `endRound()` immediately. Nuka avoided it because `startNukaSkill` pauses the loop pending input. Fix: `spawnInvaderWave(invWave)` called before `invLoop()` in `pickBossUpgrade`.
+
+**Machina double-fire fix (`a5c78df`):**
+Previous fix had introduced a `setInterval` inside `pickBossUpgrade` that auto-fired `invFire()` regardless of mouse state. When player held mouse, `invHandleMouseDown` also started its own interval — two intervals running simultaneously. Removed the rogue interval entirely. `invHandleMouseDown` already reads `invBossUpgrade || invUpgrade` to determine rate on next mousedown.
+
+**Machina redesign — 3 converging streams (`75d7220`):**
+Three streams spawned at `x-60`, `x`, `x+60`. Left/right streams have opposing `vx` values (`spread / convergeDist * speed`) calculated to meet at ~55% canvas height. `kind:'machina'`, `pierceLeft:0`. Boss damage: `0.3` per stream hit. Draw: thin white dot + streak trail. Palette: `rgba(255,255,255,0.15)` trail, white body.
+
+**Doublemissile fire rate (`4415c75`):** `1500ms → 400ms`. Two missiles per shot (±18px spread) unchanged.
+
+**Bullet improvements (`708d5c3`):**
+- Speed: `INV_BULLET_SPEED_UPGRADED = INV_BULLET_SPEED * 1.25` for all non-missile bullets
+- Pierce: `pierceLeft:2` — kills first enemy, continues, stops on second kill
+- Rapidfire: `INV_FIRE_RATE/4` (30ms)
+
+**Travelling wave shape (`708d5c3`):** Crescent blade, rotated to travel direction (`angle - π/2`). Outer arc `π*0.1→π*0.9`, inner concave at `r*0.82`. Alpha `0.25→0.9` as it closes.
+
+**Pincer 2× size (`2059245`):** Arc radius `10→20`, line span `±10→±20`, stroke `2→3.5`. Phase-2-only (≤50% boss HP).
+
+**HP drain animation + damage SFX (`2059245`):**
+Red overlay div from `toPct` to `fromPct`, fades 550ms. `playPlayerDamage()`: lowpass noise burst (80Hz), sub-bass `40→25Hz`, triangle thud `155→60Hz`. All decay 400–500ms.
+
+### Current upgrade system state
+- **Wave 2:** rapidfire (`INV_FIRE_RATE/4`), AOE missile
+- **Wave 4:** double missile (400ms, ±18px pair), rapid+homing
+- **Boss modal:** nuka, machina (3 converging streams, 0.3 dmg/stream)
+- **Resolution:** `activeUpgrade = invBossUpgrade || invUpgrade`
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — paused pending Adam's vibe direction
+- Pincer not yet playtested at phase 2
+- Descent snap grid (`Math.floor(invDescentY/20)*20`) unchanged — 20px steps at 60fps
+
+---
+
 ## Boss travelling wave + SFX — 2026-07-06 (continued)
 
 ### Committed & pushed to `main` (2e6dd03)
