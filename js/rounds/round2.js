@@ -652,9 +652,10 @@ function invHandleMouseDown(e){
   invMouseDown=true;
   invFire();
   const activeUpgrade=invBossUpgrade||invUpgrade;
-  const rate=activeUpgrade==='machina'?INV_FIRE_RATE/3.2
-    :activeUpgrade==='rapidfire'?INV_FIRE_RATE/4
-    :activeUpgrade==='doublemissile'?1500
+  const activeUpgradeForRate=invBossUpgrade||invUpgrade;
+  const rate=activeUpgradeForRate==='machina'?INV_FIRE_RATE/3.2
+    :activeUpgradeForRate==='rapidfire'?INV_FIRE_RATE/4
+    :activeUpgradeForRate==='doublemissile'?1500
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
@@ -684,7 +685,23 @@ function invFire(){
     invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
   if(activeUpgrade==='machina'){
-    spawnBullet(invShooterX-10); spawnBullet(invShooterX+10);
+    // 3 streams: left, centre, right — converge toward invShooterX at ~mid-canvas
+    const ch2=invCanvas.height;
+    const convergeDist=ch2*0.55; // distance at which streams meet
+    const spread=60;
+    const streams=[
+      {ox:-spread, vx: spread/convergeDist*INV_BULLET_SPEED_UPGRADED},
+      {ox:0,       vx: 0},
+      {ox: spread, vx:-spread/convergeDist*INV_BULLET_SPEED_UPGRADED},
+    ];
+    for(let s of streams){
+      invBullets.push({
+        x:invShooterX+s.ox, y:ch2-67,
+        vy:-INV_BULLET_SPEED_UPGRADED,
+        vx:s.vx,
+        trail:[], hit:false, kind:'machina', pierceLeft:0
+      });
+    }
     try{playMachinaBurst();}catch(e){}
   } else if(activeUpgrade==='doublemissile'){
     spawnBullet(invShooterX-18); spawnBullet(invShooterX+18);
@@ -890,6 +907,7 @@ function invUpdate(){
       }
     }
     b.y+=b.vy;
+    if(b.vx) b.x+=b.vx;
     if(!b.hit){
       for(let e of invEntities){
         if(!e.alive)continue;
@@ -916,7 +934,7 @@ function invUpdate(){
             break;
           } else {
             b.hit=true;
-            const damage=e.isBoss?((b.kind==='missile'||b.kind==='nuka')?7:0.5):1;
+            const damage=e.isBoss?((b.kind==='missile'||b.kind==='nuka')?7:b.kind==='machina'?0.3:0.5):1;
             e.hp-=damage;
             if(e.hp<=0){
               e.alive=false;
@@ -959,6 +977,13 @@ function invUpdate(){
 }
 
 function getProjectilePalette(kind){
+  if(kind==='machina'){
+    return{
+      trail:'rgba(255,255,255,0.15)',
+      accent:'rgba(255,255,255,0.9)',
+      body:'#ffffff',
+    };
+  }
   if(kind==='nuka'){
     return{
       trail:'rgba(120, 72, 92, 0.28)',
@@ -1063,6 +1088,22 @@ function drawMissileSilhouette(palette, scale){
 function drawProjectileVisual(b){
   const palette=getProjectilePalette(b.kind);
   invCtx.save();
+  if(b.kind==='machina'){
+    // Thin converging streak — draw trail line + small dot
+    if(b.trail.length>1){
+      invCtx.strokeStyle=palette.trail;
+      invCtx.lineWidth=1.5;
+      invCtx.beginPath();
+      invCtx.moveTo(b.trail[0].x,b.trail[0].y);
+      for(let t of b.trail) invCtx.lineTo(t.x,t.y);
+      invCtx.stroke();
+    }
+    invCtx.fillStyle=palette.body;
+    invCtx.globalAlpha=0.92;
+    invCtx.beginPath();invCtx.arc(b.x,b.y,1.8,0,Math.PI*2);invCtx.fill();
+    invCtx.restore();
+    return;
+  }
   if(b.kind==='missile'||b.kind==='nuka'){
     const missileScale=getMissileScale(b.kind);
     if(b.trail.length>1){
