@@ -608,6 +608,7 @@ function showBossUpgradeModal(){
     state.running=true;
     invTransitioning=false;
     startBossAbilities();
+    spawnInvaderWave(invWave); // must populate invEntities before invLoop runs
     if(type==='nuka') startNukaSkill(true);
     else invLoop();
   }
