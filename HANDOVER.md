@@ -2,6 +2,48 @@
 
 ---
 
+## Boss ability swap + yellow glow + HP feedback — 2026-07-08
+
+### Committed & pushed to `main` (067dadc)
+
+**Boss ability order reversed:**
+- Phase 1 (>50% HP): pincer only (was: wave only)
+- Phase 2 (≤50% HP): wave unlocks in addition to pincer (was: pincer unlocked)
+- `startBossAbilities()` now calls `schedulePincer()` immediately instead of starting the wave interval
+- Phase 2 transition spawns an immediate wave + starts `setInterval(spawnWave, 3000)` (was 3500ms)
+
+**Speed increases:**
+- `BOSS_PINCER_SPEED`: 3.5 → 5.25 (×1.5) — pincer is now phase 1, needs to be felt immediately
+- `BOSS_WAVE_SPEED`: 3.2 → 4.8 (×1.5) — replaces the old inline `3.2*(bossPhase2?1.3:1)` variable; `spawnWave()` is now a top-level function (not nested inside `startBossAbilities`)
+- Phase 2 pincer retains `×1.3` multiplier on top of the new base → 5.25×1.3 ≈ 6.8 px/frame
+
+**Cooldown reductions at phase 2 (0.5s each):**
+- Wave interval: 3500ms → 3000ms (set in phase 2 transition block)
+- Pincer CD: `schedulePincer()` now reads `bossPhase2 ? BOSS_PINCER_CD-500 : BOSS_PINCER_CD` — picks up on next cycle automatically
+
+**Yellow glow on abilities at phase 2:**
+- Pincer: switches from purple (`rgba(200,160,255,0.9)`) to yellow (`rgba(255,230,80,0.95)`), with a fat yellow glow shadow pass rendered before the main stroke
+- Wave (travelling crescent): always yellow since it only exists in phase 2 — yellow glow underlay + yellow main stroke (replaces white)
+- Uses `invCtx.shadowColor` + `invCtx.shadowBlur=18/20` for the glow; reset to 0 before main strokes
+
+**HP bar damage feedback improvements:**
+- Bar height: 2px → 4px (CSS `#player-hp-bar`)
+- Red drain overlay opacity: 0.7 → 1.0 (fully opaque), z-index:2 over fill
+- Drain fade duration: 550ms → 650ms
+- HP text: gains `.hurt` class on damage → CSS `@keyframes hpTextPulse` pulses opacity 1→0.4→1 over 500ms, text turns `rgba(220,80,80,0.9)`; class removed after 600ms
+- Canvas screen flash: radial red vignette painted directly onto the invader canvas, alpha starts at 0.28, decays by 0.025/frame (~11 frames); runs via its own `_hpScreenFlashRaf` separate from the main game loop
+
+### Testing status
+- Pincer phase 1 — first live playtest needed
+- Wave phase 2 (now yellow) — first live playtest needed
+- HP flash + text pulse — untested live; logic is straightforward
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused pending Adam's direction
+- Descent snap grid (`Math.floor(invDescentY/20)*20`) — unchanged
+
+---
+
 ## Machina, bullet, pincer, HP bar — 2026-07-07
 
 ### Committed & pushed to `main` (60baa5f)
