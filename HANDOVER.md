@@ -2,6 +2,20 @@
 
 ---
 
+## HP bar relocation — 2026-07-08
+
+### Committed & pushed to `main` (7c57a45)
+
+**Player HP bar moved from DOM to canvas, bottom of screen.**
+Was: a thin DOM bar above the canvas (top of page, above the action). Now: drawn directly on the canvas at `ch-20`, full width minus 24px padding each side, 3px tall — sits right above the shooter sprite where the player's eye already is. `updatePlayerHpBar()` is now a no-op; `invDraw()` reads `invPlayerHp` each frame and paints it directly. Turns red at ≤30 HP. The DOM `#player-hp-wrap` is never shown anymore — `showBossUpgradeModal()` no longer calls `display:flex` on it.
+
+**Boss HP bar moved from under the boss sprite to top of canvas.**
+Was: a 100px wide bar 34px below the boss glyph (moved around with the boss, hard to track). Now: a full-width bar at `y=10`, 3px tall, padded 24px each side — stationary, always readable. Turns yellow when `bossPhase2` (matches the ability glow colour from the previous commit). Has a faint `VOID` label to the left.
+
+**`triggerHpDrainAnimation`** stripped of all DOM bar logic — now only fires the canvas red vignette flash on damage.
+
+---
+
 ## Boss ability swap + yellow glow + HP feedback — 2026-07-08
 
 ### Committed & pushed to `main` (067dadc)
