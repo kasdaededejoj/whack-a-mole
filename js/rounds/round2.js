@@ -59,24 +59,7 @@ let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
 
 function updatePlayerHpBar(){
-  const wrap=document.getElementById('player-hp-wrap');
-  const bar=document.getElementById('player-hp-bar');
-  const txt=document.getElementById('player-hp-text');
-  if(!wrap||!bar||!txt)return;
-  const pct=Math.max(0,invPlayerHp/PLAYER_MAX_HP);
-  bar.style.setProperty('--hp-scale',pct);
-  bar.style.cssText=bar.style.cssText; // force repaint
-  // Drive width via ::after scaleX — set via inline style on the bar
-  bar.querySelector && (bar.style.setProperty('--hp',pct));
-  // Use direct child approach instead
-  if(!bar._fill){
-    bar._fill=document.createElement('div');
-    bar._fill.style.cssText='position:absolute;inset:0;background:#fff;transform-origin:left;border-radius:999px;transition:transform .25s ease,background .3s ease';
-    bar.appendChild(bar._fill);
-  }
-  bar._fill.style.transform=`scaleX(${pct})`;
-  bar._fill.style.background=invPlayerHp<=30?'rgba(220,80,80,0.9)':'#fff';
-  txt.textContent=`${Math.max(0,invPlayerHp)} / ${PLAYER_MAX_HP}`;
+  // Player HP is drawn on-canvas each frame in invDraw — nothing to update in DOM
 }
 
 function damagePlayer(amount){
@@ -92,66 +75,28 @@ function damagePlayer(amount){
 }
 
 let _hpScreenFlashRaf=null;
+// Player HP bar is drawn on-canvas in invDraw (bottom strip).
+// This function only triggers the screen flash on damage — no DOM bar manipulation needed.
 function triggerHpDrainAnimation(fromHp, toHp){
-  const bar=document.getElementById('player-hp-bar');
-  if(!bar)return;
-  // Ensure white fill div exists
-  if(!bar._fill){
-    bar._fill=document.createElement('div');
-    bar._fill.style.cssText='position:absolute;inset:0;background:#fff;transform-origin:left;border-radius:999px;transition:transform .25s ease,background .3s ease';
-    bar.appendChild(bar._fill);
-  }
-  // Create or reuse drain overlay (red segment showing lost HP)
-  if(!bar._drain){
-    bar._drain=document.createElement('div');
-    bar._drain.style.cssText='position:absolute;top:0;left:0;height:100%;background:rgba(220,60,60,1);transform-origin:left;border-radius:999px;pointer-events:none;transition:none;z-index:2';
-    bar.appendChild(bar._drain);
-  }
-  const fromPct=fromHp/PLAYER_MAX_HP;
-  const toPct=Math.max(0,toHp/PLAYER_MAX_HP);
-  bar._drain.style.transition='none';
-  bar._drain.style.opacity='1';
-  bar._drain.style.left=(toPct*100)+'%';
-  bar._drain.style.width=((fromPct-toPct)*100)+'%';
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      bar._drain.style.transition='opacity 0.65s ease';
-      bar._drain.style.opacity='0';
-    });
-  });
-
-  // Pulse the HP text red
-  const txt=document.getElementById('player-hp-text');
-  if(txt){
-    txt.classList.remove('hurt');
-    void txt.offsetWidth; // reflow to restart animation
-    txt.classList.add('hurt');
-    setTimeout(()=>txt.classList.remove('hurt'), 600);
-  }
-
-  // Canvas-level screen flash — red vignette overlay on the field
-  if(invCanvas){
-    if(_hpScreenFlashRaf){cancelAnimationFrame(_hpScreenFlashRaf);_hpScreenFlashRaf=null;}
-    let flashAlpha=0.28;
-    const flashStep=()=>{
-      if(!invCtx||!invCanvas){_hpScreenFlashRaf=null;return;}
-      // Draw over the game frame — runs next time invDraw is called isn't enough,
-      // so we paint directly here once and let it decay
-      const cw=invCanvas.width,ch=invCanvas.height;
-      invCtx.save();
-      invCtx.globalAlpha=flashAlpha;
-      const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.1,cw/2,ch/2,ch*0.85);
-      grad.addColorStop(0,'rgba(180,30,30,0)');
-      grad.addColorStop(1,'rgba(200,30,30,0.9)');
-      invCtx.fillStyle=grad;
-      invCtx.fillRect(0,0,cw,ch);
-      invCtx.restore();
-      flashAlpha-=0.025;
-      if(flashAlpha>0) _hpScreenFlashRaf=requestAnimationFrame(flashStep);
-      else _hpScreenFlashRaf=null;
-    };
-    _hpScreenFlashRaf=requestAnimationFrame(flashStep);
-  }
+  if(!invCanvas||!invCtx)return;
+  if(_hpScreenFlashRaf){cancelAnimationFrame(_hpScreenFlashRaf);_hpScreenFlashRaf=null;}
+  let flashAlpha=0.28;
+  const flashStep=()=>{
+    if(!invCtx||!invCanvas){_hpScreenFlashRaf=null;return;}
+    const cw=invCanvas.width,ch=invCanvas.height;
+    invCtx.save();
+    invCtx.globalAlpha=flashAlpha;
+    const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.1,cw/2,ch/2,ch*0.85);
+    grad.addColorStop(0,'rgba(180,30,30,0)');
+    grad.addColorStop(1,'rgba(200,30,30,0.9)');
+    invCtx.fillStyle=grad;
+    invCtx.fillRect(0,0,cw,ch);
+    invCtx.restore();
+    flashAlpha-=0.025;
+    if(flashAlpha>0) _hpScreenFlashRaf=requestAnimationFrame(flashStep);
+    else _hpScreenFlashRaf=null;
+  };
+  _hpScreenFlashRaf=requestAnimationFrame(flashStep);
 }
 let invAoeCooldown=0; // ms timestamp of last AOE fire
 const INV_AOE_INTERVAL=2500, INV_AOE_RADIUS=40;
@@ -636,8 +581,8 @@ function drawBossAbilities(){
 }
 
 function showBossUpgradeModal(){
-  // Additional pick at boss start — Nuka or Machina only
-  document.getElementById('player-hp-wrap').style.display='flex';
+  // Player HP is now drawn on-canvas — DOM wrap stays hidden
+  // document.getElementById('player-hp-wrap') intentionally not shown
   state.running=false;
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
   const modal=document.getElementById('boss-upgrade-modal');
@@ -1269,14 +1214,7 @@ function invDraw(){
       invCtx.fillStyle='#fff';
       invCtx.textAlign='center';invCtx.textBaseline='middle';
       invCtx.fillText(e.glyph,0,0);
-      // HP bar under boss
-      const barW=100;
-      invCtx.globalAlpha=0.3;
-      invCtx.fillStyle='#333';
-      invCtx.fillRect(-barW/2,34,barW,2);
-      invCtx.globalAlpha=0.8;
-      invCtx.fillStyle='#fff';
-      invCtx.fillRect(-barW/2,34,barW*hpRatio,2);
+      // Boss HP — drawn as full-width canvas bar at top (see invDraw)
     } else {
       const alpha=0.5+0.4*(Math.sin(e.flicker*1.3)*0.5+0.5);
       invCtx.translate(e.x+e.glitchOffset,e.y);
@@ -1294,6 +1232,56 @@ function invDraw(){
     invCtx.restore();
   }
 
+  // ── BOSS HP BAR — top of canvas, full width ──
+  if(invWave===5){
+    const boss=invEntities.find(e=>e.isBoss&&e.alive);
+    if(boss){
+      const hpRatio=boss.hp/boss.maxHp;
+      const barH=3, padX=24, barY=10;
+      const barW=cw-padX*2;
+      invCtx.save();
+      invCtx.globalAlpha=0.18;
+      invCtx.fillStyle='#fff';
+      invCtx.fillRect(padX,barY,barW,barH);
+      invCtx.globalAlpha=0.75;
+      invCtx.fillStyle=hpRatio>0.5?'#fff':'rgba(255,220,50,0.9)'; // yellow in p2
+      invCtx.fillRect(padX,barY,barW*hpRatio,barH);
+      // Label
+      invCtx.globalAlpha=0.28;
+      invCtx.font="8px 'BlackChancery', serif";
+      invCtx.fillStyle='#fff';
+      invCtx.textAlign='right';
+      invCtx.textBaseline='middle';
+      invCtx.fillText('VOID',padX-6,barY+barH/2);
+      invCtx.restore();
+    }
+  }
+
+  // ── PLAYER HP BAR — bottom of canvas, above shooter ──
+  {
+    const padX=24, barH=3, barY=ch-20;
+    const barW=cw-padX*2;
+    const pct=Math.max(0,invPlayerHp/PLAYER_MAX_HP);
+    invCtx.save();
+    // Track bar
+    invCtx.globalAlpha=0.12;
+    invCtx.fillStyle='#fff';
+    invCtx.fillRect(padX,barY,barW,barH);
+    // Fill
+    invCtx.globalAlpha=0.72;
+    invCtx.fillStyle=invPlayerHp<=30?'rgba(220,60,60,0.9)':'#fff';
+    invCtx.fillRect(padX,barY,barW*pct,barH);
+    // HP number
+    invCtx.globalAlpha=0.28;
+    invCtx.font="8px 'BlackChancery', serif";
+    invCtx.fillStyle='#fff';
+    invCtx.textAlign='right';
+    invCtx.textBaseline='middle';
+    invCtx.fillText(`${Math.max(0,invPlayerHp)}`,padX-6,barY+barH/2);
+    invCtx.restore();
+  }
+
+  // ── SHOOTER ──
   invCtx.save();
   invCtx.translate(invShooterX,ch-54);
   invCtx.strokeStyle='rgba(255,255,255,0.85)';
