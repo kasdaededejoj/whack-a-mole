@@ -43,11 +43,12 @@ let bossPincerTimer=null;
 let bossPhase2=false;
 let bossTeleportTimer=null;
 let bossTeleportFlash=0; // frames remaining for landing flash
-const BOSS_SHOCKWAVE_INTERVAL=3500;
-const BOSS_PINCER_CD=4000;
+const BOSS_SHOCKWAVE_INTERVAL=3500;      // phase 1: not active; phase 2: 3500→3000ms
+const BOSS_PINCER_CD=4000;               // phase 1: 4000ms; phase 2: 3500ms
 const BOSS_SHOCKWAVE_R_MAX_P1=120;
 const BOSS_SHOCKWAVE_DURATION=4000;
-const BOSS_PINCER_SPEED=3.5;
+const BOSS_PINCER_SPEED=5.25;            // was 3.5 × 1.5 — pincer active from phase 1
+const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from phase 2
 
 // Boss sprite pool — one chosen at random on spawn
 const BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ'];
@@ -90,35 +91,67 @@ function damagePlayer(amount){
   }
 }
 
+let _hpScreenFlashRaf=null;
 function triggerHpDrainAnimation(fromHp, toHp){
   const bar=document.getElementById('player-hp-bar');
   if(!bar)return;
-  // Ensure _fill exists
+  // Ensure white fill div exists
   if(!bar._fill){
     bar._fill=document.createElement('div');
     bar._fill.style.cssText='position:absolute;inset:0;background:#fff;transform-origin:left;border-radius:999px;transition:transform .25s ease,background .3s ease';
     bar.appendChild(bar._fill);
   }
-  // Create or reuse drain overlay
+  // Create or reuse drain overlay (red segment showing lost HP)
   if(!bar._drain){
     bar._drain=document.createElement('div');
-    bar._drain.style.cssText='position:absolute;top:0;left:0;height:100%;background:rgba(220,80,80,0.7);transform-origin:left;border-radius:999px;pointer-events:none;transition:none';
+    bar._drain.style.cssText='position:absolute;top:0;left:0;height:100%;background:rgba(220,60,60,1);transform-origin:left;border-radius:999px;pointer-events:none;transition:none;z-index:2';
     bar.appendChild(bar._drain);
   }
   const fromPct=fromHp/PLAYER_MAX_HP;
   const toPct=Math.max(0,toHp/PLAYER_MAX_HP);
-  // Drain overlay sits from toPct to fromPct, then fades
   bar._drain.style.transition='none';
   bar._drain.style.opacity='1';
   bar._drain.style.left=(toPct*100)+'%';
   bar._drain.style.width=((fromPct-toPct)*100)+'%';
-  // Let it settle one frame then fade
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
-      bar._drain.style.transition='opacity 0.55s ease';
+      bar._drain.style.transition='opacity 0.65s ease';
       bar._drain.style.opacity='0';
     });
   });
+
+  // Pulse the HP text red
+  const txt=document.getElementById('player-hp-text');
+  if(txt){
+    txt.classList.remove('hurt');
+    void txt.offsetWidth; // reflow to restart animation
+    txt.classList.add('hurt');
+    setTimeout(()=>txt.classList.remove('hurt'), 600);
+  }
+
+  // Canvas-level screen flash — red vignette overlay on the field
+  if(invCanvas){
+    if(_hpScreenFlashRaf){cancelAnimationFrame(_hpScreenFlashRaf);_hpScreenFlashRaf=null;}
+    let flashAlpha=0.28;
+    const flashStep=()=>{
+      if(!invCtx||!invCanvas){_hpScreenFlashRaf=null;return;}
+      // Draw over the game frame — runs next time invDraw is called isn't enough,
+      // so we paint directly here once and let it decay
+      const cw=invCanvas.width,ch=invCanvas.height;
+      invCtx.save();
+      invCtx.globalAlpha=flashAlpha;
+      const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.1,cw/2,ch/2,ch*0.85);
+      grad.addColorStop(0,'rgba(180,30,30,0)');
+      grad.addColorStop(1,'rgba(200,30,30,0.9)');
+      invCtx.fillStyle=grad;
+      invCtx.fillRect(0,0,cw,ch);
+      invCtx.restore();
+      flashAlpha-=0.025;
+      if(flashAlpha>0) _hpScreenFlashRaf=requestAnimationFrame(flashStep);
+      else _hpScreenFlashRaf=null;
+    };
+    _hpScreenFlashRaf=requestAnimationFrame(flashStep);
+  }
 }
 let invAoeCooldown=0; // ms timestamp of last AOE fire
 const INV_AOE_INTERVAL=2500, INV_AOE_RADIUS=40;
@@ -425,6 +458,22 @@ function triggerBossTeleport(){
   bossTeleportFlash=12; // ~12 frames of flash at 60fps
 }
 
+function spawnWave(){
+  const boss=invEntities.find(e=>e.isBoss&&e.alive);
+  if(!boss||!state.running||!invCanvas)return;
+  const ch=invCanvas.height;
+  const tx=invShooterX, ty=ch-54;
+  const dx=tx-boss.x, dy=ty-boss.y;
+  const dist=Math.hypot(dx,dy)||1;
+  bossShockwaves.push({
+    x:boss.x, y:boss.y,
+    vx:(dx/dist)*BOSS_WAVE_SPEED, vy:(dy/dist)*BOSS_WAVE_SPEED,
+    r:20, targetDist:dist,
+    travelledDist:0,
+    hit:false, alive:true
+  });
+}
+
 function startBossAbilities(){
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
@@ -432,25 +481,8 @@ function startBossAbilities(){
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
   bossTeleportFlash=0;
   bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
-  // Travelling wave — fires at player position, cycles every 3.5s
-  function spawnWave(){
-    const boss=invEntities.find(e=>e.isBoss&&e.alive);
-    if(!boss||!state.running||!invCanvas)return;
-    const ch=invCanvas.height;
-    const tx=invShooterX, ty=ch-54; // player's current position at fire time
-    const dx=tx-boss.x, dy=ty-boss.y;
-    const dist=Math.hypot(dx,dy)||1;
-    const speed=3.2*(bossPhase2?1.3:1);
-    bossShockwaves.push({
-      x:boss.x, y:boss.y,
-      vx:(dx/dist)*speed, vy:(dy/dist)*speed,
-      r:20, targetDist:dist,
-      travelledDist:0,
-      hit:false, alive:true
-    });
-  }
-  spawnWave();
-  bossShockwaveTimer=setInterval(spawnWave, BOSS_SHOCKWAVE_INTERVAL);
+  // Phase 1: pincer only — starts immediately
+  schedulePincer();
 }
 
 function spawnPincer(){
@@ -471,11 +503,12 @@ function spawnPincer(){
 }
 
 function schedulePincer(){
+  const cd=bossPhase2 ? BOSS_PINCER_CD-500 : BOSS_PINCER_CD;
   bossPincerTimer=setTimeout(()=>{
     if(!state.running){return;}
     spawnPincer();
     schedulePincer();
-  }, BOSS_PINCER_CD);
+  }, cd);
 }
 
 function stopBossAbilities(){
@@ -492,17 +525,10 @@ function updateBossAbilities(){
   // Phase 2 transition at ≤50% HP
   if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
     bossPhase2=true;
-    schedulePincer();
-    // Immediate wave at phase 2 onset
-    if(invCanvas){
-      const ch=invCanvas.height;
-      const tx=invShooterX, ty=ch-54;
-      const dx=tx-boss.x, dy=ty-boss.y;
-      const dist=Math.hypot(dx,dy)||1;
-      const speed=3.2*1.3;
-      bossShockwaves.push({x:boss.x,y:boss.y,vx:(dx/dist)*speed,vy:(dy/dist)*speed,
-        r:20,targetDist:dist,travelledDist:0,hit:false,alive:true});
-    }
+    // Unlock travelling wave — fires immediately then every 3000ms
+    spawnWave();
+    bossShockwaveTimer=setInterval(spawnWave, BOSS_SHOCKWAVE_INTERVAL-500);
+    // Pincer already running — schedulePincer will pick up new 3500ms CD on next cycle
   }
 
   const ch=invCanvas.height;
@@ -552,43 +578,59 @@ function updateBossAbilities(){
 function drawBossAbilities(){
   if(!invCtx)return;
   const ch=invCanvas.height;
-  for(let s of bossShockwaves){
-    const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
-    const alpha=0.25+progress*0.65;
-    const angle=Math.atan2(s.vy,s.vx); // travel direction
-    invCtx.save();
-    invCtx.translate(s.x,s.y);
-    invCtx.rotate(angle-Math.PI/2); // orient crescent to face travel direction
-    invCtx.globalAlpha=alpha;
-    invCtx.strokeStyle='rgba(255,255,255,0.95)';
-    invCtx.lineWidth=2;
-    // Outer crescent arc — bottom-facing (π*0.1 to π*0.9)
-    invCtx.beginPath();
-    invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);
-    invCtx.stroke();
-    // Inner concave — tighter radius, opposite arc segment to fake blade hollow
-    invCtx.globalAlpha=alpha*0.4;
-    invCtx.lineWidth=1;
-    invCtx.beginPath();
-    invCtx.arc(0,s.r*0.18,s.r*0.82,Math.PI*0.15,Math.PI*0.85);
-    invCtx.stroke();
-    invCtx.restore();
-  }
+
+  // Pincer — active from phase 1; yellow glow in phase 2
   for(let p of bossPincers){
     invCtx.save();
-    invCtx.globalAlpha=0.85;
-    invCtx.strokeStyle='rgba(200,160,255,0.9)';
-    invCtx.lineWidth=3.5;
     const angle=Math.atan2(p.vy,p.vx);
     invCtx.translate(p.x,p.y);
     invCtx.rotate(angle);
-    // Curved slicer arc — 2x scale (was 10, now 20)
+    if(bossPhase2){
+      // Yellow outer glow pass
+      invCtx.globalAlpha=0.35;
+      invCtx.shadowColor='rgba(255,220,50,0.9)';
+      invCtx.shadowBlur=18;
+      invCtx.strokeStyle='rgba(255,220,50,0.6)';
+      invCtx.lineWidth=7;
+      invCtx.beginPath();invCtx.arc(0,0,20,Math.PI*0.75,Math.PI*1.25);invCtx.stroke();
+      invCtx.shadowBlur=0;
+    }
+    invCtx.globalAlpha=0.85;
+    invCtx.strokeStyle=bossPhase2?'rgba(255,230,80,0.95)':'rgba(200,160,255,0.9)';
+    invCtx.lineWidth=3.5;
     invCtx.beginPath();
     invCtx.arc(0,0,20,Math.PI*0.75,Math.PI*1.25);
     invCtx.stroke();
-    invCtx.strokeStyle='rgba(255,255,255,0.5)';
+    invCtx.strokeStyle=bossPhase2?'rgba(255,255,180,0.7)':'rgba(255,255,255,0.5)';
     invCtx.lineWidth=1.5;
     invCtx.beginPath();invCtx.moveTo(-20,0);invCtx.lineTo(20,0);invCtx.stroke();
+    invCtx.restore();
+  }
+
+  // Travelling wave — active from phase 2; always yellow since it only exists in p2
+  for(let s of bossShockwaves){
+    const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
+    const alpha=0.25+progress*0.65;
+    const angle=Math.atan2(s.vy,s.vx);
+    invCtx.save();
+    invCtx.translate(s.x,s.y);
+    invCtx.rotate(angle-Math.PI/2);
+    // Yellow glow pass
+    invCtx.globalAlpha=alpha*0.4;
+    invCtx.shadowColor='rgba(255,220,50,0.9)';
+    invCtx.shadowBlur=20;
+    invCtx.strokeStyle='rgba(255,220,50,0.5)';
+    invCtx.lineWidth=6;
+    invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
+    invCtx.shadowBlur=0;
+    // Main crescent blade
+    invCtx.globalAlpha=alpha;
+    invCtx.strokeStyle='rgba(255,230,80,0.95)';
+    invCtx.lineWidth=2;
+    invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
+    invCtx.globalAlpha=alpha*0.4;
+    invCtx.lineWidth=1;
+    invCtx.beginPath();invCtx.arc(0,s.r*0.18,s.r*0.82,Math.PI*0.15,Math.PI*0.85);invCtx.stroke();
     invCtx.restore();
   }
 }
