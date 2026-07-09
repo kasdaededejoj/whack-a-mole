@@ -78,28 +78,57 @@ function damagePlayer(amount){
 }
 
 let _hpScreenFlashRaf=null;
+let _hpAberrationFrames=0; // frames remaining for chromatic aberration
+let _hpGlitchFrames=0;     // frames remaining for glitch displacement
+
 // Player HP bar is drawn on-canvas in invDraw (bottom strip).
-// This function only triggers the screen flash on damage — no DOM bar manipulation needed.
+// This function triggers the screen flash, aberration, and glitch VFX on damage.
 function triggerHpDrainAnimation(fromHp, toHp){
   if(!invCanvas||!invCtx)return;
+  // Start aberration + glitch
+  _hpAberrationFrames=18;
+  _hpGlitchFrames=10;
+
+  // Primary vignette flash
   if(_hpScreenFlashRaf){cancelAnimationFrame(_hpScreenFlashRaf);_hpScreenFlashRaf=null;}
-  let flashAlpha=0.28;
+  let flashAlpha=0.32;
   const flashStep=()=>{
     if(!invCtx||!invCanvas){_hpScreenFlashRaf=null;return;}
     const cw=invCanvas.width,ch=invCanvas.height;
     invCtx.save();
     invCtx.globalAlpha=flashAlpha;
-    const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.1,cw/2,ch/2,ch*0.85);
+    const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.08,cw/2,ch/2,ch*0.9);
     grad.addColorStop(0,'rgba(180,30,30,0)');
-    grad.addColorStop(1,'rgba(200,30,30,0.9)');
+    grad.addColorStop(1,'rgba(200,30,30,0.95)');
     invCtx.fillStyle=grad;
     invCtx.fillRect(0,0,cw,ch);
     invCtx.restore();
-    flashAlpha-=0.025;
+    flashAlpha-=0.022;
     if(flashAlpha>0) _hpScreenFlashRaf=requestAnimationFrame(flashStep);
     else _hpScreenFlashRaf=null;
   };
   _hpScreenFlashRaf=requestAnimationFrame(flashStep);
+
+  // Echo — second ghost flash at 120ms delay, dimmer
+  setTimeout(()=>{
+    if(!invCtx||!invCanvas)return;
+    let echoAlpha=0.14;
+    const echoStep=()=>{
+      if(!invCtx||!invCanvas)return;
+      const cw=invCanvas.width,ch=invCanvas.height;
+      invCtx.save();
+      invCtx.globalAlpha=echoAlpha;
+      const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.08,cw/2,ch/2,ch*0.9);
+      grad.addColorStop(0,'rgba(180,30,30,0)');
+      grad.addColorStop(1,'rgba(200,30,30,0.9)');
+      invCtx.fillStyle=grad;
+      invCtx.fillRect(0,0,cw,ch);
+      invCtx.restore();
+      echoAlpha-=0.018;
+      if(echoAlpha>0) requestAnimationFrame(echoStep);
+    };
+    requestAnimationFrame(echoStep);
+  }, 120);
 }
 let invAoeCooldown=0; // ms timestamp of last AOE fire
 const INV_AOE_INTERVAL=2500, INV_AOE_RADIUS=40;
@@ -128,6 +157,7 @@ function setInvaderMessage(text,color='rgba(255,255,255,0.92)', timeout=0){
 }
 
 function positionNukaUI(){
+  if(invBossUpgrade==='warh') return; // warh has no keycap
   const wrap=document.getElementById('nuka-keycap');
   const cd=document.getElementById('nuka-cooldown');
   if(!invCanvas||(!wrap&&!cd))return;
@@ -602,8 +632,11 @@ function showBossUpgradeModal(){
     invTransitioning=false;
     startBossAbilities();
     spawnInvaderWave(invWave);
-    if(type==='warh'){ startWarhAutoFire(); invLoop(); }
-    else invLoop();
+    if(type==='warh'){
+      hideNukaPrompt();
+      setNukaCooldown(false);
+      startWarhAutoFire(); invLoop();
+    } else invLoop();
   }
 
   document.getElementById('boss-upgrade-nuka').onclick=()=>pickBossUpgrade('warh');
@@ -642,12 +675,14 @@ function invHandleMove(e){
 function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
-  invFire();
   const activeUpgradeForRate=invBossUpgrade||invUpgrade;
-  const rate=activeUpgradeForRate==='machina'?INV_FIRE_RATE/3.2
-    :activeUpgradeForRate==='rapidfire'?INV_FIRE_RATE/4
-    :activeUpgradeForRate==='doublemissile'?400
-    :activeUpgradeForRate==='warh'?INV_FIRE_RATE   // warh auto-fires separately; click fires a normal bullet
+  if(activeUpgradeForRate==='warh') return; // warh auto-fires; no click-fire
+  invFire();
+  // Fire rate: machina boss upgrade overrides; else wave4 upgrade drives rate
+  const rateUpgrade=invBossUpgrade==='machina'?'machina':invUpgrade;
+  const rate=rateUpgrade==='machina'?INV_FIRE_RATE/3.2
+    :rateUpgrade==='rapidfire'||rateUpgrade==='rapidfire_homing'?INV_FIRE_RATE/4
+    :rateUpgrade==='doublemissile'?400
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
@@ -664,12 +699,16 @@ function invHandleSingleClick(e){
   if(!state.running)return;
   const r=invCanvas.getBoundingClientRect();
   invShooterX=e.clientX-r.left;
+  const activeUpgrade=invBossUpgrade||invUpgrade;
+  if(activeUpgrade==='warh') return; // warh auto-fires; no click-fire
   invFire();
 }
 
 function invFire(){
   if(!state.running||!invCanvas||invNukaSkillActive)return;
-  const activeUpgrade=invBossUpgrade||invUpgrade;
+  // Machina boss upgrade overrides wave4 weapon on click-fire (it's a full replacement).
+  // Warh is additive (separate autofire loop) — click-fire uses wave4 upgrade instead.
+  const activeUpgrade=invBossUpgrade==='machina'?'machina':invUpgrade;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
     const isMissile=activeUpgrade==='aoe'||activeUpgrade==='doublemissile'||activeUpgrade==='rapidfire_homing';
@@ -1099,6 +1138,49 @@ function drawProjectileVisual(b){
 function invDraw(){
   const cw=invCanvas.width,ch=invCanvas.height;
   invCtx.clearRect(0,0,cw,ch);
+
+  // ── DAMAGE VFX: chromatic aberration + glitch displacement ──
+  if(_hpAberrationFrames>0||_hpGlitchFrames>0){
+    const aberAlpha=Math.min(1,_hpAberrationFrames/18)*0.55;
+    const glitchActive=_hpGlitchFrames>0;
+    if(_hpAberrationFrames>0) _hpAberrationFrames--;
+    if(_hpGlitchFrames>0) _hpGlitchFrames--;
+
+    // Chromatic aberration: capture current frame state via getImageData isn't available yet
+    // (canvas is clear at this point), so we paint coloured edge strips instead —
+    // a red fringe left, cyan fringe right, at canvas edges, simulating lens split
+    const aberShift=Math.round(4*aberAlpha);
+    if(aberShift>0){
+      // Red channel fringe — left edge bleed
+      invCtx.save();
+      invCtx.globalAlpha=aberAlpha*0.45;
+      invCtx.fillStyle='rgba(255,30,30,1)';
+      invCtx.fillRect(0,0,aberShift*3,ch);
+      // Cyan fringe — right edge bleed
+      invCtx.fillStyle='rgba(30,255,220,1)';
+      invCtx.fillRect(cw-aberShift*3,0,aberShift*3,ch);
+      // Horizontal scan displacement — thin red bar drifts down
+      const scanY=((Date.now()*0.12)%ch);
+      invCtx.globalAlpha=aberAlpha*0.3;
+      invCtx.fillStyle='rgba(255,40,40,1)';
+      invCtx.fillRect(0,scanY,cw,1);
+      invCtx.restore();
+    }
+
+    // Glitch block displacement — random white rect strips
+    if(glitchActive){
+      invCtx.save();
+      invCtx.globalAlpha=0.12;
+      invCtx.fillStyle='#fff';
+      for(let i=0;i<3;i++){
+        const gy=Math.random()*ch;
+        const gh=2+Math.random()*6;
+        const gox=(Math.random()-0.5)*20;
+        invCtx.fillRect(gox,gy,cw,gh);
+      }
+      invCtx.restore();
+    }
+  }
 
   // Boss ability visuals drawn below everything else
   if(invWave===5) drawBossAbilities();

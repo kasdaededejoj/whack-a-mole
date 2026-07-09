@@ -313,10 +313,19 @@ function playPlayerDamage() {
     g3.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
     thud.connect(g3); g3.connect(ctx.destination);
     thud.start(now); thud.stop(now + 0.22);
+    // Layer 4: echo — delayed repeat of the thud at 120ms, half gain
+    const echo = ctx.createOscillator();
+    echo.type = 'triangle';
+    echo.frequency.setValueAtTime(155, now + 0.12);
+    echo.frequency.exponentialRampToValueAtTime(60, now + 0.30);
+    const g4 = ctx.createGain();
+    g4.gain.setValueAtTime(0.001, now + 0.12);
+    g4.gain.linearRampToValueAtTime(0.15 * state.sfxVolScale, now + 0.14);
+    g4.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    echo.connect(g4); g4.connect(ctx.destination);
+    echo.start(now + 0.12); echo.stop(now + 0.32);
   } catch(e) {}
 }
-
-export { reverseBuffer, getAudio, preloadThud, playThud, playMiss, initAudio,
   playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
   playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
   playPlayerDamage };
