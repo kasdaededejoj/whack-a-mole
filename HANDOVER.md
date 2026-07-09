@@ -2,6 +2,37 @@
 
 ---
 
+## Wave hit VFX (AE sprite sheet) — 2026-07-09
+
+### Committed & pushed to `main` (5710cc1)
+
+**Source:** `round_2__final_boss__travelling_wave_vfx__v2.mp4` — H.264, 26 frames @ ~30fps, 1920×1080, black background (no alpha in MP4)
+
+**Processing pipeline:**
+- `ffmpeg` extracted 26 PNG frames
+- `ffmpeg colorkey=black:0.25:0.1` keyed out black → RGBA PNGs
+- Scaled to 480×270 (25% of source)
+- `convert +append` packed into horizontal sprite sheet → `assets/vfx_wave.png` (236KB, 12480×270)
+
+**Integration:**
+- `loadVfxAssets()` preloads the sprite sheet image on `startInvaders()`
+- `spawnVfxWave(x, y)` pushes an entry into `activeVfx[]` — centred on player position, scaled to ~42% of canvas width
+- Triggered in `updateBossAbilities()` when a shockwave hits the player (alongside `damagePlayer()`)
+- `invDraw()` advances `v.frame` each frame and slices the correct column from the sprite sheet via `drawImage(img, frame*frameW, 0, frameW, frameH, x, y, w, h)`
+- Blend mode: `lighter` — glow adds on top of game content
+
+**Key constants:**
+```
+VFX_WAVE_FRAMES=26, VFX_WAVE_FRAME_W=480, VFX_WAVE_FRAME_H=270
+sprite sheet: assets/vfx_wave.png (12480×270)
+```
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused
+- If you have more AE VFX (pincer hit, teleport flash etc.) — same pipeline applies
+
+---
+
 ## Damage VFX + warh click removal + wave4 carry-over — 2026-07-09
 
 ### Committed & pushed to `main` (0534ca4)
