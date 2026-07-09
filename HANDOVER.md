@@ -2,6 +2,34 @@
 
 ---
 
+## Damage VFX + warh click removal + wave4 carry-over — 2026-07-09
+
+### Committed & pushed to `main` (0534ca4)
+
+**Player damage VFX (glitch + aberration + echo):**
+- `triggerHpDrainAnimation` now sets `_hpAberrationFrames=18`, `_hpGlitchFrames=10` on every hit
+- `invDraw` reads these counters at the top of every frame (before anything else is drawn): paints red/cyan edge fringe strips (`aberShift=4px max`) + a horizontal scan line for aberration; 3 random white rect strips for glitch displacement
+- Both counters decrement each frame — aberration lasts ~18 frames (~0.3s), glitch lasts ~10 frames (~0.17s)
+- Primary vignette flash unchanged (0.32 start alpha, -0.022/frame decay)
+- Echo vignette: second identical flash fired at 120ms delay, dimmer (0.14 start alpha)
+- SFX echo layer 4 added to `playPlayerDamage()` in audio.js: delayed 120ms repeat of the 155Hz triangle thud at half gain (`0.15×sfxVolScale`)
+
+**Warh: no click-fire, no keycap:**
+- `invHandleMouseDown` and `invHandleSingleClick` both return early (no `invFire()`) when `invBossUpgrade==='warh'`. Position tracking still works normally.
+- `positionNukaUI()` returns early when `invBossUpgrade==='warh'`
+- On warh pick: `hideNukaPrompt()` + `setNukaCooldown(false)` called explicitly to ensure keycap is hidden
+
+**Wave 4 upgrade carries into boss wave:**
+- `invFire()` now resolves: `machina` boss upgrade → overrides to machina; else → `invUpgrade` (wave4 weapon). Warh is additive — it auto-fires separately, click-fire uses wave4 weapon underneath.
+- `invHandleMouseDown` fire rate uses same logic: `machina` boss upgrade overrides, else `invUpgrade` drives rate
+- Result: doublemissile + warh = wide slow missiles every 1.5s AND double missiles on click. rapidfire_homing + machina = machina on click.
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused
+- All boss-wave combos need live playtesting
+
+---
+
 ## warh upgrade + boss grow/glitch + HP bar tweak — 2026-07-09
 
 ### Committed & pushed to `main` (db2a5a2)
