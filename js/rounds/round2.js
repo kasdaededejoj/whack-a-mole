@@ -50,6 +50,34 @@ const BOSS_SHOCKWAVE_DURATION=4000;
 const BOSS_PINCER_SPEED=5.25;            // was 3.5 × 1.5 — pincer active from phase 1
 const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from phase 2
 
+// VFX sprite sheet — wave ability
+const VFX_WAVE_FRAMES=26;
+const VFX_WAVE_FRAME_W=480;
+const VFX_WAVE_FRAME_H=270;
+let vfxWaveImg=null;
+let activeVfx=[]; // {img, frameW, frameH, totalFrames, frame, x, y, w, h, blendMode}
+
+function loadVfxAssets(){
+  vfxWaveImg=new Image();
+  vfxWaveImg.src='assets/vfx_wave.png';
+}
+
+function spawnVfxWave(x, y){
+  if(!vfxWaveImg||!vfxWaveImg.complete)return;
+  // Scale to ~40% of canvas width, centred on impact point
+  const w=invCanvas?invCanvas.width*0.42:200;
+  const h=w*(VFX_WAVE_FRAME_H/VFX_WAVE_FRAME_W);
+  activeVfx.push({
+    img:vfxWaveImg,
+    frameW:VFX_WAVE_FRAME_W, frameH:VFX_WAVE_FRAME_H,
+    totalFrames:VFX_WAVE_FRAMES,
+    frame:0,
+    x:x-w/2, y:y-h/2,
+    w, h,
+    blendMode:'lighter'
+  });
+}
+
 // Boss sprite pool — one chosen at random on spawn
 const BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ'];
 
@@ -262,6 +290,8 @@ function startInvaders(){
   // Player HP
   invPlayerHp=PLAYER_MAX_HP;
   updatePlayerHpBar();
+  activeVfx=[];
+  loadVfxAssets();
   // Boss abilities
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
@@ -526,6 +556,7 @@ function updateBossAbilities(){
       s.hit=true;
       const dmg=31+Math.floor(Math.random()*4); // 31-34
       damagePlayer(dmg);
+      spawnVfxWave(invShooterX, ch-54); // play wave VFX at player position
     }
     // Despawn once past the bottom or well past target
     if(s.y>ch+40 || s.travelledDist>s.targetDist+200) s.alive=false;
@@ -1297,6 +1328,21 @@ function invDraw(){
     }
     invCtx.restore();
   }
+
+  // ── ACTIVE VFX SPRITES ──
+  for(let v of activeVfx){
+    if(v.frame>=v.totalFrames) continue;
+    invCtx.save();
+    invCtx.globalCompositeOperation=v.blendMode;
+    invCtx.drawImage(
+      v.img,
+      v.frame*v.frameW, 0, v.frameW, v.frameH, // source slice
+      v.x, v.y, v.w, v.h                        // dest on canvas
+    );
+    invCtx.restore();
+    v.frame++;
+  }
+  activeVfx=activeVfx.filter(v=>v.frame<v.totalFrames);
 
   // ── BOSS HP BAR — top of canvas, full width ──
   if(invWave===5){
