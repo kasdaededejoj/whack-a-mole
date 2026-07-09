@@ -53,6 +53,9 @@ const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from 
 // Boss sprite pool — one chosen at random on spawn
 const BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ'];
 
+let bossGrowthScale=1;    // lerps to 1.38 at phase 2 transition
+let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
+
 let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
 let invUpgrade=null;
@@ -425,6 +428,8 @@ function startBossAbilities(){
   if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
   bossTeleportFlash=0;
+  bossGrowthScale=1;
+  bossGlitchBurst=0;
   bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
   // Phase 1: pincer only — starts immediately
   schedulePincer();
@@ -470,6 +475,7 @@ function updateBossAbilities(){
   // Phase 2 transition at ≤50% HP
   if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
     bossPhase2=true;
+    bossGlitchBurst=55;   // ~55 frames of heavy glitch
     // Unlock travelling wave — fires immediately then every 3000ms
     spawnWave();
     bossShockwaveTimer=setInterval(spawnWave, BOSS_SHOCKWAVE_INTERVAL-500);
@@ -595,12 +601,12 @@ function showBossUpgradeModal(){
     state.running=true;
     invTransitioning=false;
     startBossAbilities();
-    spawnInvaderWave(invWave); // must populate invEntities before invLoop runs
-    if(type==='nuka') startNukaSkill(true);
+    spawnInvaderWave(invWave);
+    if(type==='warh'){ startWarhAutoFire(); invLoop(); }
     else invLoop();
   }
 
-  document.getElementById('boss-upgrade-nuka').onclick=()=>pickBossUpgrade('nuka');
+  document.getElementById('boss-upgrade-nuka').onclick=()=>pickBossUpgrade('warh');
   document.getElementById('boss-upgrade-machina').onclick=()=>pickBossUpgrade('machina');
 }
 
@@ -609,6 +615,7 @@ function stopInvaders(){
   if(invNukaKeycapRaf){cancelAnimationFrame(invNukaKeycapRaf);invNukaKeycapRaf=null;}
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
+  stopWarhAutoFire();
   invMouseDown=false;
   invUpgrade=null;
   invBossUpgrade=null;
@@ -640,6 +647,7 @@ function invHandleMouseDown(e){
   const rate=activeUpgradeForRate==='machina'?INV_FIRE_RATE/3.2
     :activeUpgradeForRate==='rapidfire'?INV_FIRE_RATE/4
     :activeUpgradeForRate==='doublemissile'?400
+    :activeUpgradeForRate==='warh'?INV_FIRE_RATE   // warh auto-fires separately; click fires a normal bullet
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
@@ -669,9 +677,8 @@ function invFire(){
     invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
   if(activeUpgrade==='machina'){
-    // 3 streams: left, centre, right — converge toward invShooterX at ~mid-canvas
     const ch2=invCanvas.height;
-    const convergeDist=ch2*0.55; // distance at which streams meet
+    const convergeDist=ch2*0.55;
     const spread=60;
     const streams=[
       {ox:-spread, vx: spread/convergeDist*INV_BULLET_SPEED_UPGRADED},
@@ -699,86 +706,42 @@ function invFire(){
   }
 }
 
-function startNukaSkill(respawnWave=false){
-  if(!state.running||!invCanvas||invNukaSkillActive||Date.now()<invNukaCooldownUntil){return;}
-  invMouseDown=false;
-  if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
-  invNukaSkillActive=true;
-  invNukaPromptLetter=String.fromCharCode(65+Math.floor(Math.random()*26));
-  showNukaPrompt(invNukaPromptLetter);
-  try{playNukaActivate();}catch(e){}
-  if(respawnWave) spawnInvaderWave(invWave);
-  if(!invRaf) invLoop();
-}
+// ── WARH AUTO-FIRE ──
+let invWarhInterval=null;
+const WARH_INTERVAL=1500;
+const WARH_DAMAGE=20;
+const WARH_HOMING_CHANCE=0.15;
 
-function startNukaCooldown(delay, isFail=false){
-  invNukaCooldownUntil=Date.now()+delay;
-  if(invNukaCooldownTimer){clearTimeout(invNukaCooldownTimer);}
-  showNukaKeycapCooldown(); // lerp keycap to semi-opaque — signals cooldown visually
-  setNukaCooldown(true, delay, isFail);
-  invNukaCooldownTimer=setTimeout(()=>{
-    invNukaCooldownTimer=null;
-    if(!invNukaSkillActive){
-      restoreNukaKeycapOpacity(); // lerp keycap back to full opacity — ready again
-      hideNukaPrompt();
-      setNukaCooldown(false);
-    }
-  },delay);
-}
-
-function resolveNukaInput(key){
-  if(!invNukaSkillActive||!state.running)return;
-  const pressed=String(key).toUpperCase();
-  invNukaSkillActive=false;
-  if(pressed===invNukaPromptLetter){
+function startWarhAutoFire(){
+  if(invWarhInterval){clearInterval(invWarhInterval);invWarhInterval=null;}
+  if(!invCanvas)return;
+  const fire=()=>{
+    if(!state.running||!invCanvas)return;
     const ch=invCanvas.height;
-    const laneCenter=invShooterX;
-    invBullets.push({x:laneCenter,y:ch-67,vy:-INV_BULLET_SPEED*0.25,trail:[],hit:false,kind:'nuka'});
-    if(invWave===5){
-      // Boss wave: no grid rows to target, and the bullet traveling
-      // straight up rarely connects with the boss's side-to-side drift —
-      // so a successful check deals a guaranteed direct hit instead.
-      const boss=invEntities.find(e=>e.isBoss&&e.alive);
-      if(boss){
-        boss.hp-=25;
-        invParticles.push({x:boss.x,y:boss.y,vx:0,vy:0,life:1,alpha:1,isNukaBomb:true});
-        if(boss.hp<=0){
-          boss.hp=0;
-          boss.alive=false;
-          invSpawnParticles(boss.x,boss.y,1);
-          msgEl.textContent='';
-        } else {
-          boss.glitchTimer=10;
-          const hpText=(boss.hp%1===0?boss.hp:boss.hp.toFixed(1))+' / '+INV_BOSS_HP;
-          msgEl.textContent=hpText;
-        }
-        state.combo=Math.min(state.combo+1,8);
-        setComboValue('×'+state.combo);
-      }
-    } else {
-      // Clear the 3 rows (vertical "waves") closest to failing — highest row
-      // index is the row furthest down / most advanced toward the fail line.
-      const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss&&e.row!==undefined).map(e=>e.row))].sort((a,b)=>b-a);
-      const targetRows=aliveRows.slice(0,3);
-      if(targetRows.length){
-        for(let laneEnemy of invEntities){
-          if(!laneEnemy.alive||laneEnemy.isBoss||laneEnemy.row===undefined||!targetRows.includes(laneEnemy.row))continue;
-          laneEnemy.alive=false;
-          invSpawnParticles(laneEnemy.x,laneEnemy.y,1);
-          // Purple haze burst on each cleared entity — small version of the boss bomb
-          invParticles.push({x:laneEnemy.x,y:laneEnemy.y,vx:0,vy:0,life:0.7,alpha:1,isNukaBomb:true,nukaBombR:28});
-          state.combo=Math.min(state.combo+1,8);
-          setComboValue('×'+state.combo);
-        }
-      }
+    const boss=invEntities.find(e=>e.isBoss&&e.alive);
+    // 15% chance to home toward boss (if boss exists), else fire straight up
+    const homing=boss&&Math.random()<WARH_HOMING_CHANCE;
+    let vx=0, vy=-INV_BULLET_SPEED*0.7;
+    if(homing){
+      const dx=boss.x-invShooterX, dy=boss.y-(ch-67);
+      const dist=Math.hypot(dx,dy)||1;
+      const spd=INV_BULLET_SPEED*0.7;
+      vx=(dx/dist)*spd; vy=(dy/dist)*spd;
     }
-    showNukaPrompt(invNukaPromptLetter, 'success');
-    try{playNukaSuccess();}catch(e){}
-    startNukaCooldown(3500, false);
-  } else {
-    showNukaPrompt(invNukaPromptLetter, 'fail');
-    startNukaCooldown(7000, true);
-  }
+    invBullets.push({
+      x:invShooterX, y:ch-67,
+      vx, vy,
+      trail:[], hit:false, kind:'warh', pierceLeft:0,
+      isWarh:true, warhHoming:homing
+    });
+    try{playMissileFire();}catch(e){}
+  };
+  fire(); // immediate first shot
+  invWarhInterval=setInterval(fire, WARH_INTERVAL);
+}
+
+function stopWarhAutoFire(){
+  if(invWarhInterval){clearInterval(invWarhInterval);invWarhInterval=null;}
 }
 
 function invSpawnParticles(x,y,alpha){
@@ -824,7 +787,14 @@ function invUpdate(){
       e.y=e.baseY+Math.sin(e.orbitAngle*0.46)*16;
       e.flicker+=0.012;
       if(bossTeleportFlash>0)bossTeleportFlash--;
-      if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*8;}else{e.glitchOffset=0;}
+      // Phase 2 growth lerp
+      if(bossPhase2) bossGrowthScale+=(1.38-bossGrowthScale)*0.06;
+      // Phase 2 glitch burst
+      if(bossGlitchBurst>0){
+        bossGlitchBurst--;
+        e.glitchTimer=4; // keep resetting so it stays glitchy
+        e.glitchOffset=(Math.random()-0.5)*14;
+      } else if(e.glitchTimer>0){e.glitchTimer--;e.glitchOffset=(Math.random()-0.5)*8;}else{e.glitchOffset=0;}
     } else {
       e.x=e.baseX;
       e.y=e.baseY+drop+Math.sin(e.flicker+now*0.001)*1.5;
@@ -896,9 +866,9 @@ function invUpdate(){
       for(let e of invEntities){
         if(!e.alive)continue;
         if(Math.abs(b.x-e.x)<e.cellW*0.48&&Math.abs(b.y-e.y)<e.cellH*0.52){
-          if((b.kind==='missile' || b.kind==='nuka') && !e.isBoss && e.col!==undefined){
+          if((b.kind==='missile' || b.kind==='warh') && !e.isBoss && e.col!==undefined){
             b.hit=true;
-            const cols=b.kind==='nuka'?[e.col-1,e.col,e.col+1]:[e.col];
+            const cols=b.kind==='warh'?[e.col-1,e.col,e.col+1]:[e.col];
             for(let laneEnemy of invEntities){
               if(!laneEnemy.alive || laneEnemy.isBoss || laneEnemy.col===undefined || !cols.includes(laneEnemy.col))continue;
               laneEnemy.alive=false;
@@ -918,7 +888,7 @@ function invUpdate(){
             break;
           } else {
             b.hit=true;
-            const damage=e.isBoss?((b.kind==='missile'||b.kind==='nuka')?7:b.kind==='machina'?0.3:0.5):1;
+            const damage=e.isBoss?((b.kind==='missile')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.3:0.5):1;
             e.hp-=damage;
             if(e.hp<=0){
               e.alive=false;
@@ -968,7 +938,7 @@ function getProjectilePalette(kind){
       body:'#ffffff',
     };
   }
-  if(kind==='nuka'){
+  if(kind==='warh'){
     return{
       trail:'rgba(120, 72, 92, 0.28)',
       glow:'rgba(150, 90, 110, 0.22)',
@@ -1008,7 +978,7 @@ function getProjectilePalette(kind){
 }
 
 function getMissileScale(kind){
-  if(kind==='nuka') return 1.32;
+  if(kind==='warh') return 1.65;
   return 1.08;
 }
 
@@ -1088,7 +1058,7 @@ function drawProjectileVisual(b){
     invCtx.restore();
     return;
   }
-  if(b.kind==='missile'||b.kind==='nuka'){
+  if(b.kind==='missile'||b.kind==='warh'){
     const missileScale=getMissileScale(b.kind);
     if(b.trail.length>1){
       const trail=b.trail.slice(-8);
@@ -1187,33 +1157,47 @@ function invDraw(){
       const hpRatio=e.hp/e.maxHp;
       const pulse=0.7+0.3*Math.sin(e.flicker*2);
       const bossAlpha=0.6+0.4*pulse;
+      const gs=bossGrowthScale;
       invCtx.translate(e.x+e.glitchOffset,e.y);
-      // Outer ring — fades with HP
+      // Outer ring — fades with HP, grows with phase 2
       invCtx.globalAlpha=hpRatio*0.3;
       invCtx.strokeStyle='#fff';
       invCtx.lineWidth=1;
-      invCtx.beginPath();invCtx.arc(0,0,50*pulse,0,Math.PI*2);invCtx.stroke();
+      invCtx.beginPath();invCtx.arc(0,0,50*pulse*gs,0,Math.PI*2);invCtx.stroke();
       // Inner ring
       invCtx.globalAlpha=hpRatio*0.15;
-      invCtx.beginPath();invCtx.arc(0,0,35*pulse,0,Math.PI*2);invCtx.stroke();
+      invCtx.beginPath();invCtx.arc(0,0,35*pulse*gs,0,Math.PI*2);invCtx.stroke();
+      // Phase 2 yellow outer aura
+      if(bossPhase2){
+        invCtx.globalAlpha=0.12*gs;
+        invCtx.strokeStyle='rgba(255,220,50,0.6)';
+        invCtx.lineWidth=3;
+        invCtx.shadowColor='rgba(255,220,50,0.7)';
+        invCtx.shadowBlur=22*gs;
+        invCtx.beginPath();invCtx.arc(0,0,58*pulse*gs,0,Math.PI*2);invCtx.stroke();
+        invCtx.shadowBlur=0;
+      }
       // Glitch block on hit
       if(e.glitchTimer>0){
         invCtx.globalAlpha=0.25;
         invCtx.fillStyle='#fff';
-        invCtx.fillRect(-44,-28,88,56);
+        invCtx.fillRect(-44*gs,-28*gs,88*gs,56*gs);
       }
       // Teleport landing flash
       if(bossTeleportFlash>0){
         invCtx.globalAlpha=(bossTeleportFlash/12)*0.7;
         invCtx.fillStyle='#fff';
-        invCtx.fillRect(-60,-40,120,80);
+        invCtx.fillRect(-60*gs,-40*gs,120*gs,80*gs);
       }
-      // Boss glyph
+      // Boss glyph — grows with scale
       invCtx.globalAlpha=bossAlpha;
-      invCtx.font="42px 'BlackChancery', serif";
+      const fontSize=Math.round(42*gs);
+      invCtx.font=`${fontSize}px 'BlackChancery', serif`;
       invCtx.fillStyle='#fff';
       invCtx.textAlign='center';invCtx.textBaseline='middle';
       invCtx.fillText(e.glyph,0,0);
+      // Update hitbox to match growth
+      e.cellW=90*gs; e.cellH=60*gs;
       // Boss HP — drawn as full-width canvas bar at top (see invDraw)
     } else {
       const alpha=0.5+0.4*(Math.sin(e.flicker*1.3)*0.5+0.5);
@@ -1259,20 +1243,17 @@ function invDraw(){
 
   // ── PLAYER HP BAR — bottom of canvas, above shooter ──
   {
-    const padX=24, barH=3, barY=ch-20;
+    const padX=24, barH=2, barY=ch-20;
     const barW=cw-padX*2;
     const pct=Math.max(0,invPlayerHp/PLAYER_MAX_HP);
     invCtx.save();
-    // Track bar
-    invCtx.globalAlpha=0.12;
+    invCtx.globalAlpha=0.09;
     invCtx.fillStyle='#fff';
     invCtx.fillRect(padX,barY,barW,barH);
-    // Fill
-    invCtx.globalAlpha=0.72;
+    invCtx.globalAlpha=0.58;
     invCtx.fillStyle=invPlayerHp<=30?'rgba(220,60,60,0.9)':'#fff';
     invCtx.fillRect(padX,barY,barW*pct,barH);
-    // HP number
-    invCtx.globalAlpha=0.28;
+    invCtx.globalAlpha=0.22;
     invCtx.font="8px 'BlackChancery', serif";
     invCtx.fillStyle='#fff';
     invCtx.textAlign='right';
@@ -1293,6 +1274,10 @@ function invDraw(){
   const scanY=(invNow*0.035)%ch;
   invCtx.save();invCtx.globalAlpha=0.02;invCtx.fillStyle='#fff';invCtx.fillRect(0,scanY,cw,2);invCtx.restore();
 }
+
+// Nuka skill removed — warh replaced it. Stubs preserve export contract.
+function resolveNukaInput(key){ /* no-op */ }
+function startNukaSkill(auto){ /* no-op */ }
 
 function handleInvaderKeydown(e){
   if(invNukaSkillActive && /^[a-zA-Z]$/.test(e.key)){
