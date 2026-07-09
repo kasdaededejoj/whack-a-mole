@@ -556,7 +556,6 @@ function updateBossAbilities(){
       s.hit=true;
       const dmg=31+Math.floor(Math.random()*4); // 31-34
       damagePlayer(dmg);
-      spawnVfxWave(invShooterX, ch-54); // play wave VFX at player position
     }
     // Despawn once past the bottom or well past target
     if(s.y>ch+40 || s.travelledDist>s.targetDist+200) s.alive=false;
@@ -619,30 +618,39 @@ function drawBossAbilities(){
     invCtx.restore();
   }
 
-  // Travelling wave — active from phase 2; always yellow since it only exists in p2
+  // Travelling wave — draw as sprite sheet VFX tracked to projectile position
   for(let s of bossShockwaves){
+    if(!vfxWaveImg||!vfxWaveImg.complete){
+      // Fallback crescent if sprite not loaded yet
+      const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
+      const alpha=0.25+progress*0.65;
+      const angle=Math.atan2(s.vy,s.vx);
+      invCtx.save();
+      invCtx.translate(s.x,s.y);
+      invCtx.rotate(angle-Math.PI/2);
+      invCtx.globalAlpha=alpha;
+      invCtx.strokeStyle='rgba(255,230,80,0.95)';
+      invCtx.lineWidth=2;
+      invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
+      invCtx.restore();
+      continue;
+    }
+    // Map travel progress to sprite frame
     const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
-    const alpha=0.25+progress*0.65;
+    const frame=Math.min(VFX_WAVE_FRAMES-1, Math.floor(progress*VFX_WAVE_FRAMES));
+    const w=invCanvas.width*0.42;
+    const h=w*(VFX_WAVE_FRAME_H/VFX_WAVE_FRAME_W);
     const angle=Math.atan2(s.vy,s.vx);
     invCtx.save();
     invCtx.translate(s.x,s.y);
     invCtx.rotate(angle-Math.PI/2);
-    // Yellow glow pass
-    invCtx.globalAlpha=alpha*0.4;
-    invCtx.shadowColor='rgba(255,220,50,0.9)';
-    invCtx.shadowBlur=20;
-    invCtx.strokeStyle='rgba(255,220,50,0.5)';
-    invCtx.lineWidth=6;
-    invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
-    invCtx.shadowBlur=0;
-    // Main crescent blade
-    invCtx.globalAlpha=alpha;
-    invCtx.strokeStyle='rgba(255,230,80,0.95)';
-    invCtx.lineWidth=2;
-    invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
-    invCtx.globalAlpha=alpha*0.4;
-    invCtx.lineWidth=1;
-    invCtx.beginPath();invCtx.arc(0,s.r*0.18,s.r*0.82,Math.PI*0.15,Math.PI*0.85);invCtx.stroke();
+    invCtx.globalCompositeOperation='lighter';
+    invCtx.globalAlpha=0.9;
+    invCtx.drawImage(
+      vfxWaveImg,
+      frame*VFX_WAVE_FRAME_W, 0, VFX_WAVE_FRAME_W, VFX_WAVE_FRAME_H,
+      -w/2, -h/2, w, h
+    );
     invCtx.restore();
   }
 }
@@ -707,9 +715,8 @@ function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
   const activeUpgradeForRate=invBossUpgrade||invUpgrade;
-  if(activeUpgradeForRate==='warh') return; // warh auto-fires; no click-fire
+  if(activeUpgradeForRate==='warh'){ fireWarh(); return; }
   invFire();
-  // Fire rate: machina boss upgrade overrides; else wave4 upgrade drives rate
   const rateUpgrade=invBossUpgrade==='machina'?'machina':invUpgrade;
   const rate=rateUpgrade==='machina'?INV_FIRE_RATE/3.2
     :rateUpgrade==='rapidfire'||rateUpgrade==='rapidfire_homing'?INV_FIRE_RATE/4
@@ -731,7 +738,7 @@ function invHandleSingleClick(e){
   const r=invCanvas.getBoundingClientRect();
   invShooterX=e.clientX-r.left;
   const activeUpgrade=invBossUpgrade||invUpgrade;
-  if(activeUpgrade==='warh') return; // warh auto-fires; no click-fire
+  if(activeUpgrade==='warh'){ fireWarh(); return; }
   invFire();
 }
 
@@ -776,42 +783,46 @@ function invFire(){
   }
 }
 
-// ── WARH AUTO-FIRE ──
-let invWarhInterval=null;
-const WARH_INTERVAL=1500;
+// ── WARH CLICK-FIRE ──
+// Warh fires on click with a 1s cooldown between shots
+let invWarhCooldownUntil=0;
+const WARH_COOLDOWN=1000;
 const WARH_DAMAGE=20;
 const WARH_HOMING_CHANCE=0.15;
+let invWarhInterval=null; // unused but kept for stopWarhAutoFire compat
+
+function fireWarh(){
+  if(!state.running||!invCanvas)return;
+  const now=Date.now();
+  if(now<invWarhCooldownUntil)return; // on cooldown
+  invWarhCooldownUntil=now+WARH_COOLDOWN;
+  const ch=invCanvas.height;
+  const boss=invEntities.find(e=>e.isBoss&&e.alive);
+  const homing=boss&&Math.random()<WARH_HOMING_CHANCE;
+  let vx=0, vy=-INV_BULLET_SPEED*0.7;
+  if(homing){
+    const dx=boss.x-invShooterX, dy=boss.y-(ch-67);
+    const dist=Math.hypot(dx,dy)||1;
+    const spd=INV_BULLET_SPEED*0.7;
+    vx=(dx/dist)*spd; vy=(dy/dist)*spd;
+  }
+  invBullets.push({
+    x:invShooterX, y:ch-67,
+    vx, vy,
+    trail:[], hit:false, kind:'warh', pierceLeft:0,
+    isWarh:true, warhHoming:homing
+  });
+  try{playMissileFire();}catch(e){}
+}
 
 function startWarhAutoFire(){
-  if(invWarhInterval){clearInterval(invWarhInterval);invWarhInterval=null;}
-  if(!invCanvas)return;
-  const fire=()=>{
-    if(!state.running||!invCanvas)return;
-    const ch=invCanvas.height;
-    const boss=invEntities.find(e=>e.isBoss&&e.alive);
-    // 15% chance to home toward boss (if boss exists), else fire straight up
-    const homing=boss&&Math.random()<WARH_HOMING_CHANCE;
-    let vx=0, vy=-INV_BULLET_SPEED*0.7;
-    if(homing){
-      const dx=boss.x-invShooterX, dy=boss.y-(ch-67);
-      const dist=Math.hypot(dx,dy)||1;
-      const spd=INV_BULLET_SPEED*0.7;
-      vx=(dx/dist)*spd; vy=(dy/dist)*spd;
-    }
-    invBullets.push({
-      x:invShooterX, y:ch-67,
-      vx, vy,
-      trail:[], hit:false, kind:'warh', pierceLeft:0,
-      isWarh:true, warhHoming:homing
-    });
-    try{playMissileFire();}catch(e){}
-  };
-  fire(); // immediate first shot
-  invWarhInterval=setInterval(fire, WARH_INTERVAL);
+  // no-op — warh is now click-fire
+  invWarhCooldownUntil=0;
 }
 
 function stopWarhAutoFire(){
   if(invWarhInterval){clearInterval(invWarhInterval);invWarhInterval=null;}
+  invWarhCooldownUntil=0;
 }
 
 function invSpawnParticles(x,y,alpha){
