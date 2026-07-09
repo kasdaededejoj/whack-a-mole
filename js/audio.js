@@ -326,6 +326,8 @@ function playPlayerDamage() {
     echo.start(now + 0.12); echo.stop(now + 0.32);
   } catch(e) {}
 }
+
+export { reverseBuffer, getAudio, preloadThud, playThud, playMiss, initAudio,
   playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
   playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
   playPlayerDamage };
