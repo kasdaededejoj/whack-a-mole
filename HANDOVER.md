@@ -2,6 +2,32 @@
 
 ---
 
+## Warh click-fire + wave VFX on projectile — 2026-07-09
+
+### Committed & pushed to `main` (e9a3e03)
+
+**Warh → click-fire with 1s cooldown:**
+- `startWarhAutoFire()` is now a no-op (resets `invWarhCooldownUntil=0`)
+- `fireWarh()` handles click-fire: checks `Date.now()<invWarhCooldownUntil`, fires one warh missile, sets next allowed fire at `now+1000ms`
+- `invHandleMouseDown` + `invHandleSingleClick` both route to `fireWarh()` when `invBossUpgrade==='warh'`; holding mouse does not repeat (returns after first fire)
+
+**Wave VFX tracked to projectile:**
+- Procedural crescent draw removed from `drawBossAbilities`
+- Each shockwave now maps `travelledDist/targetDist` → sprite frame index, slices the correct column from `assets/vfx_wave.png`, draws at projectile position rotated to travel direction
+- Blend mode `lighter`, alpha 0.9
+- Fallback crescent draw included if sprite sheet not yet loaded
+- `spawnVfxWave()` on-hit call removed (VFX is now the projectile itself, not an on-hit effect)
+- `spawnVfxWave` and `activeVfx` system still present for future use
+
+**Instakill audit (read-only):**
+- No instakills anywhere. `hpRest:1` enemies die in one bullet — intentional. Column-clears intentional. Boss min 16 warh hits. Player needs 3 shockwave hits or 7–8 pincer hits to die.
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused
+- `activeVfx` / `spawnVfxWave` system available for pincer/teleport VFX if AE clips provided
+
+---
+
 ## Wave hit VFX (AE sprite sheet) — 2026-07-09
 
 ### Committed & pushed to `main` (5710cc1)
