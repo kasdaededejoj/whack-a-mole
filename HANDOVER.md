@@ -2,6 +2,33 @@
 
 ---
 
+## warh upgrade + boss grow/glitch + HP bar tweak — 2026-07-09
+
+### Committed & pushed to `main` (db2a5a2)
+
+**Nuka → warh (boss upgrade slot):**
+- Upgrade kind renamed from `'nuka'` to `'warh'` throughout hit detection, palette, scale, draw, modal wiring
+- `WARH_DAMAGE=20` applied on boss hit (was 7 for missiles)
+- `WARH_INTERVAL=1500ms`, `WARH_HOMING_CHANCE=0.15`
+- Scale `1.65` (wide body) vs missile `1.08` — visually ~1.5cm wide
+- `startWarhAutoFire()` + `invLoop()` both called on pick; `stopWarhAutoFire()` called in `stopInvaders()`
+- Dangling orphan `}}` (lines 745–746) removed — was leftover from an earlier refactor
+- `resolveNukaInput` / `startNukaSkill` stubbed as no-ops to preserve export contract
+
+**Boss grow + glitch at 50% HP:**
+- `bossGlitchBurst=55` triggered at phase 2 transition (already existed in prior session stub at line 478; confirmed wired)
+- `bossGrowthScale` lerps to `1.38` over ~1s via `+=0.06*(1.38-scale)` each frame (already implemented)
+- Hitbox (`cellW`/`cellH`) scales with `bossGrowthScale` in draw loop — already live
+- Phase 2 yellow aura also already uses `gs` multiplier
+
+**Player HP bar:** height `3px → 2px`, fill alpha `0.72 → 0.58`, track alpha `0.12 → 0.09`
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused
+- Pincer phase 1 / warh — first live playtests needed
+
+---
+
 ## HP bar relocation — 2026-07-08
 
 ### Committed & pushed to `main` (7c57a45)
