@@ -2,7 +2,103 @@
 
 ---
 
-## Upgrade carry-over + doublemissile rework + boss HP scaling — 2026-07-10
+## CURRENT LIVE STATE — as of `a3b8592` (2026-07-10)
+
+### Repo
+`kasdaededejoj/whack-a-mole` — GitHub Pages at `https://kasdaededejoj.github.io/whack-a-mole/`
+Architecture: vanilla JS, modular `js/` structure. `HANDOVER.md` is the shared source of truth.
+Push workflow: PAT embedded in remote URL via `curl`/`git` in bash tool. Adam authorises reuse within session.
+
+### Round 2 — fully functional
+Waves 1–4 → boss wave (wave 5). All upgrades working. No known broken behaviour.
+
+### Upgrade system
+
+**Wave 2 modal** (pick one):
+- `rapidfire` — bullets at 2× fire rate (`INV_FIRE_RATE/2`)
+- `aoe` — auto-fires missile every 2.5s, column-clears within radius
+
+**Wave 4 modal** (pick one):
+- `doublemissile` — autofire every 1.5s, no click-fire: missile 1 straight up, missile 2 diagonal homing toward densest cluster, clears ±2 cols (5 sprites)
+- `rapidfire_homing` — bullets at 2.8× fire rate (`INV_FIRE_RATE/2.8`), steers toward nearest enemy by y
+
+**Boss modal** (pick one, stacks on top):
+- `warh` — click-fire, 1s cooldown, 20 dmg/hit, 15% homing toward boss, wide silhouette (scale 1.65)
+- `machina` — 3 converging streams on click, 0.3 dmg/stream/hit, replaces click-fire weapon
+
+**Upgrade carry-over:**
+- Wave 2 and wave 4 picks tracked in `invWave2Upgrade` + `invWave4Upgrade` independently
+- Both carry into boss wave: AOE keeps firing, rapidfire rate preserved, doublemissile autofire restarts, homing carries
+- `invFire()` resolves: machina boss upgrade → machina; else `invWave4Upgrade||invUpgrade`
+
+**Boss HP scaling:**
+- Base `INV_BOSS_HP=313`; scales `×1.5^upgradeCount` at `spawnInvaderWave(5)`
+- `upgradeCount` = non-null count of `[invWave2Upgrade, invWave4Upgrade, invBossUpgrade]`
+- 0 upgrades → 313 HP; 1 → 470; 2 → 704; 3 → 1056
+- Phase 2 threshold (50% HP) and boss HP bar both use `boss.maxHp` — scale correctly
+
+### Boss mechanics
+- **Teleports** every 3s to random anchor (top half canvas, 10% x-padding), white flash on landing
+- **Pincer** (phase 1, active from start): soft-homing curved arc, 4s CD (3.5s at phase 2), speed 5.25 (×1.3 at phase 2 ≈ 6.8). 12–15 dmg. Drawn purple → yellow glow at phase 2.
+- **Travelling wave** (phase 2 only, ≤50% HP): aimed at player position, speed 4.8, 31–34 dmg. Drawn as AE sprite sheet VFX (`assets/vfx_wave.png`, 26 frames, `lighter` blend, tracked to projectile). CD 3s. Fires immediately on phase 2 transition.
+- **Phase 2 transition**: `bossGlitchBurst=55` frames of heavy glitch + boss grows to 1.38× via lerp
+- Boss SFX (wave, pincer, teleport) — **paused, pending Adam's direction**
+
+### Bullet behaviour
+- `bullet` — 1.25× speed, pierce 2 enemies
+- `missile` — standard speed, column-clear on hit (1 col)
+- `warh` — standard speed, column-clear ±1 col (3 total) on non-boss; 20 dmg on boss
+- `machina` — 3 converging streams with `vx` drift, meet at ~55% canvas height, 0.3 dmg/stream on boss
+- Diagonal homing missile (`isDiagonalHoming:true`) — column-clear ±2 cols (5 total)
+
+### HP bars (both on-canvas, not DOM)
+- **Boss HP bar**: top of canvas, full width, 3px, white → yellow at phase 2, label "VOID"
+- **Player HP bar**: bottom of canvas, above shooter, 2px, white → red at ≤30 HP
+
+### Damage VFX (on player hit)
+- Canvas: red vignette flash (0.32α, decays), echo vignette at 120ms, chromatic aberration 18 frames, glitch displacement 10 frames
+- SFX: `playPlayerDamage()` — sub-bass 40Hz + 155Hz thud + echo layer at 120ms
+
+### VFX sprite sheet
+- `assets/vfx_wave.png` — 26 frames, 480×270 each, horizontal strip (12480×270), 236KB
+- Source: AE MP4, black background keyed with ffmpeg luminance threshold
+- `activeVfx[]` system present for future VFX (pincer hit, teleport etc.) — upload AE clip to chat
+
+### JS module structure
+```
+js/
+  audio.js       — full procedural SFX suite
+  effects.js
+  game.js        — initGame, startRound, endRound
+  state.js       — shared mutable state object
+  ui.js          — field, msgEl, setComboValue, showFail
+  utils.js
+  rounds/
+    round1.js
+    round2.js    — all wave/boss logic (1457 lines)
+    round3.js
+```
+
+### Known open items
+- Boss SFX (wave, pincer, teleport) — paused
+- `positionNukaUI()` still runs every frame on non-boss waves (minor, low cost, fine to leave)
+- All boss-wave upgrade combos need live playtesting
+
+### Security / pitfall checklist (Mode 3 standing requirement)
+On every edit check: event handler leaks (re-registered onclick/addEventListener), interval/RAF ghosts (missing clearInterval/cancelAnimationFrame), off-screen object leaks (unbounded arrays), dead code from refactors, double-firing from stacked input events (mousedown + click).
+
+---
+
+## rapidfire rates — 2026-07-10
+
+### Committed & pushed to `main` (a3b8592)
+- Wave 2 `rapidfire`: `INV_FIRE_RATE/4` → `INV_FIRE_RATE/2` (2× rate)
+- Wave 4 `rapidfire_homing`: now `INV_FIRE_RATE/2.8` (2.8× rate, distinct from wave 2)
+- Homing check reads `invWave4Upgrade||invUpgrade` — carries correctly into boss wave
+
+---
+
+
 
 ### Committed & pushed to `main` (b3bb5d0)
 
