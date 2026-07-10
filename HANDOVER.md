@@ -2,7 +2,7 @@
 
 ---
 
-## CURRENT LIVE STATE — as of `82cb6b1` (2026-07-10)
+## CURRENT LIVE STATE — as of `169c1e6` (2026-07-10)
 
 ### Repo
 `kasdaededejoj/whack-a-mole` — GitHub Pages at `https://kasdaededejoj.github.io/whack-a-mole/`
@@ -88,6 +88,15 @@ js/
 
 ### Security / pitfall checklist (Mode 3 standing requirement)
 On every edit check: event handler leaks (re-registered onclick/addEventListener), interval/RAF ghosts (missing clearInterval/cancelAnimationFrame), off-screen object leaks (unbounded arrays), dead code from refactors, double-firing from stacked input events (mousedown + click).
+
+## Round 3 turn-based sequential flow — 2026-07-10
+
+### Committed & pushed to `main` (`169c1e6`)
+
+- **Sequential turn-based mechanics in `round3.js`:** Split `duelResolveTurn` into separate player and boss phases. The player makes a choice, executing their animation, followed by a 3-second buffer before the boss takes their turn (`duelResolveBossTurn`), attacks (animates action), and resolves the outcome.
+- **Visual cues for active turn:** The active combatant's sigil is enlarged to 1.25× scale, while the inactive combatant's sigil is dimmed by 30% transparency (using `globalAlpha = 0.7`). This oscillates back and forth indefinitely as turns cycle.
+
+---
 
 ## Round 3 action buttons click listeners fix — 2026-07-10
 
