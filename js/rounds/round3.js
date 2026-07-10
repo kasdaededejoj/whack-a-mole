@@ -104,6 +104,8 @@ let duelEntityPhase = 0;
 let duelAnimState = {player:{anim:null,frame:0,action:null}, enemy:{anim:null,frame:0,action:null}};
 let duelVoidTrails = []; // Dawn Warrior afterimage trail for void strike
 let gamblersGambitUsed = false;
+let duelTurn = 'player';
+
 
 const duelScreen    = document.getElementById('duel-screen');
 const duelCanvas    = document.getElementById('duel-canvas');
@@ -181,13 +183,11 @@ function duelSpawnParticles(side, count, col){
 }
 
 function duelResolveTurn(playerAction){
-  duelPhase = 'reveal';
-  duelPhaseEl.textContent = '——';
+  if (duelPhase !== 'choose' || duelTurn !== 'player') return;
+  duelPhase = 'locked';
+  duelPlayerChoice = playerAction;
+  duelHighlight(playerAction);
   duelSetButtons(false);
-
-  const enemyAction = enemyChoose();
-  const key = playerAction+'-'+enemyAction;
-  let [pDmg, eDmg, msg] = OUTCOME[key];
 
   // Fire action SFX
   duelSFX(playerAction);
@@ -195,11 +195,28 @@ function duelResolveTurn(playerAction){
   // Trigger animations
   duelAnimState.player.anim = playerAction;
   duelAnimState.player.frame = 0;
+
+  // 3 second buffer in between, then boss can attack
+  setTimeout(() => {
+    duelTurn = 'boss';
+    duelResolveBossTurn();
+  }, 3000);
+}
+
+function duelResolveBossTurn(){
+  const enemyAction = enemyChoose();
+  const key = duelPlayerChoice+'-'+enemyAction;
+  let [pDmg, eDmg, msg] = OUTCOME[key];
+
+  // Fire action SFX
+  duelSFX(enemyAction);
+
+  // Trigger animations
   duelAnimState.enemy.anim = enemyAction;
   duelAnimState.enemy.frame = 0;
 
   // Heal mechanic: guard-guard both recover 1 if below max
-  if(playerAction==='guard' && enemyAction==='guard'){
+  if(duelPlayerChoice==='guard' && enemyAction==='guard'){
     if(duelPlayerHP < DUEL_PLAYER_MAX){ duelPlayerHP++; msg = 'mutual guard — you recover.'; }
     if(duelEnemyHP < DUEL_ENEMY_MAX)  { duelEnemyHP++;  }
   }
@@ -279,11 +296,12 @@ function duelResolveTurn(playerAction){
       return;
     }
 
+    duelTurn = 'player';
     duelPhase = 'choose';
     duelPhaseEl.textContent = 'choose';
     duelSetButtons(true);
     duelMsgEl.textContent = '';
-  }, 1400);
+  }, 1800);
 }
 
 function duelEnd(won){
@@ -409,7 +427,10 @@ function duelDrawFrame(){
     }
     duelCtx.save();
     duelCtx.translate(extraX, extraY);
-    duelCtx.scale(scaleMod, scaleMod);
+    let turnScale = (duelTurn === 'player') ? 1.25 : 1.0;
+    let turnAlpha = (duelTurn === 'boss') ? 0.7 : 1.0;
+    duelCtx.scale(scaleMod * turnScale, scaleMod * turnScale);
+    duelCtx.globalAlpha = turnAlpha;
     duelCtx.transform(1, skewMod, 0, 1, 0, 0);
     const sz = 28 + Math.sin(t*1.1)*2;
     duelCtx.strokeStyle = 'rgba(255,255,255,'+Math.min(1,0.9*alphaMod)+')';
@@ -537,7 +558,10 @@ function duelDrawFrame(){
   if(eAlive){
     duelCtx.save();
     duelCtx.translate(ex+eExtraX, ey);
-    duelCtx.scale(eScaleMod, eScaleMod);
+    let eTurnScale = (duelTurn === 'boss') ? 1.25 : 1.0;
+    let eTurnAlpha = (duelTurn === 'player') ? 0.7 : 1.0;
+    duelCtx.scale(eScaleMod * eTurnScale, eScaleMod * eTurnScale);
+    duelCtx.globalAlpha = eTurnAlpha;
     duelCtx.transform(1, eSkewMod, 0, 1, 0, 0);
     const eSz = 28 + Math.sin(t*1.1)*2;
     duelCtx.strokeStyle = 'rgba(255,255,255,'+Math.min(1,0.9*eAlphaMod)+')';
@@ -601,6 +625,7 @@ function startDuel() {
   duelPlayerHP = DUEL_PLAYER_MAX;
   duelEnemyHP = DUEL_ENEMY_MAX;
   gamblersGambitUsed = false;
+  duelTurn = 'player';
   duelPlayerChoice = null;
   duelPhase = 'choose';
   duelParticles = [];
