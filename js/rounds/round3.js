@@ -120,6 +120,18 @@ const duelBtns      = {
   void:   document.getElementById('duel-btn-void'),
 };
 
+// Wire up action buttons click listeners
+Object.entries(duelBtns).forEach(([action, btn]) => {
+  if (btn) {
+    btn.addEventListener('click', () => {
+      if (duelPhase !== 'choose') return;
+      duelPlayerChoice = action;
+      duelHighlight(action);
+      duelResolveTurn(action);
+    });
+  }
+});
+
 // Enemy AI — weighted by HP ratio
 function enemyChoose(){
   const ratio = duelEnemyHP / DUEL_ENEMY_MAX; // 1=full, 0=dying
