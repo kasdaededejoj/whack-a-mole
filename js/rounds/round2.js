@@ -45,8 +45,6 @@ let bossTeleportTimer=null;
 let bossTeleportFlash=0; // frames remaining for landing flash
 const BOSS_SHOCKWAVE_INTERVAL=3500;      // phase 1: not active; phase 2: 3500→3000ms
 const BOSS_PINCER_CD=4000;               // phase 1: 4000ms; phase 2: 3500ms
-const BOSS_SHOCKWAVE_R_MAX_P1=120;
-const BOSS_SHOCKWAVE_DURATION=4000;
 const BOSS_PINCER_SPEED=5.25;            // was 3.5 × 1.5 — pincer active from phase 1
 const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from phase 2
 
@@ -444,6 +442,8 @@ function showUpgradeModal(mode='wave2'){
     invLoop();
   }
 
+  rapidBtn.onclick=null; aoeBtn.onclick=null; dblBtn.onclick=null;
+  homingBtn.onclick=null; nukaBtn.onclick=null; machinaBtn.onclick=null;
   rapidBtn.onclick=()=>pickUpgrade('rapidfire');
   aoeBtn.onclick=()=>pickUpgrade('aoe');
   dblBtn.onclick=()=>pickUpgrade('doublemissile');
@@ -678,6 +678,8 @@ function showBossUpgradeModal(){
     } else invLoop();
   }
 
+  document.getElementById('boss-upgrade-nuka').onclick=null;
+  document.getElementById('boss-upgrade-machina').onclick=null;
   document.getElementById('boss-upgrade-nuka').onclick=()=>pickBossUpgrade('warh');
   document.getElementById('boss-upgrade-machina').onclick=()=>pickBossUpgrade('machina');
 }
@@ -714,6 +716,7 @@ function invHandleMove(e){
 function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
+  if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   const activeUpgradeForRate=invBossUpgrade||invUpgrade;
   if(activeUpgradeForRate==='warh'){ fireWarh(); return; }
   invFire();
@@ -737,13 +740,13 @@ function invHandleSingleClick(e){
   if(!state.running)return;
   const r=invCanvas.getBoundingClientRect();
   invShooterX=e.clientX-r.left;
-  const activeUpgrade=invBossUpgrade||invUpgrade;
-  if(activeUpgrade==='warh'){ fireWarh(); return; }
-  invFire();
+  // Firing is handled by mousedown/mouseup — click only repositions shooter
+  // Exception: warh fires on click (cooldown-gated, safe to double-call since fireWarh checks cooldown)
+  if((invBossUpgrade||invUpgrade)==='warh') fireWarh();
 }
 
 function invFire(){
-  if(!state.running||!invCanvas||invNukaSkillActive)return;
+  if(!state.running||!invCanvas)return;
   // Machina boss upgrade overrides wave4 weapon on click-fire (it's a full replacement).
   // Warh is additive (separate autofire loop) — click-fire uses wave4 upgrade instead.
   const activeUpgrade=invBossUpgrade==='machina'?'machina':invUpgrade;
@@ -935,8 +938,10 @@ function invUpdate(){
     b.trail.push({x:b.x,y:b.y});
     if(b.trail.length>8)b.trail.shift();
     if(invUpgrade==='rapidfire_homing'){
-      const target=invEntities.find(e=>e.alive);
-      if(target){
+      const alive=invEntities.filter(e=>e.alive&&!e.isBoss);
+      if(alive.length){
+        // Target nearest enemy by y — largest y = closest to shooter
+        const target=alive.reduce((best,e)=>e.y>best.y?e:best, alive[0]);
         const dx=target.x-b.x;
         b.x+=Math.sign(dx)*1.8;
       }
@@ -995,7 +1000,12 @@ function invUpdate(){
       }
     }
   }
-  invBullets=invBullets.filter(b=>!b.hit&&b.y>-10);
+  invBullets=invBullets.filter(b=>{
+    if(b.hit) return false;
+    if(b.y<-20||b.y>invCanvas.height+20) return false;
+    if(b.vx&&(b.x<-60||b.x>invCanvas.width+60)) return false;
+    return true;
+  });
   for(let p of invParticles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045;}
   invParticles=invParticles.filter(p=>p.life>0);
 
