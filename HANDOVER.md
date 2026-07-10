@@ -2,7 +2,7 @@
 
 ---
 
-## CURRENT LIVE STATE — as of `0ba647e` (2026-07-10)
+## CURRENT LIVE STATE — as of `82cb6b1` (2026-07-10)
 
 ### Repo
 `kasdaededejoj/whack-a-mole` — GitHub Pages at `https://kasdaededejoj.github.io/whack-a-mole/`
@@ -88,6 +88,12 @@ js/
 
 ### Security / pitfall checklist (Mode 3 standing requirement)
 On every edit check: event handler leaks (re-registered onclick/addEventListener), interval/RAF ghosts (missing clearInterval/cancelAnimationFrame), off-screen object leaks (unbounded arrays), dead code from refactors, double-firing from stacked input events (mousedown + click).
+
+## Round 3 action buttons click listeners fix — 2026-07-10
+
+### Committed & pushed to `main` (`82cb6b1`)
+
+- **Fixed missing button click handlers in `round3.js`:** The click event listeners for `duelBtns.strike`, `duelBtns.guard`, and `duelBtns.void` were dropped during the recent refactoring to modular JS files, making Round 3 unplayable. Re-added module-level listeners to wire them up to `duelResolveTurn(action)` and `duelHighlight(action)` when `duelPhase === 'choose'`.
 
 ---
 
