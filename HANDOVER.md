@@ -2,7 +2,7 @@
 
 ---
 
-## CURRENT LIVE STATE — as of `a3b8592` (2026-07-10)
+## CURRENT LIVE STATE — as of `0ba647e` (2026-07-10)
 
 ### Repo
 `kasdaededejoj/whack-a-mole` — GitHub Pages at `https://kasdaededejoj.github.io/whack-a-mole/`
@@ -15,21 +15,23 @@ Waves 1–4 → boss wave (wave 5). All upgrades working. No known broken behavi
 ### Upgrade system
 
 **Wave 2 modal** (pick one):
-- `rapidfire` — bullets at 2× fire rate (`INV_FIRE_RATE/2`)
-- `aoe` — auto-fires missile every 2.5s, column-clears within radius
+- `rapida` — hold-to-fire bullets at 2× rate (`INV_FIRE_RATE/2`). Display: "rapida"
+- `missile` — hold-to-fire, 1.3s cooldown, AOE column-clear within `INV_AOE_RADIUS` of shooter X. Display: "missile"
 
 **Wave 4 modal** (pick one):
-- `doublemissile` — autofire every 1.5s, no click-fire: missile 1 straight up, missile 2 diagonal homing toward densest cluster, clears ±2 cols (5 sprites)
-- `rapidfire_homing` — bullets at 2.8× fire rate (`INV_FIRE_RATE/2.8`), steers toward nearest enemy by y
+- `doublets` — hold-to-fire, 0.8s cooldown: missile 1 straight up, missile 2 diagonal homing toward densest cluster, clears ±2 cols (5 sprites). Display: "doublets"
+- `rapidaaa` — hold-to-fire bullets at 2.8× rate (`INV_FIRE_RATE/2.8`), steers toward nearest enemy by y. Display: "rapid'aa"
 
-**Boss modal** (pick one, stacks on top):
-- `warh` — click-fire, 1s cooldown, 20 dmg/hit, 15% homing toward boss, wide silhouette (scale 1.65)
-- `machina` — 3 converging streams on click, 0.3 dmg/stream/hit, replaces click-fire weapon
+**Boss modal** (pick one — evolves the missile+doublets combo):
+- `salvo` — hold-to-fire, 1s cooldown: fires missile AOE + doublet pair simultaneously. Display: "salvo."
+- `overcharge` — hold-to-fire, 2s cooldown: wide column-clear (AOE radius ×2.5, instant-kills all non-boss enemies in column) + warh-class missile aimed directly at boss. Display: "overcharge."
 
 **Upgrade carry-over:**
 - Wave 2 and wave 4 picks tracked in `invWave2Upgrade` + `invWave4Upgrade` independently
-- Both carry into boss wave: AOE keeps firing, rapidfire rate preserved, doublemissile autofire restarts, homing carries
-- `invFire()` resolves: machina boss upgrade → machina; else `invWave4Upgrade||invUpgrade`
+- `missile` (wave 2) stacks alongside `doublets` (wave 4) — both fire on hold
+- When boss combo is active (`salvo`/`overcharge`), it replaces individual missile+doublets bindings
+- `invFire()` resolves: `invBossUpgrade==='machina'` → machina; else `invWave4Upgrade||invUpgrade` (legacy path, not used in current missile+doublets combo)
+- Base bullet suppressed when `invWave2Upgrade==='missile'` and no bullet-firing wave4/boss upgrade active
 
 **Boss HP scaling:**
 - Base `INV_BOSS_HP=313`; scales `×1.5^upgradeCount` at `spawnInvaderWave(5)`
@@ -86,6 +88,39 @@ js/
 
 ### Security / pitfall checklist (Mode 3 standing requirement)
 On every edit check: event handler leaks (re-registered onclick/addEventListener), interval/RAF ghosts (missing clearInterval/cancelAnimationFrame), off-screen object leaks (unbounded arrays), dead code from refactors, double-firing from stacked input events (mousedown + click).
+
+---
+
+## Upgrade renames + click-fire + boss combos — 2026-07-10
+
+### Committed & pushed to `main` (`0f5a0a4`, `517bf15`, `0ba647e`)
+
+**Upgrade renames (internal string keys + display labels):**
+- `rapidfire` → `rapida` / display "rapida"
+- `rapidfire_homing` → `rapidaaa` / display "rapid'aa"
+- `aoe` → `missile` / display "missile"
+- `doublemissile` → `doublets` / display "doublets"
+- All modal button labels lowercase
+
+**missile + doublets → click-fire with hold-to-repeat:**
+- `missile` (wave 2): hold-to-fire, repeats every `MISSILE_CD=1300ms`. AOE column-clear logic unchanged. Fires `fireMissile()`.
+- `doublets` (wave 4): hold-to-fire, repeats every `DOUBLETS_CD=800ms`. Straight + diagonal homing pair. Fires `fireDoublets()`.
+- Both use separate hold intervals: `invMissileHoldInterval`, `invDoubletsHoldInterval` — cleared on mouseup, mouseleave, and `stopInvaders()`.
+- Base bullet (`invFire()` + `invFireInterval`) suppressed when `invWave2Upgrade==='missile'` and no bullet-firing wave4/boss upgrade active (`rapida`/`rapidaaa`/`machina` would re-enable it).
+- Old autofire system (`startDoubleMissileAutoFire`, `stopDoubleMissileAutoFire`, `invDoubleMissileInterval`, `DOUBLEMISSILE_CD`, `invAoeCooldown`, `INV_AOE_INTERVAL`) fully removed.
+
+**Boss modal — salvo + overcharge (missile+doublets combo evolutions):**
+- Modal desc updates dynamically to show combo context.
+- `salvo` (`SALVO_CD=1000ms`): fires missile AOE + full doublet pair simultaneously on each interval.
+- `overcharge` (`OVERCHARGE_CD=2000ms`): wide column-clear (`INV_AOE_RADIUS×2.5`, instant-kills all non-boss enemies in column) + `warh`-class missile aimed directly at boss position.
+- Both are hold-to-fire via `invMissileHoldInterval` (reused). Cooldowns reset to 0 on boss modal pick.
+- `invSalvoCooldownUntil`, `invOverchargeCooldownUntil` track cooldowns independently.
+- Boss modal button IDs unchanged (`boss-upgrade-nuka` → salvo, `boss-upgrade-machina` → overcharge). Old `warh`/`machina` boss upgrade paths still exist in code as legacy but are no longer reachable via the modal.
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused
+- Only missile+doublets combo path exists; rapida/rapidaaa boss combos (combos 3–8) not yet built
+- All boss-wave upgrade combos need live playtesting
 
 ---
 
