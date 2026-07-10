@@ -2,6 +2,39 @@
 
 ---
 
+## Upgrade carry-over + doublemissile rework + boss HP scaling — 2026-07-10
+
+### Committed & pushed to `main` (b3bb5d0)
+
+**Wave 2 + wave 4 upgrades carry into boss fight:**
+- Added `invWave2Upgrade` and `invWave4Upgrade` vars — track each pick independently so both persist even after `invUpgrade` is overwritten
+- `invFire()` resolves: `machina` boss upgrade → machina; else `invWave4Upgrade||invUpgrade`
+- AOE system checks `invUpgrade==='aoe'||invWave2Upgrade==='aoe'` — fires during boss wave if wave2 was aoe
+- `rapidfire` (wave2) carries: fire rate in `invHandleMouseDown` uses `invWave4Upgrade||invUpgrade`
+- Both trackers reset in `startInvaders()` and `stopInvaders()`
+
+**doublemissile → autofire 1.5s, no click-fire:**
+- Removed from `invFire()` click-fire path entirely
+- `startDoubleMissileAutoFire()` fires every `DOUBLEMISSILE_CD=1500ms`
+- Missile 1: straight up from `shooterX-18`
+- Missile 2: diagonal homing — finds enemy column with most neighbours within ±2 cols, aims there
+- Diagonal missile `isDiagonalHoming:true` flag → hit detection clears ±2 cols (5 sprites total)
+- `stopDoubleMissileAutoFire()` called in `stopInvaders()` and `startInvaders()`
+- Restarted in `pickBossUpgrade()` if `invWave4Upgrade==='doublemissile'`
+- Click-fire blocked in `invHandleMouseDown` when doublemissile is active
+
+**Boss HP scales ×1.5 per upgrade chosen:**
+- Computed at `spawnInvaderWave(5)`: `scaledHp = INV_BOSS_HP × 1.5^upgradeCount`
+- `upgradeCount` = number of non-null values in `[invWave2Upgrade, invWave4Upgrade, invBossUpgrade]`
+- Examples: 0 upgrades = 313 HP; 1 = 470; 2 = 704; 3 = 1056
+- `boss.maxHp` set to `scaledHp` so HP bar and phase 2 threshold (50%) both scale correctly
+
+### Open items
+- Boss SFX still paused
+- `positionNukaUI` still runs every frame (low cost, minor)
+
+---
+
 ## Bug sweep — 2026-07-10
 
 ### Committed & pushed to `main` (8c931ba)
