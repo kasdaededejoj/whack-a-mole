@@ -38,9 +38,11 @@ let invPlayerHp=PLAYER_MAX_HP;
 let invWave2Upgrade=null;  // tracks wave 2 pick independently
 let invWave4Upgrade=null;  // tracks wave 4 pick independently
 
-// doublemissile autofire
-let invDoubleMissileInterval=null;
-const DOUBLEMISSILE_CD=1500;
+// missile + doublets click-fire cooldowns
+const MISSILE_CD=1300;
+const DOUBLETS_CD=800;
+let invMissileCooldownUntil=0;
+let invDoubletsCooldownUntil=0;
 
 // Boss abilities
 let bossShockwaves=[];
@@ -163,8 +165,7 @@ function triggerHpDrainAnimation(fromHp, toHp){
     requestAnimationFrame(echoStep);
   }, 120);
 }
-let invAoeCooldown=0; // ms timestamp of last AOE fire
-const INV_AOE_INTERVAL=2500, INV_AOE_RADIUS=40;
+const INV_AOE_RADIUS=40;
 let invNukaCooldownUntil=0;
 let invNukaSkillActive=false;
 let invNukaPromptLetter='';
@@ -287,8 +288,8 @@ function startInvaders(){
   invBossUpgrade=null;
   invWave2Upgrade=null;
   invWave4Upgrade=null;
-  stopDoubleMissileAutoFire();
-  invAoeCooldown=0;
+  invMissileCooldownUntil=0;
+  invDoubletsCooldownUntil=0;
   invNukaCooldownUntil=0;
   invNukaSkillActive=false;
   invNukaPromptLetter='';
@@ -448,12 +449,10 @@ function showUpgradeModal(mode='wave2'){
     if(mode==='wave2') invWave2Upgrade=type;
     else { invWave4Upgrade=type; }
     try{playUpgradePick();}catch(e){}
-    if(type==='missile') invAoeCooldown=Date.now();
     modal.style.display='none';
     state.running=true;
     invTransitioning=false;
     spawnInvaderWave(invWave);
-    if(type==='doublets') startDoubleMissileAutoFire();
     invLoop();
   }
 
@@ -687,9 +686,7 @@ function showBossUpgradeModal(){
     startBossAbilities();
     spawnInvaderWave(invWave);
     // Restart wave4 doublemissile autofire if chosen
-    if(invWave4Upgrade==='doublets') startDoubleMissileAutoFire();
-    // Restart missile cooldown if wave2 was missile
-    if(invWave2Upgrade==='missile') invAoeCooldown=Date.now();
+    // missile + doublets are click-fire — no autofire to restart
     if(type==='warh'){
       hideNukaPrompt();
       setNukaCooldown(false);
@@ -709,7 +706,8 @@ function stopInvaders(){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
   stopWarhAutoFire();
-  stopDoubleMissileAutoFire();
+  invMissileCooldownUntil=0;
+  invDoubletsCooldownUntil=0;
   invMouseDown=false;
   invUpgrade=null;
   invBossUpgrade=null;
@@ -741,7 +739,8 @@ function invHandleMouseDown(e){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
   if(activeUpgradeForRate==='warh'){ fireWarh(); return; }
-  if(activeUpgradeForRate==='doublets') return; // doublets is autofire-only
+  if(invWave2Upgrade==='missile'){ fireMissile(); }
+  if(activeUpgradeForRate==='doublets'){ fireDoublets(); return; }
   invFire();
   const rateUpgrade=invBossUpgrade==='machina'?'machina':(invWave4Upgrade||invUpgrade);
   const rate=rateUpgrade==='machina'?INV_FIRE_RATE/3.2
@@ -764,8 +763,10 @@ function invHandleSingleClick(e){
   const r=invCanvas.getBoundingClientRect();
   invShooterX=e.clientX-r.left;
   // Firing is handled by mousedown/mouseup — click only repositions shooter
-  // Exception: warh fires on click (cooldown-gated, safe to double-call since fireWarh checks cooldown)
+  // Exceptions: cooldown-gated weapons fire on click (safe since each checks its own cooldown)
   if((invBossUpgrade||invUpgrade)==='warh') fireWarh();
+  if(invWave2Upgrade==='missile') fireMissile();
+  if((invWave4Upgrade||invUpgrade)==='doublets') fireDoublets();
 }
 
 function invFire(){
@@ -806,9 +807,43 @@ function invFire(){
   }
 }
 
-// ── DOUBLE MISSILE AUTOFIRE ──
-function fireDoubleMissile(){
+// ── MISSILE — click-fire, 1.3s cooldown, AOE column-clear ──
+function fireMissile(){
   if(!state.running||!invCanvas)return;
+  const now=Date.now();
+  if(now<invMissileCooldownUntil)return;
+  invMissileCooldownUntil=now+MISSILE_CD;
+  const ch=invCanvas.height;
+  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
+  let targetY=invCanvas.height/2;
+  if(aliveRows.length){
+    targetY=aliveRows.reduce((best,row)=>
+      Math.abs(row-invCanvas.height/2)<Math.abs(best-invCanvas.height/2)?row:best
+    ,aliveRows[0]);
+  }
+  invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
+  try{playAoeTrigger();}catch(e){}
+  for(let e of invEntities){
+    if(!e.alive)continue;
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+      e.hp--;
+      if(e.hp<=0){
+        e.alive=false;
+        invSpawnParticles(e.x,e.y,1);
+        try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
+        state.combo=Math.min(state.combo+1,8);
+        setComboValue('×'+state.combo);
+      } else { e.glitchTimer=10; }
+    }
+  }
+}
+
+// ── DOUBLETS — click-fire, 0.8s cooldown, straight + diagonal homing missiles ──
+function fireDoublets(){
+  if(!state.running||!invCanvas)return;
+  const now=Date.now();
+  if(now<invDoubletsCooldownUntil)return;
+  invDoubletsCooldownUntil=now+DOUBLETS_CD;
   const ch=invCanvas.height;
   // Missile 1 — straight up
   invBullets.push({
@@ -820,14 +855,13 @@ function fireDoubleMissile(){
   const alive=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
   let targetE=null;
   if(alive.length){
-    // Find enemy whose column has the most neighbours within ±2 cols
     targetE=alive.reduce((best,e)=>{
       const score=alive.filter(o=>Math.abs(o.col-e.col)<=2).length;
       const bestScore=alive.filter(o=>Math.abs(o.col-best.col)<=2).length;
       return score>bestScore?e:best;
     }, alive[0]);
   }
-  let vx=12, vy=-INV_BULLET_SPEED; // default diagonal right
+  let vx=12, vy=-INV_BULLET_SPEED;
   if(targetE){
     const dx=targetE.x-(invShooterX+18), dy=targetE.y-(ch-67);
     const dist=Math.hypot(dx,dy)||1;
@@ -838,22 +872,9 @@ function fireDoubleMissile(){
     x:invShooterX+18, y:ch-67,
     vx, vy,
     trail:[], hit:false, kind:'missile', pierceLeft:0,
-    isDiagonalHoming:true // flag for wide column-clear (+2 cols)
+    isDiagonalHoming:true
   });
   try{playMissileFire();}catch(e){}
-}
-
-function startDoubleMissileAutoFire(){
-  stopDoubleMissileAutoFire();
-  fireDoubleMissile(); // immediate
-  invDoubleMissileInterval=setInterval(()=>{
-    if(!state.running){stopDoubleMissileAutoFire();return;}
-    fireDoubleMissile();
-  }, DOUBLEMISSILE_CD);
-}
-
-function stopDoubleMissileAutoFire(){
-  if(invDoubleMissileInterval){clearInterval(invDoubleMissileInterval);invDoubleMissileInterval=null;}
 }
 // Warh fires on click with a 1s cooldown between shots
 let invWarhCooldownUntil=0;
@@ -961,45 +982,6 @@ function invUpdate(){
 
   // Boss abilities (shockwave + pincer) — update every frame during boss wave
   if(isBossWave) updateBossAbilities();
-
-  // AOE missile — fires every 2.5s, hits all entities within radius of shooter X
-  if(invUpgrade==='missile'||invWave2Upgrade==='missile'){
-    const now2=Date.now();
-    if(now2-invAoeCooldown>=INV_AOE_INTERVAL){
-      invAoeCooldown=now2;
-
-      const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
-      let targetY=invCanvas.height/2;
-      if(aliveRows.length){
-        targetY=aliveRows.reduce((best,row)=>
-          Math.abs(row-invCanvas.height/2)<Math.abs(best-invCanvas.height/2)?row:best
-        ,aliveRows[0]);
-      }
-
-      invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
-      try{playAoeTrigger();}catch(e){}
-
-      for(let e of invEntities){
-        if(!e.alive)continue;
-
-        const withinColumn=Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS;
-        const withinThreeRows=Math.abs(e.y-targetY)<=90;
-
-        if(withinColumn && withinThreeRows){
-          e.hp--;
-          if(e.hp<=0){
-            e.alive=false;
-            invSpawnParticles(e.x,e.y,1);
-            try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
-            state.combo=Math.min(state.combo+1,8);
-            setComboValue('×'+state.combo);
-          } else {
-            e.glitchTimer=10;
-          }
-        }
-      }
-    }
-  }
 
   // Bullets
   for(let b of invBullets){
