@@ -745,7 +745,8 @@ function invHandleMouseDown(e){
   invFire();
   const rateUpgrade=invBossUpgrade==='machina'?'machina':(invWave4Upgrade||invUpgrade);
   const rate=rateUpgrade==='machina'?INV_FIRE_RATE/3.2
-    :rateUpgrade==='rapidfire'||rateUpgrade==='rapidfire_homing'?INV_FIRE_RATE/4
+    :rateUpgrade==='rapidfire_homing'?INV_FIRE_RATE/2.8
+    :rateUpgrade==='rapidfire'?INV_FIRE_RATE/2
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
@@ -1004,10 +1005,9 @@ function invUpdate(){
   for(let b of invBullets){
     b.trail.push({x:b.x,y:b.y});
     if(b.trail.length>8)b.trail.shift();
-    if(invUpgrade==='rapidfire_homing'){
+    if(invWave4Upgrade==='rapidfire_homing'||invUpgrade==='rapidfire_homing'){
       const alive=invEntities.filter(e=>e.alive&&!e.isBoss);
       if(alive.length){
-        // Target nearest enemy by y — largest y = closest to shooter
         const target=alive.reduce((best,e)=>e.y>best.y?e:best, alive[0]);
         const dx=target.x-b.x;
         b.x+=Math.sign(dx)*1.8;
