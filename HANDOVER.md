@@ -2,6 +2,30 @@
 
 ---
 
+## Bug sweep — 2026-07-10
+
+### Committed & pushed to `main` (8c931ba)
+
+**#1 Bullet out-of-bounds leak** — filter now checks all four edges: `y<-20`, `y>ch+20`, `x<-60`, `x>cw+60`. Warh homing bullets with diagonal `vx` no longer persist off-screen forever.
+
+**#2 invFireInterval ghost on warh** — `invHandleMouseDown` now clears `invFireInterval` before the warh early-return. Any interval from a previous non-warh upgrade is flushed cleanly.
+
+**#3 Double-registered onclick handlers** — `showUpgradeModal` and `showBossUpgradeModal` both now null all button `onclick` refs before setting new ones. Previously each modal open stacked a new handler on top, so wave 4 picks would fire twice.
+
+**#4 Homing targets closest enemy, not first in array** — `rapidfire_homing` now reduces `invEntities` to the alive non-boss enemy with the largest `y` (nearest to shooter). Previously always targeted top-left enemy regardless of position.
+
+**#5 Double shot on click** — `invHandleSingleClick` no longer calls `invFire()` for non-warh upgrades. Mousedown handles firing; click only repositions the shooter. Warh still fires on click (cooldown-gated, safe).
+
+**#6 Dead constants removed** — `BOSS_SHOCKWAVE_R_MAX_P1`, `BOSS_SHOCKWAVE_DURATION` were declared but never read. Removed.
+
+**#7 Dead `invNukaSkillActive` guard removed** — from `invFire()`. Nuka skill is dead code; the var is always `false`.
+
+### Open items
+- Boss SFX (wave, pincer, teleport) — still paused
+- `positionNukaUI` still called every frame on non-boss waves (minor, low cost)
+
+---
+
 ## Warh click-fire + wave VFX on projectile — 2026-07-09
 
 ### Committed & pushed to `main` (e9a3e03)
