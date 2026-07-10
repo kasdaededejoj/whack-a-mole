@@ -682,8 +682,26 @@ function showBossUpgradeModal(){
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
   const modal=document.getElementById('boss-upgrade-modal');
   const desc=document.getElementById('boss-upgrade-desc');
+  const btn1=document.getElementById('boss-upgrade-nuka');
+  const btn2=document.getElementById('boss-upgrade-machina');
   modal.style.display='flex';
-  if(desc) desc.innerHTML='the void.<br>missile + doublets.<br>choose your final augment.';
+  btn1.onclick=null; btn2.onclick=null;
+
+  const isMissileDoublets=invWave2Upgrade==='missile'&&invWave4Upgrade==='doublets';
+
+  if(isMissileDoublets){
+    if(desc) desc.innerHTML='the void.<br>missile + doublets.<br>choose your final augment.';
+    btn1.textContent='salvo.';
+    btn2.textContent='overcharge.';
+    btn1.onclick=()=>pickBossUpgrade('salvo');
+    btn2.onclick=()=>pickBossUpgrade('overcharge');
+  } else {
+    if(desc) desc.innerHTML='the void.<br>choose your final augment.';
+    btn1.textContent='???';
+    btn2.textContent='???';
+    btn1.onclick=()=>pickBossUpgrade(null);
+    btn2.onclick=()=>pickBossUpgrade(null);
+  }
 
   function pickBossUpgrade(type){
     invBossUpgrade=type;
@@ -697,11 +715,6 @@ function showBossUpgradeModal(){
     invOverchargeCooldownUntil=0;
     invLoop();
   }
-
-  document.getElementById('boss-upgrade-nuka').onclick=null;
-  document.getElementById('boss-upgrade-machina').onclick=null;
-  document.getElementById('boss-upgrade-nuka').onclick=()=>pickBossUpgrade('salvo');
-  document.getElementById('boss-upgrade-machina').onclick=()=>pickBossUpgrade('overcharge');
 }
 
 function stopInvaders(){
