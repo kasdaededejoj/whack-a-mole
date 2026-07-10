@@ -29,11 +29,18 @@ const INV_WAVE_CONFIG=[
   {cols:10,rows:5,descentSpeed:1.0,hpTop:4,hpRest:2},  // wave 5
   null,                                                  // wave 6 — boss
 ];
-const INV_BOSS_HP=313;
+const INV_BOSS_HP=313; // base — scales ×1.5 per upgrade chosen
 
 // Player HP
 const PLAYER_MAX_HP=100;
 let invPlayerHp=PLAYER_MAX_HP;
+
+let invWave2Upgrade=null;  // tracks wave 2 pick independently
+let invWave4Upgrade=null;  // tracks wave 4 pick independently
+
+// doublemissile autofire
+let invDoubleMissileInterval=null;
+const DOUBLEMISSILE_CD=1500;
 
 // Boss abilities
 let bossShockwaves=[];
@@ -278,6 +285,9 @@ function startInvaders(){
   invTransitioning=false;
   invUpgrade=null;
   invBossUpgrade=null;
+  invWave2Upgrade=null;
+  invWave4Upgrade=null;
+  stopDoubleMissileAutoFire();
   invAoeCooldown=0;
   invNukaCooldownUntil=0;
   invNukaSkillActive=false;
@@ -327,7 +337,9 @@ function spawnInvaderWave(waveIdx){
   const cw=invCanvas.width,ch=invCanvas.height;
 
   if(waveIdx===5){
-    // ── BOSS WAVE ──
+    // Boss HP scales ×1.5 per upgrade chosen so far
+    const upgradeCount=[invWave2Upgrade,invWave4Upgrade,invBossUpgrade].filter(Boolean).length;
+    const scaledHp=Math.round(INV_BOSS_HP*Math.pow(1.5,upgradeCount));
     const bossGlyph=BOSS_SPRITES[Math.floor(Math.random()*BOSS_SPRITES.length)];
     invEntities.push({
       isBoss:true,
@@ -337,8 +349,8 @@ function spawnInvaderWave(waveIdx){
       glyph:bossGlyph,
       flicker:0,
       glitchTimer:0,glitchOffset:0,
-      hp:INV_BOSS_HP,
-      maxHp:INV_BOSS_HP,
+      hp:scaledHp,
+      maxHp:scaledHp,
       cellW:90,cellH:60,
       orbitAngle:0,
     });
@@ -433,12 +445,15 @@ function showUpgradeModal(mode='wave2'){
 
   function pickUpgrade(type){
     invUpgrade=type;
+    if(mode==='wave2') invWave2Upgrade=type;
+    else { invWave4Upgrade=type; }
     try{playUpgradePick();}catch(e){}
     if(type==='aoe') invAoeCooldown=Date.now();
     modal.style.display='none';
     state.running=true;
     invTransitioning=false;
     spawnInvaderWave(invWave);
+    if(type==='doublemissile') startDoubleMissileAutoFire();
     invLoop();
   }
 
@@ -671,6 +686,10 @@ function showBossUpgradeModal(){
     invTransitioning=false;
     startBossAbilities();
     spawnInvaderWave(invWave);
+    // Restart wave4 doublemissile autofire if chosen
+    if(invWave4Upgrade==='doublemissile') startDoubleMissileAutoFire();
+    // Restart AOE cooldown if wave2 was aoe
+    if(invWave2Upgrade==='aoe') invAoeCooldown=Date.now();
     if(type==='warh'){
       hideNukaPrompt();
       setNukaCooldown(false);
@@ -690,9 +709,12 @@ function stopInvaders(){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
   stopWarhAutoFire();
+  stopDoubleMissileAutoFire();
   invMouseDown=false;
   invUpgrade=null;
   invBossUpgrade=null;
+  invWave2Upgrade=null;
+  invWave4Upgrade=null;
   document.querySelector('.hud').style.display='';
   document.querySelector('.bar-wrap').style.display='';
   document.getElementById('wave-progress').style.display='none';
@@ -717,13 +739,13 @@ function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
-  const activeUpgradeForRate=invBossUpgrade||invUpgrade;
+  const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
   if(activeUpgradeForRate==='warh'){ fireWarh(); return; }
+  if(activeUpgradeForRate==='doublemissile') return; // doublemissile is autofire-only
   invFire();
-  const rateUpgrade=invBossUpgrade==='machina'?'machina':invUpgrade;
+  const rateUpgrade=invBossUpgrade==='machina'?'machina':(invWave4Upgrade||invUpgrade);
   const rate=rateUpgrade==='machina'?INV_FIRE_RATE/3.2
     :rateUpgrade==='rapidfire'||rateUpgrade==='rapidfire_homing'?INV_FIRE_RATE/4
-    :rateUpgrade==='doublemissile'?400
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
@@ -747,12 +769,12 @@ function invHandleSingleClick(e){
 
 function invFire(){
   if(!state.running||!invCanvas)return;
-  // Machina boss upgrade overrides wave4 weapon on click-fire (it's a full replacement).
-  // Warh is additive (separate autofire loop) — click-fire uses wave4 upgrade instead.
-  const activeUpgrade=invBossUpgrade==='machina'?'machina':invUpgrade;
+  // During boss wave: machina overrides click weapon; else use wave4 upgrade.
+  // Wave2 upgrade (rapidfire/aoe) stacks separately — handled via interval/AOE system.
+  const activeUpgrade=invBossUpgrade==='machina'?'machina':invWave4Upgrade||invUpgrade;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
-    const isMissile=activeUpgrade==='aoe'||activeUpgrade==='doublemissile'||activeUpgrade==='rapidfire_homing';
+    const isMissile=activeUpgrade==='aoe'||activeUpgrade==='rapidfire_homing';
     const spd=isMissile?INV_BULLET_SPEED:INV_BULLET_SPEED_UPGRADED;
     invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
@@ -774,9 +796,6 @@ function invFire(){
       });
     }
     try{playMachinaBurst();}catch(e){}
-  } else if(activeUpgrade==='doublemissile'){
-    spawnBullet(invShooterX-18); spawnBullet(invShooterX+18);
-    try{playMissileFire();}catch(e){}
   } else if(activeUpgrade==='rapidfire_homing'||activeUpgrade==='aoe'){
     spawnBullet(invShooterX);
     try{playMissileFire();}catch(e){}
@@ -786,7 +805,55 @@ function invFire(){
   }
 }
 
-// ── WARH CLICK-FIRE ──
+// ── DOUBLE MISSILE AUTOFIRE ──
+function fireDoubleMissile(){
+  if(!state.running||!invCanvas)return;
+  const ch=invCanvas.height;
+  // Missile 1 — straight up
+  invBullets.push({
+    x:invShooterX-18, y:ch-67,
+    vx:0, vy:-INV_BULLET_SPEED,
+    trail:[], hit:false, kind:'missile', pierceLeft:0
+  });
+  // Missile 2 — diagonal homing toward densest enemy cluster, kills ±2 cols (5 total)
+  const alive=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
+  let targetE=null;
+  if(alive.length){
+    // Find enemy whose column has the most neighbours within ±2 cols
+    targetE=alive.reduce((best,e)=>{
+      const score=alive.filter(o=>Math.abs(o.col-e.col)<=2).length;
+      const bestScore=alive.filter(o=>Math.abs(o.col-best.col)<=2).length;
+      return score>bestScore?e:best;
+    }, alive[0]);
+  }
+  let vx=12, vy=-INV_BULLET_SPEED; // default diagonal right
+  if(targetE){
+    const dx=targetE.x-(invShooterX+18), dy=targetE.y-(ch-67);
+    const dist=Math.hypot(dx,dy)||1;
+    const spd=INV_BULLET_SPEED;
+    vx=(dx/dist)*spd; vy=(dy/dist)*spd;
+  }
+  invBullets.push({
+    x:invShooterX+18, y:ch-67,
+    vx, vy,
+    trail:[], hit:false, kind:'missile', pierceLeft:0,
+    isDiagonalHoming:true // flag for wide column-clear (+2 cols)
+  });
+  try{playMissileFire();}catch(e){}
+}
+
+function startDoubleMissileAutoFire(){
+  stopDoubleMissileAutoFire();
+  fireDoubleMissile(); // immediate
+  invDoubleMissileInterval=setInterval(()=>{
+    if(!state.running){stopDoubleMissileAutoFire();return;}
+    fireDoubleMissile();
+  }, DOUBLEMISSILE_CD);
+}
+
+function stopDoubleMissileAutoFire(){
+  if(invDoubleMissileInterval){clearInterval(invDoubleMissileInterval);invDoubleMissileInterval=null;}
+}
 // Warh fires on click with a 1s cooldown between shots
 let invWarhCooldownUntil=0;
 const WARH_COOLDOWN=1000;
@@ -895,7 +962,7 @@ function invUpdate(){
   if(isBossWave) updateBossAbilities();
 
   // AOE missile — fires every 2.5s, hits all entities within radius of shooter X
-  if(invUpgrade==='aoe'){
+  if(invUpgrade==='aoe'||invWave2Upgrade==='aoe'){
     const now2=Date.now();
     if(now2-invAoeCooldown>=INV_AOE_INTERVAL){
       invAoeCooldown=now2;
@@ -954,7 +1021,9 @@ function invUpdate(){
         if(Math.abs(b.x-e.x)<e.cellW*0.48&&Math.abs(b.y-e.y)<e.cellH*0.52){
           if((b.kind==='missile' || b.kind==='warh') && !e.isBoss && e.col!==undefined){
             b.hit=true;
-            const cols=b.kind==='warh'?[e.col-1,e.col,e.col+1]:[e.col];
+            const colRange=b.kind==='warh'?1:b.isDiagonalHoming?2:0; // warh ±1, diag ±2, normal col only
+            const cols=[];
+            for(let c=e.col-colRange;c<=e.col+colRange;c++) cols.push(c);
             for(let laneEnemy of invEntities){
               if(!laneEnemy.alive || laneEnemy.isBoss || laneEnemy.col===undefined || !cols.includes(laneEnemy.col))continue;
               laneEnemy.alive=false;
