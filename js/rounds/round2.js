@@ -29,7 +29,7 @@ const INV_WAVE_CONFIG=[
   {cols:10,rows:5,descentSpeed:1.0,hpTop:4,hpRest:2},  // wave 5
   null,                                                  // wave 6 — boss
 ];
-const INV_BOSS_HP=313; // base — scales ×1.5 per upgrade chosen
+const INV_BOSS_HP=444; // base — scales ×1.5 per upgrade chosen; ~1000 at 2 upgrades
 
 // Player HP
 const PLAYER_MAX_HP=100;
@@ -555,7 +555,7 @@ function updateBossAbilities(){
   if(!boss||!invCanvas)return;
 
   // Phase 2 transition at ≤50% HP
-  if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
+  if(!bossPhase2&&boss.hp<=boss.maxHp*0.5){
     bossPhase2=true;
     bossGlitchBurst=55;   // ~55 frames of heavy glitch
     // Unlock travelling wave — fires immediately then every 3000ms
@@ -580,7 +580,7 @@ function updateBossAbilities(){
       damagePlayer(dmg);
     }
     // Despawn once past the bottom or well past target
-    if(s.y>ch+40 || s.travelledDist>s.targetDist+200) s.alive=false;
+    if(s.y>ch+60||s.x<-60||s.x>invCanvas.width+60) s.alive=false;
   }
   bossShockwaves=bossShockwaves.filter(s=>s.alive);
 
@@ -779,11 +779,11 @@ function invHandleMouseDown(e){
   // doublets (wave4) — hold-to-fire, suppresses base bullet
   if(activeUpgradeForRate==='doublets'){
     fireDoublets();
-    invDoubletsHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;return;}fireDoublets();},DOUBLETS_CD);
+    invDoubletsHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;return;}fireDoublets();},400);
     // missile (wave2) still stacks alongside doublets
     if(invWave2Upgrade==='missile'){
       fireMissile();
-      invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
+      invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},600);
     }
     return;
   }
@@ -791,7 +791,7 @@ function invHandleMouseDown(e){
   // missile (wave2) alone — hold-to-fire, suppress base bullet
   if(invWave2Upgrade==='missile'){
     fireMissile();
-    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
+    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},600);
     // only skip base bullet if no wave4/boss upgrade that uses bullet fire
     const needsBullet=activeUpgradeForRate==='rapida'||activeUpgradeForRate==='rapidaaa'||activeUpgradeForRate==='machina';
     if(!needsBullet) return;
@@ -875,18 +875,17 @@ function fireMissile(){
   if(now<invMissileCooldownUntil)return;
   invMissileCooldownUntil=now+MISSILE_CD;
   const ch=invCanvas.height;
-  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
-  let targetY=invCanvas.height/2;
-  if(aliveRows.length){
-    targetY=aliveRows.reduce((best,row)=>
-      Math.abs(row-invCanvas.height/2)<Math.abs(best-invCanvas.height/2)?row:best
-    ,aliveRows[0]);
-  }
+  // Target lowest alive row (largest Y) so stragglers are never missed
+  const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss).map(e=>Math.round(e.y)))].sort((a,b)=>b-a);
+  let targetY=ch/2;
+  if(aliveRows.length) targetY=aliveRows[0];
   invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
   try{playAoeTrigger();}catch(e){}
+  // Vertical window: cellH*3 covers ~1.5 rows above + 1.5 rows below target row
+  const vertWindow=44*3;
   for(let e of invEntities){
-    if(!e.alive)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+    if(!e.alive||e.isBoss)continue;
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=vertWindow){
       e.hp--;
       if(e.hp<=0){
         e.alive=false;
@@ -946,17 +945,13 @@ function fireSalvo(){
   invSalvoCooldownUntil=now+SALVO_CD;
   const ch=invCanvas.height;
   // Missile AOE — same logic as fireMissile but bypasses its own cooldown gate
-  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
+  const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss).map(e=>Math.round(e.y)))].sort((a,b)=>b-a);
   let targetY=ch/2;
-  if(aliveRows.length){
-    targetY=aliveRows.reduce((best,row)=>
-      Math.abs(row-ch/2)<Math.abs(best-ch/2)?row:best
-    ,aliveRows[0]);
-  }
+  if(aliveRows.length) targetY=aliveRows[0];
   invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
   for(let e of invEntities){
-    if(!e.alive)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+    if(!e.alive||e.isBoss)continue;
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=44*3){
       e.hp--;
       if(e.hp<=0){
         e.alive=false;
@@ -1182,7 +1177,7 @@ function invUpdate(){
               e.glitchTimer=10;
               // Show boss HP
               if(isBossWave){
-                const hpText=(e.hp%1===0?e.hp:e.hp.toFixed(1))+' / '+INV_BOSS_HP;
+                const hpText=(e.hp%1===0?e.hp:e.hp.toFixed(1))+' / '+e.maxHp;
                 msgEl.textContent=hpText;
               }
             }
@@ -1204,11 +1199,13 @@ function invUpdate(){
   const alive=invEntities.filter(e=>e.alive);
   if(alive.length===0){
     if(invWave<5){
-      // More waves to go
       nextInvaderWave();
     } else {
-      // All 6 waves cleared — pass R2
-      state.running=false;clearInterval(state.bTimer);endRound();
+      // Boss wave — only end if the boss entity is confirmed dead
+      const boss=invEntities.find(e=>e.isBoss);
+      if(boss&&boss.hp<=0&&!boss.alive){
+        state.running=false;clearInterval(state.bTimer);endRound();
+      }
     }
   }
 }
