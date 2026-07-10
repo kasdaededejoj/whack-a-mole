@@ -440,7 +440,7 @@ function showUpgradeModal(mode='wave2'){
     rapidBtn.style.display='none'; aoeBtn.style.display='none';
     dblBtn.style.display=''; homingBtn.style.display='';
     nukaBtn.style.display='none'; machinaBtn.style.display='none';
-    desc.innerHTML='wave 4.<br>choose your augment.<br>double missile.<br>rapid + homing.';
+    desc.innerHTML='wave 4.<br>choose your augment.<br>doublets.<br>rapid\'aa.';
   }
 
   function pickUpgrade(type){
@@ -448,21 +448,21 @@ function showUpgradeModal(mode='wave2'){
     if(mode==='wave2') invWave2Upgrade=type;
     else { invWave4Upgrade=type; }
     try{playUpgradePick();}catch(e){}
-    if(type==='aoe') invAoeCooldown=Date.now();
+    if(type==='missile') invAoeCooldown=Date.now();
     modal.style.display='none';
     state.running=true;
     invTransitioning=false;
     spawnInvaderWave(invWave);
-    if(type==='doublemissile') startDoubleMissileAutoFire();
+    if(type==='doublets') startDoubleMissileAutoFire();
     invLoop();
   }
 
   rapidBtn.onclick=null; aoeBtn.onclick=null; dblBtn.onclick=null;
   homingBtn.onclick=null; nukaBtn.onclick=null; machinaBtn.onclick=null;
-  rapidBtn.onclick=()=>pickUpgrade('rapidfire');
-  aoeBtn.onclick=()=>pickUpgrade('aoe');
-  dblBtn.onclick=()=>pickUpgrade('doublemissile');
-  homingBtn.onclick=()=>pickUpgrade('rapidfire_homing');
+  rapidBtn.onclick=()=>pickUpgrade('rapida');
+  aoeBtn.onclick=()=>pickUpgrade('missile');
+  dblBtn.onclick=()=>pickUpgrade('doublets');
+  homingBtn.onclick=()=>pickUpgrade('rapidaaa');
   nukaBtn.onclick=()=>pickUpgrade('nuka');
   machinaBtn.onclick=()=>pickUpgrade('machina');
 }
@@ -687,9 +687,9 @@ function showBossUpgradeModal(){
     startBossAbilities();
     spawnInvaderWave(invWave);
     // Restart wave4 doublemissile autofire if chosen
-    if(invWave4Upgrade==='doublemissile') startDoubleMissileAutoFire();
-    // Restart AOE cooldown if wave2 was aoe
-    if(invWave2Upgrade==='aoe') invAoeCooldown=Date.now();
+    if(invWave4Upgrade==='doublets') startDoubleMissileAutoFire();
+    // Restart missile cooldown if wave2 was missile
+    if(invWave2Upgrade==='missile') invAoeCooldown=Date.now();
     if(type==='warh'){
       hideNukaPrompt();
       setNukaCooldown(false);
@@ -741,12 +741,12 @@ function invHandleMouseDown(e){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
   if(activeUpgradeForRate==='warh'){ fireWarh(); return; }
-  if(activeUpgradeForRate==='doublemissile') return; // doublemissile is autofire-only
+  if(activeUpgradeForRate==='doublets') return; // doublets is autofire-only
   invFire();
   const rateUpgrade=invBossUpgrade==='machina'?'machina':(invWave4Upgrade||invUpgrade);
   const rate=rateUpgrade==='machina'?INV_FIRE_RATE/3.2
-    :rateUpgrade==='rapidfire_homing'?INV_FIRE_RATE/2.8
-    :rateUpgrade==='rapidfire'?INV_FIRE_RATE/2
+    :rateUpgrade==='rapidaaa'?INV_FIRE_RATE/2.8
+    :rateUpgrade==='rapida'?INV_FIRE_RATE/2
     :INV_FIRE_RATE;
   invFireInterval=setInterval(()=>{
     if(!state.running||!invMouseDown){clearInterval(invFireInterval);invFireInterval=null;return;}
@@ -775,7 +775,7 @@ function invFire(){
   const activeUpgrade=invBossUpgrade==='machina'?'machina':invWave4Upgrade||invUpgrade;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
-    const isMissile=activeUpgrade==='aoe'||activeUpgrade==='rapidfire_homing';
+    const isMissile=activeUpgrade==='missile'||activeUpgrade==='rapidaaa';
     const spd=isMissile?INV_BULLET_SPEED:INV_BULLET_SPEED_UPGRADED;
     invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
@@ -797,7 +797,7 @@ function invFire(){
       });
     }
     try{playMachinaBurst();}catch(e){}
-  } else if(activeUpgrade==='rapidfire_homing'||activeUpgrade==='aoe'){
+  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='missile'){
     spawnBullet(invShooterX);
     try{playMissileFire();}catch(e){}
   } else {
@@ -963,7 +963,7 @@ function invUpdate(){
   if(isBossWave) updateBossAbilities();
 
   // AOE missile — fires every 2.5s, hits all entities within radius of shooter X
-  if(invUpgrade==='aoe'||invWave2Upgrade==='aoe'){
+  if(invUpgrade==='missile'||invWave2Upgrade==='missile'){
     const now2=Date.now();
     if(now2-invAoeCooldown>=INV_AOE_INTERVAL){
       invAoeCooldown=now2;
@@ -1005,7 +1005,7 @@ function invUpdate(){
   for(let b of invBullets){
     b.trail.push({x:b.x,y:b.y});
     if(b.trail.length>8)b.trail.shift();
-    if(invWave4Upgrade==='rapidfire_homing'||invUpgrade==='rapidfire_homing'){
+    if(invWave4Upgrade==='rapidaaa'||invUpgrade==='rapidaaa'){
       const alive=invEntities.filter(e=>e.alive&&!e.isBoss);
       if(alive.length){
         const target=alive.reduce((best,e)=>e.y>best.y?e:best, alive[0]);
