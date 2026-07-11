@@ -950,9 +950,17 @@ function fireMissile(){
   }
   invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
   try{playAoeTrigger();}catch(e){}
+  // Map shooter x → nearest col index for reliable 2-column clear
+  const _mgrid=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
+  let _mCol=null;
+  if(_mgrid.length){
+    const _mc=_mgrid.reduce((best,e)=>Math.abs(e.x-invShooterX)<Math.abs(best.x-invShooterX)?e:best,_mgrid[0]);
+    _mCol=_mc.col;
+  }
   for(let e of invEntities){
-    if(!e.alive)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+    if(!e.alive||e.isBoss||e.col===undefined)continue;
+    const _colHit=_mCol!==null?Math.abs(e.col-_mCol)<=1:Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS;
+    if(_colHit){
       e.hp--;
       if(e.hp<=0){
         e.alive=false;
@@ -1020,9 +1028,17 @@ function fireSalvo(){
     ,aliveRows[0]);
   }
   invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
+  // Map shooter x → nearest col index for reliable 2-column clear (same fix as fireMissile)
+  const _sgrid=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
+  let _sCol=null;
+  if(_sgrid.length){
+    const _sc=_sgrid.reduce((best,e)=>Math.abs(e.x-invShooterX)<Math.abs(best.x-invShooterX)?e:best,_sgrid[0]);
+    _sCol=_sc.col;
+  }
   for(let e of invEntities){
-    if(!e.alive)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+    if(!e.alive||e.isBoss||e.col===undefined)continue;
+    const _sColHit=_sCol!==null?Math.abs(e.col-_sCol)<=1:Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS;
+    if(_sColHit){
       e.hp--;
       if(e.hp<=0){
         e.alive=false;
@@ -1232,7 +1248,7 @@ function invUpdate(){
             break;
           } else {
             b.hit=true;
-            const damage=e.isBoss?((b.kind==='missile')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.3:0.5):1;
+            const damage=e.isBoss?((b.kind==='missile')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.5:0.5):1;
             e.hp-=damage;
             if(e.hp<=0){
               e.alive=false;
