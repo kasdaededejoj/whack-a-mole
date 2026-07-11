@@ -933,9 +933,6 @@ function invFire(){
 const BEAM_WIDTH=113;
 function fireBeam(widthOverride){
   if(!state.running||!invCanvas)return;
-  const now=Date.now();
-  if(now<invBeamCooldownUntil)return;
-  invBeamCooldownUntil=now+BEAM_CD;
   _castAndFireBeam(invShooterX, widthOverride||BEAM_WIDTH, 1);
 }
 
@@ -975,9 +972,6 @@ function _castAndFireBeam(cx, bw, dmg){
 const DUA_BEAM_WIDTH=280;
 function fireDuaBeam(){
   if(!state.running||!invCanvas)return;
-  const now=Date.now();
-  if(now<invDuaBeamCooldownUntil)return;
-  invDuaBeamCooldownUntil=now+DUA_BEAM_CD;
   _castAndFireBeam(invShooterX, DUA_BEAM_WIDTH, 1);
 }
 
