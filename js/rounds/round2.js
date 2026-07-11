@@ -29,7 +29,7 @@ const INV_WAVE_CONFIG=[
   {cols:10,rows:5,descentSpeed:1.0,hpTop:4,hpRest:2},  // wave 5
   null,                                                  // wave 6 — boss
 ];
-const INV_BOSS_HP=444; // base — scales ×1.5 per upgrade chosen; ~1000 at 2 upgrades
+const INV_BOSS_HP=313; // base — scales ×1.5 per upgrade chosen
 
 // Player HP
 const PLAYER_MAX_HP=100;
@@ -64,31 +64,19 @@ const BOSS_PINCER_SPEED=5.25;            // was 3.5 × 1.5 — pincer active fro
 const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from phase 2
 
 // VFX sprite sheet — wave ability
-const VFX_WAVE_FRAMES=26;
-const VFX_WAVE_FRAME_W=480;
-const VFX_WAVE_FRAME_H=270;
-let vfxWaveImg=null;
-let activeVfx=[]; // {img, frameW, frameH, totalFrames, frame, x, y, w, h, blendMode}
+// Travelling wave VFX — WebM video element
+let vfxWaveVideo=null;
+let vfxWaveRaf=null;
 
 function loadVfxAssets(){
-  vfxWaveImg=new Image();
-  vfxWaveImg.src='assets/vfx_wave.png';
-}
-
-function spawnVfxWave(x, y){
-  if(!vfxWaveImg||!vfxWaveImg.complete)return;
-  // Scale to ~40% of canvas width, centred on impact point
-  const w=invCanvas?invCanvas.width*0.42:200;
-  const h=w*(VFX_WAVE_FRAME_H/VFX_WAVE_FRAME_W);
-  activeVfx.push({
-    img:vfxWaveImg,
-    frameW:VFX_WAVE_FRAME_W, frameH:VFX_WAVE_FRAME_H,
-    totalFrames:VFX_WAVE_FRAMES,
-    frame:0,
-    x:x-w/2, y:y-h/2,
-    w, h,
-    blendMode:'lighter'
-  });
+  if(vfxWaveVideo) return; // already created
+  vfxWaveVideo=document.createElement('video');
+  vfxWaveVideo.src='assets/vfx_wave.webm';
+  vfxWaveVideo.preload='auto';
+  vfxWaveVideo.muted=true;
+  vfxWaveVideo.playsInline=true;
+  vfxWaveVideo.style.cssText='position:fixed;pointer-events:none;mix-blend-mode:screen;display:none;z-index:50;transform-origin:center center;';
+  document.body.appendChild(vfxWaveVideo);
 }
 
 // Boss sprite pool — one chosen at random on spawn
@@ -307,7 +295,6 @@ function startInvaders(){
   // Player HP
   invPlayerHp=PLAYER_MAX_HP;
   updatePlayerHpBar();
-  activeVfx=[];
   loadVfxAssets();
   // Boss abilities
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
@@ -495,6 +482,8 @@ function spawnWave(){
   const tx=invShooterX, ty=ch-54;
   const dx=tx-boss.x, dy=ty-boss.y;
   const dist=Math.hypot(dx,dy)||1;
+
+  // Physics projectile — hit detection unchanged
   bossShockwaves.push({
     x:boss.x, y:boss.y,
     vx:(dx/dist)*BOSS_WAVE_SPEED, vy:(dy/dist)*BOSS_WAVE_SPEED,
@@ -502,6 +491,49 @@ function spawnWave(){
     travelledDist:0,
     hit:false, alive:true
   });
+
+  // WebM VFX — position video over boss, translate toward shooter
+  if(!vfxWaveVideo) return;
+  if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
+  vfxWaveVideo.currentTime=0;
+
+  const rect=invCanvas.getBoundingClientRect();
+  // Boss canvas coords → page coords
+  const bossPageX=rect.left+boss.x;
+  const bossPageY=rect.top+boss.y;
+  const shooterPageX=rect.left+tx;
+  const shooterPageY=rect.top+ty;
+
+  // Size: full canvas width, maintain 16:9 aspect
+  const vidW=rect.width;
+  const vidH=vidW*(9/16);
+
+  // Angle from boss to shooter
+  const angle=Math.atan2(ty-boss.y, tx-boss.x)-Math.PI/2;
+
+  vfxWaveVideo.style.width=vidW+'px';
+  vfxWaveVideo.style.height=vidH+'px';
+  vfxWaveVideo.style.display='block';
+
+  // Animate position from boss to shooter over the same duration as BOSS_WAVE_SPEED travel
+  const travelMs=(dist/BOSS_WAVE_SPEED)*(1000/60); // approx ms at 60fps
+  const startTime=performance.now();
+
+  function animateWave(now){
+    const elapsed=now-startTime;
+    const t=Math.min(1, elapsed/travelMs);
+    const cx=bossPageX+(shooterPageX-bossPageX)*t;
+    const cy=bossPageY+(shooterPageY-bossPageY)*t;
+    vfxWaveVideo.style.left=(cx-vidW/2)+'px';
+    vfxWaveVideo.style.top=(cy-vidH/2)+'px';
+    vfxWaveVideo.style.transform=`rotate(${angle}rad)`;
+    if(t<1&&state.running) vfxWaveRaf=requestAnimationFrame(animateWave);
+    else { vfxWaveVideo.style.display='none'; vfxWaveRaf=null; }
+  }
+
+  vfxWaveVideo.play().catch(()=>{});
+  vfxWaveVideo.onended=()=>{ vfxWaveVideo.style.display='none'; };
+  vfxWaveRaf=requestAnimationFrame(animateWave);
 }
 
 function startBossAbilities(){
@@ -547,6 +579,8 @@ function stopBossAbilities(){
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
   if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
+  if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
+  if(vfxWaveVideo){vfxWaveVideo.pause();vfxWaveVideo.style.display='none';}
   bossShockwaves=[];bossPincers=[];bossTeleportFlash=0;
 }
 
@@ -555,7 +589,7 @@ function updateBossAbilities(){
   if(!boss||!invCanvas)return;
 
   // Phase 2 transition at ≤50% HP
-  if(!bossPhase2&&boss.hp<=boss.maxHp*0.5){
+  if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
     bossPhase2=true;
     bossGlitchBurst=55;   // ~55 frames of heavy glitch
     // Unlock travelling wave — fires immediately then every 3000ms
@@ -580,7 +614,7 @@ function updateBossAbilities(){
       damagePlayer(dmg);
     }
     // Despawn once past the bottom or well past target
-    if(s.y>ch+60||s.x<-60||s.x>invCanvas.width+60) s.alive=false;
+    if(s.y>ch+40 || s.travelledDist>s.targetDist+200) s.alive=false;
   }
   bossShockwaves=bossShockwaves.filter(s=>s.alive);
 
@@ -640,39 +674,17 @@ function drawBossAbilities(){
     invCtx.restore();
   }
 
-  // Travelling wave — draw as sprite sheet VFX tracked to projectile position
+  // Travelling wave — canvas fallback crescent (visible if video not loaded)
   for(let s of bossShockwaves){
-    if(!vfxWaveImg||!vfxWaveImg.complete){
-      // Fallback crescent if sprite not loaded yet
-      const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
-      const alpha=0.25+progress*0.65;
-      const angle=Math.atan2(s.vy,s.vx);
-      invCtx.save();
-      invCtx.translate(s.x,s.y);
-      invCtx.rotate(angle-Math.PI/2);
-      invCtx.globalAlpha=alpha;
-      invCtx.strokeStyle='rgba(255,230,80,0.95)';
-      invCtx.lineWidth=2;
-      invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
-      invCtx.restore();
-      continue;
-    }
-    // Map travel progress to sprite frame
     const progress=Math.min(1, s.travelledDist/(s.targetDist||1));
-    const frame=Math.min(VFX_WAVE_FRAMES-1, Math.floor(progress*VFX_WAVE_FRAMES));
-    const w=invCanvas.width*0.42;
-    const h=w*(VFX_WAVE_FRAME_H/VFX_WAVE_FRAME_W);
     const angle=Math.atan2(s.vy,s.vx);
     invCtx.save();
     invCtx.translate(s.x,s.y);
     invCtx.rotate(angle-Math.PI/2);
-    invCtx.globalCompositeOperation='lighter';
-    invCtx.globalAlpha=0.9;
-    invCtx.drawImage(
-      vfxWaveImg,
-      frame*VFX_WAVE_FRAME_W, 0, VFX_WAVE_FRAME_W, VFX_WAVE_FRAME_H,
-      -w/2, -h/2, w, h
-    );
+    invCtx.globalAlpha=0.18;
+    invCtx.strokeStyle='rgba(255,230,80,0.7)';
+    invCtx.lineWidth=2;
+    invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
     invCtx.restore();
   }
 }
@@ -779,11 +791,11 @@ function invHandleMouseDown(e){
   // doublets (wave4) — hold-to-fire, suppresses base bullet
   if(activeUpgradeForRate==='doublets'){
     fireDoublets();
-    invDoubletsHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;return;}fireDoublets();},400);
+    invDoubletsHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;return;}fireDoublets();},DOUBLETS_CD);
     // missile (wave2) still stacks alongside doublets
     if(invWave2Upgrade==='missile'){
       fireMissile();
-      invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},600);
+      invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
     }
     return;
   }
@@ -791,7 +803,7 @@ function invHandleMouseDown(e){
   // missile (wave2) alone — hold-to-fire, suppress base bullet
   if(invWave2Upgrade==='missile'){
     fireMissile();
-    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},600);
+    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
     // only skip base bullet if no wave4/boss upgrade that uses bullet fire
     const needsBullet=activeUpgradeForRate==='rapida'||activeUpgradeForRate==='rapidaaa'||activeUpgradeForRate==='machina';
     if(!needsBullet) return;
@@ -875,17 +887,18 @@ function fireMissile(){
   if(now<invMissileCooldownUntil)return;
   invMissileCooldownUntil=now+MISSILE_CD;
   const ch=invCanvas.height;
-  // Target lowest alive row (largest Y) so stragglers are never missed
-  const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss).map(e=>Math.round(e.y)))].sort((a,b)=>b-a);
-  let targetY=ch/2;
-  if(aliveRows.length) targetY=aliveRows[0];
+  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
+  let targetY=invCanvas.height/2;
+  if(aliveRows.length){
+    targetY=aliveRows.reduce((best,row)=>
+      Math.abs(row-invCanvas.height/2)<Math.abs(best-invCanvas.height/2)?row:best
+    ,aliveRows[0]);
+  }
   invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
   try{playAoeTrigger();}catch(e){}
-  // Vertical window: cellH*3 covers ~1.5 rows above + 1.5 rows below target row
-  const vertWindow=44*3;
   for(let e of invEntities){
-    if(!e.alive||e.isBoss)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=vertWindow){
+    if(!e.alive)continue;
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
       e.hp--;
       if(e.hp<=0){
         e.alive=false;
@@ -945,13 +958,17 @@ function fireSalvo(){
   invSalvoCooldownUntil=now+SALVO_CD;
   const ch=invCanvas.height;
   // Missile AOE — same logic as fireMissile but bypasses its own cooldown gate
-  const aliveRows=[...new Set(invEntities.filter(e=>e.alive&&!e.isBoss).map(e=>Math.round(e.y)))].sort((a,b)=>b-a);
+  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
   let targetY=ch/2;
-  if(aliveRows.length) targetY=aliveRows[0];
+  if(aliveRows.length){
+    targetY=aliveRows.reduce((best,row)=>
+      Math.abs(row-ch/2)<Math.abs(best-ch/2)?row:best
+    ,aliveRows[0]);
+  }
   invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
   for(let e of invEntities){
-    if(!e.alive||e.isBoss)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=44*3){
+    if(!e.alive)continue;
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
       e.hp--;
       if(e.hp<=0){
         e.alive=false;
@@ -1177,7 +1194,7 @@ function invUpdate(){
               e.glitchTimer=10;
               // Show boss HP
               if(isBossWave){
-                const hpText=(e.hp%1===0?e.hp:e.hp.toFixed(1))+' / '+e.maxHp;
+                const hpText=(e.hp%1===0?e.hp:e.hp.toFixed(1))+' / '+INV_BOSS_HP;
                 msgEl.textContent=hpText;
               }
             }
@@ -1199,13 +1216,11 @@ function invUpdate(){
   const alive=invEntities.filter(e=>e.alive);
   if(alive.length===0){
     if(invWave<5){
+      // More waves to go
       nextInvaderWave();
     } else {
-      // Boss wave — only end if the boss entity is confirmed dead
-      const boss=invEntities.find(e=>e.isBoss);
-      if(boss&&boss.hp<=0&&!boss.alive){
-        state.running=false;clearInterval(state.bTimer);endRound();
-      }
+      // All 6 waves cleared — pass R2
+      state.running=false;clearInterval(state.bTimer);endRound();
     }
   }
 }
@@ -1538,21 +1553,6 @@ function invDraw(){
     }
     invCtx.restore();
   }
-
-  // ── ACTIVE VFX SPRITES ──
-  for(let v of activeVfx){
-    if(v.frame>=v.totalFrames) continue;
-    invCtx.save();
-    invCtx.globalCompositeOperation=v.blendMode;
-    invCtx.drawImage(
-      v.img,
-      v.frame*v.frameW, 0, v.frameW, v.frameH, // source slice
-      v.x, v.y, v.w, v.h                        // dest on canvas
-    );
-    invCtx.restore();
-    v.frame++;
-  }
-  activeVfx=activeVfx.filter(v=>v.frame<v.totalFrames);
 
   // ── BOSS HP BAR — top of canvas, full width ──
   if(invWave===5){
