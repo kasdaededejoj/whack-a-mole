@@ -2,7 +2,7 @@
 
 ---
 
-## CURRENT LIVE STATE — as of `624c8fc` (2026-07-11)
+## CURRENT LIVE STATE — as of `c01f5b0` (2026-07-11)
 
 ### Repo
 `kasdaededejoj/whack-a-mole` — GitHub Pages at `https://kasdaededejoj.github.io/whack-a-mole/`
@@ -88,6 +88,29 @@ js/
 
 ### Security / pitfall checklist (Mode 3 standing requirement)
 On every edit check: event handler leaks (re-registered onclick/addEventListener), interval/RAF ghosts (missing clearInterval/cancelAnimationFrame), off-screen object leaks (unbounded arrays), dead code from refactors, double-firing from stacked input events (mousedown + click).
+
+---
+
+## Wave size + shooter hit effect — 2026-07-11
+
+### Committed & pushed to `main` (`c01f5b0`)
+
+**Wave VFX size** — reduced to `rect.width*0.25` (25% canvas width).
+
+**Shooter sprite hit effect** — on damage, localised purple VFX centred on shooter at `(invShooterX, ch-54)`, driven by existing `_hpAberrationFrames` and `_hpGlitchFrames` counters:
+- Purple radial glow: `createRadialGradient` 0→38px, alpha scales with `hitIntensity` (`max(aberFrames/18, glitchFrames/10)`)
+- Clipped aberration fringe: purple left / green-cyan right, masked to 28px arc clip around sprite
+- Glitch strips: 2 random purple horizontal bars, masked to 32px arc clip
+- Sprite jitter: ±4px X, ±2px Y while `_hpGlitchFrames>0`
+- Stroke colour: shifts from white toward purple-white at peak intensity, decays back to white
+
+Screen-level purple vignette + `-hp` float still active alongside the sprite effect.
+
+### Open items
+- Boss SFX: pincer and teleport SFX still paused
+- Wave VFX speed/sync: `video.playbackRate` not yet set dynamically to match travel distance
+- `???` combos (rapida+doublets, rapida+rapidaaa, missile+rapidaaa) — mechanics TBD
+- All boss-wave upgrade combos need live playtesting
 
 ---
 
