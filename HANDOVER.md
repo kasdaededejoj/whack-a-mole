@@ -2,6 +2,18 @@
 
 ---
 
+## beam + dua beam tuning — 2026-07-12
+
+### Committed & pushed to `main` (`0f9d3da`)
+
+- **Hit precision:** beam hit radius = 1px each side (2px total), dua beam = 2px each side (4px total). Visual width unchanged (113px / 280px). Enemies must be directly under shooter.
+- **Beam origin:** beam stops ~38px (1cm) above shooter sprite — drawn from `y=0` to `y=ch-105`. No longer appears to originate inside sprite.
+- **Dua beam colour:** mid-purple (`rgba(180,100,255)` glow, `rgba(210,160,255)` core, `rgba(200,130,255)` edges). Beam stays ice blue.
+- **Intervals:** both beam and dua beam at 450ms (matches VFX cast+flash+fade duration). No cooldown gates inside fire functions — interval only.
+- **Stacking:** when beam + dua beam both active, dua beam subsumes beam — single 450ms interval, no double-fire.
+
+---
+
 ## beam + dua beam overhaul — 2026-07-12
 
 ### Committed & pushed to `main` (`3b3a55c`)
