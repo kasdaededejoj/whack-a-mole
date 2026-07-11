@@ -75,7 +75,7 @@ function loadVfxAssets(){
   vfxWaveVideo.preload='auto';
   vfxWaveVideo.muted=true;
   vfxWaveVideo.playsInline=true;
-  vfxWaveVideo.style.cssText='position:fixed;pointer-events:none;mix-blend-mode:screen;display:none;z-index:50;transform-origin:center center;';
+  vfxWaveVideo.style.cssText='position:fixed;pointer-events:none;mix-blend-mode:normal;display:none;z-index:50;transform-origin:center center;opacity:0.92;filter:brightness(3.5) contrast(1.4) saturate(1.5);';
   document.body.appendChild(vfxWaveVideo);
 }
 
@@ -723,9 +723,9 @@ function drawBossAbilities(){
     invCtx.save();
     invCtx.translate(s.x,s.y);
     invCtx.rotate(angle-Math.PI/2);
-    invCtx.globalAlpha=0.18;
-    invCtx.strokeStyle='rgba(255,230,80,0.7)';
-    invCtx.lineWidth=2;
+    invCtx.globalAlpha=0.65;
+    invCtx.strokeStyle='rgba(255,230,80,0.9)';
+    invCtx.lineWidth=3.5;
     invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
     invCtx.restore();
   }
