@@ -892,8 +892,7 @@ function invHandleSingleClick(e){
   if((invBossUpgrade||invUpgrade)==='warh') fireWarh();
   if(invBossUpgrade==='salvo') fireSalvo();
   if(invBossUpgrade==='overcharge') fireOvercharge();
-  if(invWave2Upgrade==='beam'&&invBossUpgrade!=='salvo'&&invBossUpgrade!=='overcharge') fireBeam();
-  if((invWave4Upgrade||invUpgrade)==='dua beam'&&invBossUpgrade!=='salvo'&&invBossUpgrade!=='overcharge') fireDuaBeam();
+  // beam/dua beam fire handled by mousedown only — no double-fire here
 }
 
 function invFire(){
