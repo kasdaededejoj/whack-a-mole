@@ -2,6 +2,16 @@
 
 ---
 
+## machina dmg + missile col-clear fix — 2026-07-12
+
+### Committed & pushed to `main` (`079b450`)
+
+**Machina damage:** boss hit damage per stream raised from `0.3` → `0.5`.
+
+**Missile column clear bug fixed:** `fireMissile()` and `fireSalvo()` both used `Math.abs(e.x - invShooterX) <= INV_AOE_RADIUS` (40px) — too narrow, drift-sensitive. Both now map `invShooterX` to nearest alive entity col index, then clear `Math.abs(e.col - shooterCol) <= 1` (exactly ±1 col). Fallback to radius if no alive grid entities. Salvo carries the same fix.
+
+---
+
 ## Boss modal: rapida+rapidaaa → machina — 2026-07-11
 
 ### Committed & pushed to `main` (`096d593`)
