@@ -39,8 +39,8 @@ let invWave2Upgrade=null;  // tracks wave 2 pick independently
 let invWave4Upgrade=null;  // tracks wave 4 pick independently
 
 // beam + dua beam click-fire cooldowns
-const BEAM_CD=900;
-const DUA_BEAM_CD=600;
+const BEAM_CD=450;
+const DUA_BEAM_CD=450;
 const SALVO_CD=1000;
 const OVERCHARGE_CD=2000;
 let invBeamCooldownUntil=0;
