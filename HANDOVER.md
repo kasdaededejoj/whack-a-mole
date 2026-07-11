@@ -2,6 +2,27 @@
 
 ---
 
+## beam + dua beam overhaul — 2026-07-12
+
+### Committed & pushed to `main` (`3b3a55c`)
+
+**missile → beam (wave 2, 1.5s CD, 113px wide):**
+- Instant-hit vertical clear: all enemies with `Math.abs(e.x - cx) <= 56.5` die immediately on fire
+- 150ms cast sequence: thin 60px line expands to 113px, then 120ms full flash, 180ms fade
+- VFX drawn via `isBeam` particle: outer glow column (linear gradient), bright core (28% of width), chromatic aberration fringe (red left, blue right), edge glow lines
+- Shared via `_castAndFireBeam(cx, bw, dmg)` — called by both `fireBeam` and `fireDuaBeam`
+- Salvo also uses `_castAndFireBeam` now (old inline AOE replaced)
+
+**doublets → dua beam (wave 4, 1.0s CD, 280px wide):**
+- Same mechanic, wider beam (280px = ~5 columns × cellW)
+- Calls `_castAndFireBeam(invShooterX, DUA_BEAM_WIDTH, 1)`
+
+**Remaining stale `kind:'missile'` bullet references:** only on salvo's doublet pair projectiles and rapidaaa bullets — these are still travelling projectiles, not beams; intentionally unchanged.
+
+**Boss modal combo desc:** updated to `beam + dua beam`
+
+---
+
 ## machina dmg + missile col-clear fix — 2026-07-12
 
 ### Committed & pushed to `main` (`079b450`)
