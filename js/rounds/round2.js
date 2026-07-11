@@ -548,8 +548,8 @@ function spawnWave(){
     const shooterPageX=rect.left+tx;
     const shooterPageY=rect.top+ty;
 
-    // 50% of canvas width
-    const vidW=rect.width*0.5;
+    // 25% of canvas width
+    const vidW=rect.width*0.25;
     const vidH=vidW*(9/16);
     const angle=Math.atan2(ty-boss.y, tx-boss.x)-Math.PI/2;
 
@@ -1664,9 +1664,58 @@ function invDraw(){
   }
 
   // ── SHOOTER ──
+  const sx=invShooterX, sy=ch-54;
+  const hitIntensity=Math.max(_hpAberrationFrames/18, _hpGlitchFrames/10);
+
   invCtx.save();
-  invCtx.translate(invShooterX,ch-54);
-  invCtx.strokeStyle='rgba(255,255,255,0.85)';
+  invCtx.translate(sx, sy);
+
+  // Localised purple radial glow on hit
+  if(hitIntensity>0){
+    const glowR=38*hitIntensity;
+    const glow=invCtx.createRadialGradient(0,0,4,0,0,glowR);
+    glow.addColorStop(0,`rgba(160,40,255,${0.55*hitIntensity})`);
+    glow.addColorStop(1,'rgba(100,0,180,0)');
+    invCtx.globalAlpha=1;
+    invCtx.fillStyle=glow;
+    invCtx.beginPath();invCtx.arc(0,0,glowR,0,Math.PI*2);invCtx.fill();
+
+    // Clipped aberration fringe — purple left, green-cyan right, clipped to shooter radius
+    invCtx.save();
+    invCtx.beginPath();invCtx.arc(0,0,28,0,Math.PI*2);invCtx.clip();
+    const aberShift=Math.round(3*hitIntensity);
+    if(aberShift>0){
+      invCtx.globalAlpha=0.4*hitIntensity;
+      invCtx.fillStyle='rgba(160,30,255,1)';
+      invCtx.fillRect(-28-aberShift,-28,aberShift*2,56);
+      invCtx.fillStyle='rgba(30,255,160,1)';
+      invCtx.fillRect(28-aberShift,-28,aberShift*2,56);
+    }
+    invCtx.restore();
+
+    // Glitch block strips clipped to shooter area
+    if(_hpGlitchFrames>0){
+      invCtx.save();
+      invCtx.beginPath();invCtx.arc(0,0,32,0,Math.PI*2);invCtx.clip();
+      invCtx.globalAlpha=0.18;
+      invCtx.fillStyle='rgba(180,60,255,1)';
+      for(let i=0;i<2;i++){
+        const gy=(Math.random()-0.5)*32;
+        const gh=1.5+Math.random()*4;
+        const gox=(Math.random()-0.5)*10;
+        invCtx.fillRect(-32+gox,gy,64,gh);
+      }
+      invCtx.restore();
+    }
+  }
+
+  // Shooter sprite — jitter on hit
+  const jx=_hpGlitchFrames>0?(Math.random()-0.5)*4:0;
+  const jy=_hpGlitchFrames>0?(Math.random()-0.5)*2:0;
+  invCtx.translate(jx,jy);
+  invCtx.strokeStyle=hitIntensity>0
+    ?`rgba(${Math.round(180+75*hitIntensity)},${Math.round(255*(1-hitIntensity*0.7))},255,0.95)`
+    :'rgba(255,255,255,0.85)';
   invCtx.lineWidth=1.5;
   invCtx.beginPath();invCtx.moveTo(0,-13);invCtx.lineTo(-11,9);invCtx.lineTo(0,4);invCtx.lineTo(11,9);invCtx.closePath();invCtx.stroke();
   invCtx.restore();
