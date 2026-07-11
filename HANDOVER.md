@@ -2,7 +2,7 @@
 
 ---
 
-## CURRENT LIVE STATE — as of `5a40176` (2026-07-10)
+## CURRENT LIVE STATE — as of `624c8fc` (2026-07-11)
 
 ### Repo
 `kasdaededejoj/whack-a-mole` — GitHub Pages at `https://kasdaededejoj.github.io/whack-a-mole/`
@@ -88,6 +88,56 @@ js/
 
 ### Security / pitfall checklist (Mode 3 standing requirement)
 On every edit check: event handler leaks (re-registered onclick/addEventListener), interval/RAF ghosts (missing clearInterval/cancelAnimationFrame), off-screen object leaks (unbounded arrays), dead code from refactors, double-firing from stacked input events (mousedown + click).
+
+---
+
+## Boss VFX, SFX, hit effect, phase2 fix — 2026-07-11
+
+### Committed & pushed to `main` (`4c1fe1a`, `d12968d`, `352bebb`, `624c8fc`)
+
+**VFX pipeline: sprite sheet → WebM video element**
+- `assets/vfx_wave.webm` added (56KB, ProRes 4444 source with real alpha, converted via ffmpeg VP9 `yuva420p`)
+- `vfxWaveVideo` — single `<video>` element appended to `document.body`, `mix-blend-mode:screen`, `position:fixed`, `pointer-events:none`
+- On `spawnWave()`: 400ms charge animation (3 purple contracting rings on boss canvas position via rAF), then `launchWaveVfx()` fires — video positioned at boss page coords, travels to shooter via rAF at `BOSS_WAVE_SPEED` pace
+- Video width: `rect.width*0.5` (50% canvas width), aspect 16:9
+- Angle: `Math.atan2(ty-boss.y, tx-boss.x)-Math.PI/2` — points wave toward shooter
+- Physics `bossShockwaves` projectile unchanged — hit detection runs independently of VFX
+- Canvas fallback crescent still draws at `globalAlpha:0.18` if video not loaded
+- Entire sprite sheet system removed: `vfxWaveImg`, `activeVfx`, `spawnVfxWave`, `VFX_WAVE_FRAMES/FRAME_W/FRAME_H`, draw loop — all gone
+- `vfxWaveRaf` and video paused/hidden in `stopBossAbilities()`
+- Safari HEVC fallback not implemented — WebM only (Safari desktop v16+ supports it)
+
+**Boss wave cast SFX — `playBossWaveCast()` in `audio.js`**
+- Layer 1: infrasonic sine 28→14Hz over 0.85s (sub-threshold pressure)
+- Layer 2: sawtooth 55→32Hz, hard lowpass at 90Hz — sub-bass octave descent
+- Layer 3: bandpass noise at 120Hz, 0.75s — void texture
+- Layer 4: triangle click 180→60Hz, 60ms — cast initiation transient
+- Called in `spawnWave()` at cast moment (before charge animation)
+
+**Phase 2 threshold fix**
+- Was: `boss.hp <= INV_BOSS_HP*0.5` (triggered at ~22% actual HP due to scaling)
+- Now: `boss.hp <= boss.maxHp*0.5` (correct 50%)
+
+**Boss HP fixes (from previous session)**
+- Base HP: `INV_BOSS_HP=444` → scales to ~666/1000/1500 at 1/2/3 upgrades
+- HP display: `e.maxHp` not `INV_BOSS_HP`
+- Boss defeat gate: only advances on wave 5 when `boss.hp<=0 && !boss.alive`
+
+**Missile fixes (from previous session)**
+- Targets lowest alive row (largest Y), vertical window `44*3px`
+- Hold repeat: 600ms missile, 400ms doublets (cooldown gates individual clicks at 1300/800ms)
+
+**Player hit effect — purple glitch**
+- Vignette: purple radial gradient (`rgba(130,30,200,0.95)`) replacing red
+- Chromatic aberration: purple left fringe, green-cyan right fringe, purple scan line
+- Floating `-{amount}` text: rises from shooter sprite (`invShooterX, ch-70`), purple with glow, horizontal jitter while `_hpGlitchFrames>0`, fades over ~55 frames
+- `_dmgFloats` array: `{text, x, y, alpha, vy}` — drawn in `invDraw` after glitch block
+
+### Open items
+- Boss SFX: pincer and teleport SFX still paused
+- Wave VFX speed/sync tuning — video `playbackRate` not yet set dynamically to match travel distance
+- `???` combos (rapida+doublets, rapida+rapidaaa, missile+rapidaaa) — mechanics TBD
+- All boss-wave upgrade combos need live playtesting
 
 ---
 
