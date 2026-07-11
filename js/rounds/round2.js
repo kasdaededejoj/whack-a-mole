@@ -938,10 +938,11 @@ function fireBeam(widthOverride){
 
 function _castAndFireBeam(cx, bw, dmg){
   const ch=invCanvas.height;
-  // Instant hit — kill all enemies within beam width
+  // Instant hit — narrow precision hit (2px beam, 4px dua beam)
+  const hitR=bw>=200?2:1; // dua beam=2, beam=1 (half of 4px/2px)
   for(let e of invEntities){
     if(!e.alive)continue;
-    if(Math.abs(e.x-cx)<=bw/2){
+    if(Math.abs(e.x-cx)<=hitR){
       if(e.isBoss){
         e.hp-=dmg;
         if(e.hp<=0){
@@ -1521,35 +1522,45 @@ function invDraw(){
         alpha=1-t;
       }
       const bx=Math.round(cx);
+      // Beam starts ~38px above shooter sprite top (ch-67-38 = ch-105)
+      const beamTop=0;
+      const beamBot=ch2-105;
+      const beamH=beamBot-beamTop;
+      const isDua=p.bw>=200;
+      // Colour: beam=ice blue, dua beam=mid purple
+      const glowCol=isDua?'rgba(180,100,255,':'rgba(180,220,255,';
+      const coreCol0=isDua?'rgba(140,60,220,0)':'rgba(160,210,255,0)';
+      const coreCol1=isDua?'rgba(210,160,255,1)':'rgba(230,245,255,1)';
+      const edgeCol=isDua?'rgba(200,130,255,0.9)':'rgba(180,230,255,0.9)';
       // Glow column
       invCtx.globalAlpha=alpha*0.18;
       const grad=invCtx.createLinearGradient(bx-currentW/2,0,bx+currentW/2,0);
-      grad.addColorStop(0,'rgba(180,220,255,0)');
-      grad.addColorStop(0.5,'rgba(200,235,255,1)');
-      grad.addColorStop(1,'rgba(180,220,255,0)');
+      grad.addColorStop(0,glowCol+'0)');
+      grad.addColorStop(0.5,glowCol+'1)');
+      grad.addColorStop(1,glowCol+'0)');
       invCtx.fillStyle=grad;
-      invCtx.fillRect(bx-currentW/2,0,currentW,ch2);
+      invCtx.fillRect(bx-currentW/2,beamTop,currentW,beamH);
       // Core bright fill
       invCtx.globalAlpha=alpha*0.72;
       const coreW=currentW*0.28;
       const coreGrad=invCtx.createLinearGradient(bx-coreW/2,0,bx+coreW/2,0);
-      coreGrad.addColorStop(0,'rgba(160,210,255,0)');
-      coreGrad.addColorStop(0.5,'rgba(230,245,255,1)');
-      coreGrad.addColorStop(1,'rgba(160,210,255,0)');
+      coreGrad.addColorStop(0,coreCol0);
+      coreGrad.addColorStop(0.5,coreCol1);
+      coreGrad.addColorStop(1,coreCol0);
       invCtx.fillStyle=coreGrad;
-      invCtx.fillRect(bx-coreW/2,0,coreW,ch2);
+      invCtx.fillRect(bx-coreW/2,beamTop,coreW,beamH);
       // Chromatic aberration: red left, blue right
       invCtx.globalAlpha=alpha*0.18;
       invCtx.fillStyle='rgba(255,80,80,0.7)';
-      invCtx.fillRect(bx-currentW/2-4,0,6,ch2);
+      invCtx.fillRect(bx-currentW/2-4,beamTop,6,beamH);
       invCtx.fillStyle='rgba(80,160,255,0.7)';
-      invCtx.fillRect(bx+currentW/2-2,0,6,ch2);
+      invCtx.fillRect(bx+currentW/2-2,beamTop,6,beamH);
       // Edge glow lines
       invCtx.globalAlpha=alpha*0.55;
-      invCtx.strokeStyle='rgba(180,230,255,0.9)';
+      invCtx.strokeStyle=edgeCol;
       invCtx.lineWidth=1.5;
-      invCtx.beginPath();invCtx.moveTo(bx-currentW/2,0);invCtx.lineTo(bx-currentW/2,ch2);invCtx.stroke();
-      invCtx.beginPath();invCtx.moveTo(bx+currentW/2,0);invCtx.lineTo(bx+currentW/2,ch2);invCtx.stroke();
+      invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
+      invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
     } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
