@@ -112,13 +112,27 @@ let _hpGlitchFrames=0;     // frames remaining for glitch displacement
 
 // Player HP bar is drawn on-canvas in invDraw (bottom strip).
 // This function triggers the screen flash, aberration, and glitch VFX on damage.
+// damage float texts — {amount, x, y, alpha, vy}
+let _dmgFloats=[];
+
 function triggerHpDrainAnimation(fromHp, toHp){
   if(!invCanvas||!invCtx)return;
-  // Start aberration + glitch
+  const amount=fromHp-toHp;
   _hpAberrationFrames=18;
   _hpGlitchFrames=10;
 
-  // Primary vignette flash
+  // Floating -hp text on shooter sprite
+  if(invCanvas){
+    _dmgFloats.push({
+      text:'-'+amount,
+      x:invShooterX,
+      y:invCanvas.height-70,
+      alpha:1,
+      vy:-0.9
+    });
+  }
+
+  // Primary vignette flash — purple
   if(_hpScreenFlashRaf){cancelAnimationFrame(_hpScreenFlashRaf);_hpScreenFlashRaf=null;}
   let flashAlpha=0.32;
   const flashStep=()=>{
@@ -127,8 +141,8 @@ function triggerHpDrainAnimation(fromHp, toHp){
     invCtx.save();
     invCtx.globalAlpha=flashAlpha;
     const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.08,cw/2,ch/2,ch*0.9);
-    grad.addColorStop(0,'rgba(180,30,30,0)');
-    grad.addColorStop(1,'rgba(200,30,30,0.95)');
+    grad.addColorStop(0,'rgba(80,0,120,0)');
+    grad.addColorStop(1,'rgba(130,30,200,0.95)');
     invCtx.fillStyle=grad;
     invCtx.fillRect(0,0,cw,ch);
     invCtx.restore();
@@ -138,7 +152,7 @@ function triggerHpDrainAnimation(fromHp, toHp){
   };
   _hpScreenFlashRaf=requestAnimationFrame(flashStep);
 
-  // Echo — second ghost flash at 120ms delay, dimmer
+  // Echo — dimmer purple flash at 120ms
   setTimeout(()=>{
     if(!invCtx||!invCanvas)return;
     let echoAlpha=0.14;
@@ -148,8 +162,8 @@ function triggerHpDrainAnimation(fromHp, toHp){
       invCtx.save();
       invCtx.globalAlpha=echoAlpha;
       const grad=invCtx.createRadialGradient(cw/2,ch/2,ch*0.08,cw/2,ch/2,ch*0.9);
-      grad.addColorStop(0,'rgba(180,30,30,0)');
-      grad.addColorStop(1,'rgba(200,30,30,0.9)');
+      grad.addColorStop(0,'rgba(80,0,120,0)');
+      grad.addColorStop(1,'rgba(130,30,200,0.9)');
       invCtx.fillStyle=grad;
       invCtx.fillRect(0,0,cw,ch);
       invCtx.restore();
@@ -493,48 +507,75 @@ function spawnWave(){
   });
   try{playBossWaveCast();}catch(e){}
 
-  // WebM VFX — position video over boss, translate toward shooter
-  if(!vfxWaveVideo) return;
-  if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
-  vfxWaveVideo.currentTime=0;
-
-  const rect=invCanvas.getBoundingClientRect();
-  // Boss canvas coords → page coords
-  const bossPageX=rect.left+boss.x;
-  const bossPageY=rect.top+boss.y;
-  const shooterPageX=rect.left+tx;
-  const shooterPageY=rect.top+ty;
-
-  // Size: full canvas width, maintain 16:9 aspect
-  const vidW=rect.width;
-  const vidH=vidW*(9/16);
-
-  // Angle from boss to shooter
-  const angle=Math.atan2(ty-boss.y, tx-boss.x)-Math.PI/2;
-
-  vfxWaveVideo.style.width=vidW+'px';
-  vfxWaveVideo.style.height=vidH+'px';
-  vfxWaveVideo.style.display='block';
-
-  // Animate position from boss to shooter over the same duration as BOSS_WAVE_SPEED travel
-  const travelMs=(dist/BOSS_WAVE_SPEED)*(1000/60); // approx ms at 60fps
-  const startTime=performance.now();
-
-  function animateWave(now){
-    const elapsed=now-startTime;
-    const t=Math.min(1, elapsed/travelMs);
-    const cx=bossPageX+(shooterPageX-bossPageX)*t;
-    const cy=bossPageY+(shooterPageY-bossPageY)*t;
-    vfxWaveVideo.style.left=(cx-vidW/2)+'px';
-    vfxWaveVideo.style.top=(cy-vidH/2)+'px';
-    vfxWaveVideo.style.transform=`rotate(${angle}rad)`;
-    if(t<1&&state.running) vfxWaveRaf=requestAnimationFrame(animateWave);
-    else { vfxWaveVideo.style.display='none'; vfxWaveRaf=null; }
+  // ── CHARGE ANIMATION — contracting rings on boss over 400ms ──
+  const CHARGE_MS=400;
+  const chargeStart=performance.now();
+  let chargeRaf=null;
+  function drawCharge(now){
+    if(!invCtx||!invCanvas||!state.running){chargeRaf=null;return;}
+    const t=Math.min(1,(now-chargeStart)/CHARGE_MS);
+    // Three rings contracting inward: start at r=80, collapse to r=8
+    const rings=3;
+    for(let i=0;i<rings;i++){
+      const phase=(i/rings);
+      const rt=Math.max(0,(t+phase)%1); // stagger each ring
+      const r=80*(1-rt)+8*rt;
+      const alpha=(1-rt)*0.7;
+      invCtx.save();
+      invCtx.translate(boss.x,boss.y);
+      invCtx.globalAlpha=alpha;
+      invCtx.strokeStyle=`rgba(160,80,255,${0.9-rt*0.5})`;
+      invCtx.lineWidth=1.5*(1-rt*0.5);
+      invCtx.shadowColor='rgba(160,80,255,0.8)';
+      invCtx.shadowBlur=12*(1-rt);
+      invCtx.beginPath();invCtx.arc(0,0,r,0,Math.PI*2);invCtx.stroke();
+      invCtx.restore();
+    }
+    if(t<1) chargeRaf=requestAnimationFrame(drawCharge);
+    else { chargeRaf=null; launchWaveVfx(); }
   }
+  chargeRaf=requestAnimationFrame(drawCharge);
 
-  vfxWaveVideo.play().catch(()=>{});
-  vfxWaveVideo.onended=()=>{ vfxWaveVideo.style.display='none'; };
-  vfxWaveRaf=requestAnimationFrame(animateWave);
+  // ── WAVE VFX — fires after charge completes ──
+  function launchWaveVfx(){
+    if(!vfxWaveVideo||!state.running)return;
+    if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
+    vfxWaveVideo.currentTime=0;
+
+    const rect=invCanvas.getBoundingClientRect();
+    const bossPageX=rect.left+boss.x;
+    const bossPageY=rect.top+boss.y;
+    const shooterPageX=rect.left+tx;
+    const shooterPageY=rect.top+ty;
+
+    // 50% of canvas width
+    const vidW=rect.width*0.5;
+    const vidH=vidW*(9/16);
+    const angle=Math.atan2(ty-boss.y, tx-boss.x)-Math.PI/2;
+
+    vfxWaveVideo.style.width=vidW+'px';
+    vfxWaveVideo.style.height=vidH+'px';
+    vfxWaveVideo.style.display='block';
+
+    const travelMs=(dist/BOSS_WAVE_SPEED)*(1000/60);
+    const startTime=performance.now();
+
+    function animateWave(now){
+      const elapsed=now-startTime;
+      const t=Math.min(1,elapsed/travelMs);
+      const cx=bossPageX+(shooterPageX-bossPageX)*t;
+      const cy=bossPageY+(shooterPageY-bossPageY)*t;
+      vfxWaveVideo.style.left=(cx-vidW/2)+'px';
+      vfxWaveVideo.style.top=(cy-vidH/2)+'px';
+      vfxWaveVideo.style.transform=`rotate(${angle}rad)`;
+      if(t<1&&state.running) vfxWaveRaf=requestAnimationFrame(animateWave);
+      else { vfxWaveVideo.style.display='none'; vfxWaveRaf=null; }
+    }
+
+    vfxWaveVideo.play().catch(()=>{});
+    vfxWaveVideo.onended=()=>{ vfxWaveVideo.style.display='none'; };
+    vfxWaveRaf=requestAnimationFrame(animateWave);
+  }
 }
 
 function startBossAbilities(){
@@ -590,7 +631,7 @@ function updateBossAbilities(){
   if(!boss||!invCanvas)return;
 
   // Phase 2 transition at ≤50% HP
-  if(!bossPhase2&&boss.hp<=INV_BOSS_HP*0.5){
+  if(!bossPhase2&&boss.hp<=boss.maxHp*0.5){
     bossPhase2=true;
     bossGlitchBurst=55;   // ~55 frames of heavy glitch
     // Unlock travelling wave — fires immediately then every 3000ms
@@ -1408,18 +1449,17 @@ function invDraw(){
     // a red fringe left, cyan fringe right, at canvas edges, simulating lens split
     const aberShift=Math.round(4*aberAlpha);
     if(aberShift>0){
-      // Red channel fringe — left edge bleed
+      // Purple fringe left, green-cyan fringe right
       invCtx.save();
       invCtx.globalAlpha=aberAlpha*0.45;
-      invCtx.fillStyle='rgba(255,30,30,1)';
+      invCtx.fillStyle='rgba(160,30,255,1)';
       invCtx.fillRect(0,0,aberShift*3,ch);
-      // Cyan fringe — right edge bleed
-      invCtx.fillStyle='rgba(30,255,220,1)';
+      invCtx.fillStyle='rgba(30,255,160,1)';
       invCtx.fillRect(cw-aberShift*3,0,aberShift*3,ch);
-      // Horizontal scan displacement — thin red bar drifts down
+      // Horizontal scan displacement — purple bar drifts down
       const scanY=((Date.now()*0.12)%ch);
       invCtx.globalAlpha=aberAlpha*0.3;
-      invCtx.fillStyle='rgba(255,40,40,1)';
+      invCtx.fillStyle='rgba(160,40,255,1)';
       invCtx.fillRect(0,scanY,cw,1);
       invCtx.restore();
     }
@@ -1437,6 +1477,28 @@ function invDraw(){
       }
       invCtx.restore();
     }
+  }
+
+  // ── DAMAGE FLOATS — purple -hp text rising from shooter ──
+  if(_dmgFloats.length){
+    invCtx.save();
+    for(let f of _dmgFloats){
+      invCtx.globalAlpha=f.alpha;
+      invCtx.font=`bold 13px 'BlackChancery', serif`;
+      invCtx.fillStyle='rgba(180,80,255,1)';
+      invCtx.shadowColor='rgba(140,0,255,0.9)';
+      invCtx.shadowBlur=8;
+      invCtx.textAlign='center';
+      invCtx.textBaseline='middle';
+      // Glitch offset — random horizontal jitter while glitch active
+      const jx=_hpGlitchFrames>0?(Math.random()-0.5)*6:0;
+      invCtx.fillText(f.text, f.x+jx, f.y);
+      f.y+=f.vy;
+      f.alpha-=0.018;
+    }
+    invCtx.shadowBlur=0;
+    invCtx.restore();
+    _dmgFloats=_dmgFloats.filter(f=>f.alpha>0);
   }
 
   // Boss ability visuals drawn below everything else
