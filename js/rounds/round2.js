@@ -742,17 +742,29 @@ function showBossUpgradeModal(){
   btn1.onclick=null; btn2.onclick=null;
 
   const isMissileDoublets=invWave2Upgrade==='missile'&&invWave4Upgrade==='doublets';
+  const isRapidaMachina=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='rapida');
 
   if(isMissileDoublets){
     if(desc) desc.innerHTML='the void.<br>missile + doublets.<br>choose your final augment.';
     btn1.textContent='salvo.';
     btn2.textContent='overcharge.';
+    btn1.style.cssText='';
+    btn2.style.display='';
     btn1.onclick=()=>pickBossUpgrade('salvo');
     btn2.onclick=()=>pickBossUpgrade('overcharge');
+  } else if(isRapidaMachina){
+    if(desc) desc.innerHTML='the void.<br>rapida + rapid\'aa.<br>convergence.';
+    btn1.textContent='machina.';
+    btn1.style.cssText='display:block;margin:0 auto;';
+    btn2.style.display='none';
+    btn1.onclick=()=>pickBossUpgrade('machina');
+    btn2.onclick=null;
   } else {
     if(desc) desc.innerHTML='the void.<br>choose your final augment.';
     btn1.textContent='???';
     btn2.textContent='???';
+    btn1.style.cssText='';
+    btn2.style.display='';
     btn1.onclick=()=>pickBossUpgrade(null);
     btn2.onclick=()=>pickBossUpgrade(null);
   }
