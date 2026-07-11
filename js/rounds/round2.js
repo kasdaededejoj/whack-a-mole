@@ -3,7 +3,7 @@ import { state } from '../state.js';
 import { field, msgEl, setComboValue, showFail } from '../ui.js';
 import { playThud, playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
   playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
-  playPlayerDamage } from '../audio.js';
+  playPlayerDamage, playBossWaveCast } from '../audio.js';
 import { endRound } from '../game.js';
 
 let invCanvas=null,invCtx=null,invRaf=null;
@@ -491,6 +491,7 @@ function spawnWave(){
     travelledDist:0,
     hit:false, alive:true
   });
+  try{playBossWaveCast();}catch(e){}
 
   // WebM VFX — position video over boss, translate toward shooter
   if(!vfxWaveVideo) return;

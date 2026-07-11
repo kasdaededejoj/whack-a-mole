@@ -327,7 +327,75 @@ function playPlayerDamage() {
   } catch(e) {}
 }
 
+// Boss wave cast — infrasonic sweep + sub-bass descent + void rumble + attack transient
+function playBossWaveCast() {
+  if (state.sfxMuted) return;
+  try {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+
+    // Layer 1 — infrasonic sweep: 28Hz → 14Hz over 0.8s (felt as pressure, sub-threshold)
+    const infra = ctx.createOscillator();
+    infra.type = 'sine';
+    infra.frequency.setValueAtTime(28, now);
+    infra.frequency.exponentialRampToValueAtTime(14, now + 0.8);
+    const gi = ctx.createGain();
+    gi.gain.setValueAtTime(0.001, now);
+    gi.gain.linearRampToValueAtTime(0.7 * state.sfxVolScale, now + 0.12);
+    gi.gain.setValueAtTime(0.7 * state.sfxVolScale, now + 0.5);
+    gi.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+    infra.connect(gi); gi.connect(ctx.destination);
+    infra.start(now); infra.stop(now + 0.85);
+
+    // Layer 2 — sub-bass octave descent: sawtooth 55Hz → 32Hz, heavy lowpass
+    const sub = ctx.createOscillator();
+    sub.type = 'sawtooth';
+    sub.frequency.setValueAtTime(55, now);
+    sub.frequency.exponentialRampToValueAtTime(32, now + 0.65);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 90;
+    lp.Q.value = 1.8;
+    const gs = ctx.createGain();
+    gs.gain.setValueAtTime(0.001, now);
+    gs.gain.linearRampToValueAtTime(0.5 * state.sfxVolScale, now + 0.08);
+    gs.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+    sub.connect(lp); lp.connect(gs); gs.connect(ctx.destination);
+    sub.start(now); sub.stop(now + 0.7);
+
+    // Layer 3 — void rumble: bandpass noise at 120Hz
+    const bufLen = Math.floor(ctx.sampleRate * 0.75);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 0.4);
+    }
+    const noiseSrc = ctx.createBufferSource();
+    noiseSrc.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 120;
+    bp.Q.value = 0.8;
+    const gn = ctx.createGain();
+    gn.gain.setValueAtTime(0.35 * state.sfxVolScale, now);
+    gn.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+    noiseSrc.connect(bp); bp.connect(gn); gn.connect(ctx.destination);
+    noiseSrc.start(now); noiseSrc.stop(now + 0.75);
+
+    // Layer 4 — attack transient: triangle click at 180Hz, 60ms decay
+    const click = ctx.createOscillator();
+    click.type = 'triangle';
+    click.frequency.setValueAtTime(180, now);
+    click.frequency.exponentialRampToValueAtTime(60, now + 0.06);
+    const gc = ctx.createGain();
+    gc.gain.setValueAtTime(0.4 * state.sfxVolScale, now);
+    gc.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    click.connect(gc); gc.connect(ctx.destination);
+    click.start(now); click.stop(now + 0.06);
+  } catch(e) {}
+}
+
 export { reverseBuffer, getAudio, preloadThud, playThud, playMiss, initAudio,
   playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
   playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
-  playPlayerDamage };
+  playPlayerDamage, playBossWaveCast };
