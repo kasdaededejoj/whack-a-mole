@@ -2,6 +2,25 @@
 
 ---
 
+## Boss modal: rapida+rapidaaa → machina — 2026-07-11
+
+### Committed & pushed to `main` (`096d593`)
+
+`showBossUpgradeModal` now has a third combo branch: `invWave2Upgrade==='rapida' && invWave4Upgrade==='rapidaaa'` (and reverse order).
+- Both buttons reset cleanly on each modal open (`style.cssText`, `style.display` restored) to avoid bleed from previous combo branches
+- rapida+rapidaaa path: `btn2` hidden (`display:none`), `btn1` centred (`display:block;margin:0 auto`), label `machina.`, desc `the void.<br>rapida + rapid'aa.<br>convergence.`, assigns `invBossUpgrade='machina'`
+- missile+doublets path: unchanged (salvo / overcharge)
+- all other combos: unchanged (`???` → null)
+- machina mechanics unchanged: 3 converging streams, `INV_FIRE_RATE/3.2`, 0.3 dmg/stream on boss
+
+### Open items
+- Boss SFX: pincer and teleport SFX still paused
+- Wave VFX speed/sync: `video.playbackRate` not yet set dynamically to match travel distance
+- `???` combos (missile+rapidaaa, rapida+doublets) — mechanics TBD
+- All boss-wave upgrade combos need live playtesting
+
+---
+
 ## CURRENT LIVE STATE — as of `c01f5b0` (2026-07-11)
 
 ### Repo
