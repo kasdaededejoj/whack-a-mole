@@ -843,14 +843,10 @@ function invHandleMouseDown(e){
   }
 
   // dua beam (wave4) — hold-to-fire, suppresses base bullet
+  // beam (wave2) is subsumed by dua beam width — no separate interval when stacked
   if(activeUpgradeForRate==='dua beam'){
     fireDuaBeam();
     invDuaBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;return;}fireDuaBeam();},DUA_BEAM_CD);
-    // beam (wave2) still stacks alongside dua beam
-    if(invWave2Upgrade==='beam'){
-      fireBeam();
-      invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireBeam();},BEAM_CD);
-    }
     return;
   }
 
