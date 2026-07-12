@@ -819,6 +819,9 @@ function invHandleMove(e){
 function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
+  // Snap shooter to exact cursor position on press — no lag during hold-fire
+  const _r=invCanvas.getBoundingClientRect();
+  invShooterX=e.clientX-_r.left;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
 
   const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
@@ -1555,6 +1558,18 @@ function invDraw(){
       invCtx.lineWidth=1.5;
       invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
       invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
+      // Curved muzzle flash at beam base — radial gradient arc fading outward
+      const muzzleY=beamBot;
+      const muzzleR=currentW*0.85;
+      const muzzleGrad=invCtx.createRadialGradient(bx,muzzleY,0,bx,muzzleY,muzzleR);
+      muzzleGrad.addColorStop(0,isDua?'rgba(210,160,255,'+( alpha*0.9)+')'  :'rgba(230,245,255,'+(alpha*0.9)+')');
+      muzzleGrad.addColorStop(0.35,isDua?'rgba(180,100,255,'+(alpha*0.45)+')':'rgba(180,220,255,'+(alpha*0.45)+')');
+      muzzleGrad.addColorStop(1,'rgba(0,0,0,0)');
+      invCtx.globalAlpha=1;
+      invCtx.fillStyle=muzzleGrad;
+      invCtx.beginPath();
+      invCtx.ellipse(bx, muzzleY, muzzleR, muzzleR*0.38, 0, Math.PI, Math.PI*2);
+      invCtx.fill();
       // Curved base: radial gradient ellipse at beam origin point
       const baseRx=currentW*0.65, baseRy=currentW*0.22;
       const baseGrad=invCtx.createRadialGradient(bx,beamBot,0,bx,beamBot,baseRx);
