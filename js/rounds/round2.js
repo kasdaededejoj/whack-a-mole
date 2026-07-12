@@ -932,8 +932,8 @@ function fireBeam(widthOverride){
 
 function _castAndFireBeam(cx, bw, dmg){
   const ch=invCanvas.height;
-  // Instant hit — narrow precision hit (2px beam, 4px dua beam)
-  const hitR=bw>=200?2:1; // dua beam=2, beam=1 (half of 4px/2px)
+  // Instant hit — hit radius matches visual beam width
+  const hitR=bw/2;
   for(let e of invEntities){
     if(!e.alive)continue;
     if(Math.abs(e.x-cx)<=hitR){
@@ -1555,6 +1555,21 @@ function invDraw(){
       invCtx.lineWidth=1.5;
       invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
       invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
+      // Curved base: radial gradient ellipse at beam origin point
+      const baseRx=currentW*0.65, baseRy=currentW*0.22;
+      const baseGrad=invCtx.createRadialGradient(bx,beamBot,0,bx,beamBot,baseRx);
+      baseGrad.addColorStop(0,isDua?'rgba(200,130,255,'+alpha*0.55+')':'rgba(200,235,255,'+alpha*0.55+')');
+      baseGrad.addColorStop(0.5,isDua?'rgba(160,80,220,'+alpha*0.25+')':'rgba(160,210,255,'+alpha*0.25+')');
+      baseGrad.addColorStop(1,'rgba(0,0,0,0)');
+      invCtx.globalAlpha=1;
+      invCtx.save();
+      invCtx.translate(bx,beamBot);
+      invCtx.scale(1, baseRy/baseRx);
+      invCtx.beginPath();
+      invCtx.arc(0,0,baseRx,0,Math.PI*2);
+      invCtx.fillStyle=baseGrad;
+      invCtx.fill();
+      invCtx.restore();
     } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
