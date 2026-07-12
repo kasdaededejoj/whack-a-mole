@@ -430,9 +430,6 @@ function showUpgradeModal(mode='wave2'){
   state.running=false;
   // Kill the rAF loop cleanly so it doesn't ghost-run
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
-  // Clear beam hold intervals — prevents beam firing during/after modal before spawn protection stamps
-  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
-  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
   const modal=document.getElementById('upgrade-modal');
   const desc=document.getElementById('upgrade-desc');
   modal.style.display='flex';
@@ -737,8 +734,6 @@ function drawBossAbilities(){
 function showBossUpgradeModal(){
   state.running=false;
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
-  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
-  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
   const modal=document.getElementById('boss-upgrade-modal');
   const desc=document.getElementById('boss-upgrade-desc');
   const btn1=document.getElementById('boss-upgrade-nuka');
@@ -794,8 +789,6 @@ function stopInvaders(){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
   stopWarhAutoFire();
-  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
-  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
   invBeamCooldownUntil=0;
   invDuaBeamCooldownUntil=0;
   invMouseDown=false;
@@ -827,8 +820,6 @@ function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
-  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
-  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
 
   const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
 
@@ -880,8 +871,6 @@ function invHandleMouseDown(e){
 function invHandleMouseUp(){
   invMouseDown=false;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
-  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
-  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
 }
 
 function invHandleSingleClick(e){
