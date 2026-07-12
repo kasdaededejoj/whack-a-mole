@@ -86,6 +86,7 @@ let bossGrowthScale=1;    // lerps to 1.38 at phase 2 transition
 let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
 
 let invWave=0;        // 0-indexed, 0-5
+let invWave5ProtectUntil=0; // 300ms beam immunity for wave 5 only
 let invTransitioning=false;
 let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
@@ -342,6 +343,7 @@ function startInvaders(){
 }
 
 function spawnInvaderWave(waveIdx){
+  if(waveIdx===4) invWave5ProtectUntil=Date.now()+300;
   invDescentY=0;
   invEntities=[];
   const cw=invCanvas.width,ch=invCanvas.height;
@@ -935,6 +937,7 @@ function fireBeam(widthOverride){
 
 function _castAndFireBeam(cx, bw, dmg){
   const ch=invCanvas.height;
+  if(Date.now()<invWave5ProtectUntil) return;
   // Instant hit — hit radius matches visual beam width
   const hitR=bw/2;
   for(let e of invEntities){
