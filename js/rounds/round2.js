@@ -1555,12 +1555,32 @@ function invDraw(){
       invCtx.fillRect(bx-currentW/2-4,beamTop,6,beamH);
       invCtx.fillStyle='rgba(80,160,255,0.7)';
       invCtx.fillRect(bx+currentW/2-2,beamTop,6,beamH);
-      // Edge glow lines
+      // Edge glow lines — blurred + 40% fractal glitch noise
+      invCtx.save();
+      invCtx.filter='blur(1.8px)';
       invCtx.globalAlpha=alpha*0.55;
       invCtx.strokeStyle=edgeCol;
       invCtx.lineWidth=1.5;
       invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
       invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
+      invCtx.filter='none';
+      // Fractal glitch noise — short jittered segments at 40% opacity
+      invCtx.globalAlpha=alpha*0.40;
+      invCtx.lineWidth=1;
+      const _segH=8; // height of each noise segment
+      const _segs=Math.ceil((beamBot-beamTop)/_segH);
+      for(let _i=0;_i<_segs;_i++){
+        const _sy=beamTop+_i*_segH;
+        const _ey=Math.min(_sy+_segH*(0.4+Math.random()*0.6),beamBot);
+        // left edge
+        const _lx=bx-currentW/2+(Math.random()-0.5)*3.5;
+        invCtx.strokeStyle=edgeCol;
+        invCtx.beginPath();invCtx.moveTo(_lx,_sy);invCtx.lineTo(_lx+(Math.random()-0.5)*2,_ey);invCtx.stroke();
+        // right edge
+        const _rx=bx+currentW/2+(Math.random()-0.5)*3.5;
+        invCtx.beginPath();invCtx.moveTo(_rx,_sy);invCtx.lineTo(_rx+(Math.random()-0.5)*2,_ey);invCtx.stroke();
+      }
+      invCtx.restore();
       // Curved muzzle flash — soft full ellipse, radial gradient fades to transparent
       const muzzleY=beamBot+muzzleR*0.18; // push centre down so top half dissolves into beam
       const muzzleR=currentW*0.85;
