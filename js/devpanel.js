@@ -4,7 +4,7 @@
 // screen, and tweak/mute BGM & SFX while testing.
 import { state } from './state.js';
 import { field, welcomeScreen, portalScreen, gameScreen, glitchTrans, roundOverlay } from './ui.js';
-import { stopInvaders, getRound2DebugInfo } from './rounds/round2.js';
+import { stopInvaders, resumeInvaders, getRound2DebugInfo } from './rounds/round2.js';
 import { stopDuel, getRound3DebugInfo } from './rounds/round3.js';
 import { getRound1DebugInfo } from './rounds/round1.js';
 import { startRound, showPortal } from './game.js';
@@ -70,6 +70,12 @@ function closeDevPanel() {
   devPanel.classList.remove('open');
   devPwInput.value = '';
   devPwError.textContent = '';
+  // Resume game if it was paused by opening the panel
+  if(!state.running && typeof resumeInvaders === 'function'){
+    resumeInvaders();
+  } else if(!state.running){
+    state.running = true;
+  }
 }
 
 function checkDevPassword() {

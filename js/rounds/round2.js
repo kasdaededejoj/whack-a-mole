@@ -1561,17 +1561,18 @@ function invDraw(){
       invCtx.lineWidth=1.5;
       invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
       invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
-      // Curved muzzle flash at beam base — radial gradient arc fading outward
-      const muzzleY=beamBot;
+      // Curved muzzle flash — soft full ellipse, radial gradient fades to transparent
+      const muzzleY=beamBot+muzzleR*0.18; // push centre down so top half dissolves into beam
       const muzzleR=currentW*0.85;
       const muzzleGrad=invCtx.createRadialGradient(bx,muzzleY,0,bx,muzzleY,muzzleR);
-      muzzleGrad.addColorStop(0,isDua?'rgba(210,160,255,'+( alpha*0.9)+')'  :'rgba(230,245,255,'+(alpha*0.9)+')');
-      muzzleGrad.addColorStop(0.35,isDua?'rgba(180,100,255,'+(alpha*0.45)+')':'rgba(180,220,255,'+(alpha*0.45)+')');
+      muzzleGrad.addColorStop(0,isDua?'rgba(210,160,255,'+(alpha*0.7)+')':'rgba(230,245,255,'+(alpha*0.7)+')');
+      muzzleGrad.addColorStop(0.4,isDua?'rgba(180,100,255,'+(alpha*0.35)+')':'rgba(180,220,255,'+(alpha*0.35)+')');
+      muzzleGrad.addColorStop(0.75,isDua?'rgba(120,60,200,'+(alpha*0.1)+')':'rgba(140,190,255,'+(alpha*0.1)+')');
       muzzleGrad.addColorStop(1,'rgba(0,0,0,0)');
       invCtx.globalAlpha=1;
       invCtx.fillStyle=muzzleGrad;
       invCtx.beginPath();
-      invCtx.ellipse(bx, muzzleY, muzzleR, muzzleR*0.38, 0, Math.PI, Math.PI*2);
+      invCtx.ellipse(bx, muzzleY, muzzleR, muzzleR*0.42, 0, 0, Math.PI*2);
       invCtx.fill();
       // Curved base: radial gradient ellipse at beam origin point
       const baseRx=currentW*0.65, baseRy=currentW*0.22;
@@ -1820,4 +1821,10 @@ function getRound2DebugInfo() {
   };
 }
 
-export { startInvaders, stopInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };
+function resumeInvaders(){
+  if(state.running) return; // already running
+  state.running=true;
+  if(!invRaf && invCanvas) invLoop();
+}
+
+export { startInvaders, stopInvaders, resumeInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };
