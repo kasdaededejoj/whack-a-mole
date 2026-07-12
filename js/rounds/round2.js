@@ -87,6 +87,7 @@ let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
 
 let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
+let invSpawnProtectUntil=0; // enemies invulnerable for 800ms after wave spawn
 let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
 
@@ -292,6 +293,7 @@ function setNukaCooldown(active, duration=2000, isFail=false){
 function startInvaders(){
   invWave=0;
   invTransitioning=false;
+  invSpawnProtectUntil=0;
   invUpgrade=null;
   invBossUpgrade=null;
   invWave2Upgrade=null;
@@ -342,6 +344,7 @@ function startInvaders(){
 }
 
 function spawnInvaderWave(waveIdx){
+  invSpawnProtectUntil=Date.now()+800;
   invDescentY=0;
   invEntities=[];
   const cw=invCanvas.width,ch=invCanvas.height;
@@ -920,7 +923,7 @@ function invFire(){
       });
     }
     try{playMachinaBurst();}catch(e){}
-  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='beam'){
+  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='beam'||activeUpgrade==='dua beam'){
     spawnBullet(invShooterX);
     try{playMissileFire();}catch(e){}
   } else {
@@ -939,6 +942,8 @@ function fireBeam(widthOverride){
 function _castAndFireBeam(cx, bw, dmg){
   const ch=invCanvas.height;
   // Instant hit — narrow precision hit (2px beam, 4px dua beam)
+  // Spawn protection: beam cannot clear a wave in the first 800ms
+  if(Date.now()<invSpawnProtectUntil) return;
   const hitR=bw>=200?2:1; // dua beam=2, beam=1 (half of 4px/2px)
   for(let e of invEntities){
     if(!e.alive)continue;
