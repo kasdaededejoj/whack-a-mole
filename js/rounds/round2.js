@@ -344,7 +344,7 @@ function startInvaders(){
 }
 
 function spawnInvaderWave(waveIdx){
-  invSpawnProtectUntil=Date.now()+800;
+  invSpawnProtectUntil=Date.now()+1500;
   invDescentY=0;
   invEntities=[];
   const cw=invCanvas.width,ch=invCanvas.height;
