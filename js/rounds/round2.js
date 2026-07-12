@@ -87,6 +87,7 @@ let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
 
 let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
+let invWaveSpawnTime=0; // ms timestamp of last wave spawn — beam protection window
 let invSpawnProtectUntil=0; // enemies invulnerable for 800ms after wave spawn
 let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
@@ -433,6 +434,9 @@ function showUpgradeModal(mode='wave2'){
   state.running=false;
   // Kill the rAF loop cleanly so it doesn't ghost-run
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  // Clear beam hold intervals — prevents beam firing during/after modal before spawn protection stamps
+  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
+  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
   const modal=document.getElementById('upgrade-modal');
   const desc=document.getElementById('upgrade-desc');
   modal.style.display='flex';
@@ -737,6 +741,8 @@ function drawBossAbilities(){
 function showBossUpgradeModal(){
   state.running=false;
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
+  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
   const modal=document.getElementById('boss-upgrade-modal');
   const desc=document.getElementById('boss-upgrade-desc');
   const btn1=document.getElementById('boss-upgrade-nuka');
