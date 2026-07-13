@@ -2,6 +2,30 @@
 
 ---
 
+## beam + dua beam VFX + fixes — 2026-07-13
+
+### Committed & pushed to `main` (`4571b27`)
+
+**Beam edge glow:** `blur(1.8px)` on edge stroke lines + 40% fractal glitch noise (short jittered vertical segments, ±3.5px x-jitter, re-rolls every frame). Drawn via `save/restore` to isolate filter.
+
+**Beam muzzle cutoff:** replaced flat-top arc with full soft ellipse (`0` to `Math.PI*2`), centre pushed down `muzzleR*0.18` so top half dissolves into beam body. Multi-stop radial gradient (0 → 0.4 → 0.75 → 1) fades cleanly with no hard edge.
+
+**Dev panel freeze fixed:** `closeDevPanel()` now calls `resumeInvaders()` (new export from round2.js) which sets `state.running=true` and restarts `invLoop()` if rAF was killed. Import added to devpanel.js.
+
+**Wave 5 beam skip fixed:** 300ms immunity window (`invWave5ProtectUntil`) stamped only on `waveIdx===4` spawn. All other waves unaffected.
+
+**Beam snap:** `invShooterX` snapped to exact cursor on mousedown (was lerp-lagged during hold-fire).
+
+**Stacking:** dua beam subsumes beam interval when both active — single 450ms interval, clean rhythm.
+
+### Open items
+- Boss SFX: pincer and teleport still paused
+- Wave VFX `playbackRate` sync: not yet done
+- `???` combos: missile+rapidaaa, rapida+doublets → now beam+rapidaaa, beam+dua beam paths TBD (rapida+dua beam already handled)
+- All boss-wave upgrade combos need live playtesting
+
+---
+
 ## beam + dua beam tuning — 2026-07-12
 
 ### Committed & pushed to `main` (`0f9d3da`)
