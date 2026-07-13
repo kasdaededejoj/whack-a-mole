@@ -38,17 +38,17 @@ let invPlayerHp=PLAYER_MAX_HP;
 let invWave2Upgrade=null;  // tracks wave 2 pick independently
 let invWave4Upgrade=null;  // tracks wave 4 pick independently
 
-// beam + dua beam click-fire cooldowns
-const BEAM_CD=450;
-const DUA_BEAM_CD=450;
+// missile + doublets click-fire cooldowns
+const MISSILE_CD=1300;
+const DOUBLETS_CD=800;
 const SALVO_CD=1000;
 const OVERCHARGE_CD=2000;
-let invBeamCooldownUntil=0;
-let invDuaBeamCooldownUntil=0;
+let invMissileCooldownUntil=0;
+let invDoubletsCooldownUntil=0;
 let invSalvoCooldownUntil=0;
 let invOverchargeCooldownUntil=0;
-let invBeamHoldInterval=null;
-let invDuaBeamHoldInterval=null;
+let invMissileHoldInterval=null;
+let invDoubletsHoldInterval=null;
 
 // Boss abilities
 let bossShockwaves=[];
@@ -64,19 +64,28 @@ const BOSS_PINCER_SPEED=5.25;            // was 3.5 × 1.5 — pincer active fro
 const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from phase 2
 
 // VFX sprite sheet — wave ability
-// Travelling wave VFX — WebM video element
+// Travelling wave VFX — WebM video element + 2 echo trails
 let vfxWaveVideo=null;
+let vfxWaveEcho1=null;
+let vfxWaveEcho2=null;
 let vfxWaveRaf=null;
 
+function _makeWaveVideo(opacity){
+  const v=document.createElement('video');
+  v.src='assets/vfx_wave.webm';
+  v.preload='auto';
+  v.muted=true;
+  v.playsInline=true;
+  v.style.cssText=`position:fixed;pointer-events:none;mix-blend-mode:screen;display:none;z-index:50;transform-origin:center center;opacity:${opacity};`;
+  document.body.appendChild(v);
+  return v;
+}
+
 function loadVfxAssets(){
-  if(vfxWaveVideo) return; // already created
-  vfxWaveVideo=document.createElement('video');
-  vfxWaveVideo.src='assets/vfx_wave.webm';
-  vfxWaveVideo.preload='auto';
-  vfxWaveVideo.muted=true;
-  vfxWaveVideo.playsInline=true;
-  vfxWaveVideo.style.cssText='position:fixed;pointer-events:none;mix-blend-mode:normal;display:none;z-index:50;transform-origin:center center;opacity:0.92;filter:brightness(3.5) contrast(1.4) saturate(1.5);';
-  document.body.appendChild(vfxWaveVideo);
+  if(vfxWaveVideo) return;
+  vfxWaveVideo=_makeWaveVideo(1);
+  vfxWaveEcho1=_makeWaveVideo(0.45);
+  vfxWaveEcho2=_makeWaveVideo(0.2);
 }
 
 // Boss sprite pool — one chosen at random on spawn
@@ -86,7 +95,6 @@ let bossGrowthScale=1;    // lerps to 1.38 at phase 2 transition
 let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
 
 let invWave=0;        // 0-indexed, 0-5
-let invWave5ProtectUntil=0; // 300ms beam immunity for wave 5 only
 let invTransitioning=false;
 let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
@@ -297,8 +305,8 @@ function startInvaders(){
   invBossUpgrade=null;
   invWave2Upgrade=null;
   invWave4Upgrade=null;
-  invBeamCooldownUntil=0;
-  invDuaBeamCooldownUntil=0;
+  invMissileCooldownUntil=0;
+  invDoubletsCooldownUntil=0;
   invSalvoCooldownUntil=0;
   invOverchargeCooldownUntil=0;
   invNukaCooldownUntil=0;
@@ -343,7 +351,6 @@ function startInvaders(){
 }
 
 function spawnInvaderWave(waveIdx){
-  if(waveIdx===4) invWave5ProtectUntil=Date.now()+300;
   invDescentY=0;
   invEntities=[];
   const cw=invCanvas.width,ch=invCanvas.height;
@@ -452,7 +459,7 @@ function showUpgradeModal(mode='wave2'){
     rapidBtn.style.display='none'; aoeBtn.style.display='none';
     dblBtn.style.display=''; homingBtn.style.display='';
     nukaBtn.style.display='none'; machinaBtn.style.display='none';
-    desc.innerHTML='wave 4.<br>choose your augment.<br>dua beam.<br>rapid\'aa.';
+    desc.innerHTML='wave 4.<br>choose your augment.<br>doublets.<br>rapid\'aa.';
   }
 
   function pickUpgrade(type){
@@ -470,8 +477,8 @@ function showUpgradeModal(mode='wave2'){
   rapidBtn.onclick=null; aoeBtn.onclick=null; dblBtn.onclick=null;
   homingBtn.onclick=null; nukaBtn.onclick=null; machinaBtn.onclick=null;
   rapidBtn.onclick=()=>pickUpgrade('rapida');
-  aoeBtn.onclick=()=>pickUpgrade('beam');
-  dblBtn.onclick=()=>pickUpgrade('dua beam');
+  aoeBtn.onclick=()=>pickUpgrade('missile');
+  dblBtn.onclick=()=>pickUpgrade('doublets');
   homingBtn.onclick=()=>pickUpgrade('rapidaaa');
   nukaBtn.onclick=()=>pickUpgrade('nuka');
   machinaBtn.onclick=()=>pickUpgrade('machina');
@@ -542,41 +549,48 @@ function spawnWave(){
   function launchWaveVfx(){
     if(!vfxWaveVideo||!state.running)return;
     if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
-    vfxWaveVideo.currentTime=0;
 
     const rect=invCanvas.getBoundingClientRect();
     const bossPageX=rect.left+boss.x;
     const bossPageY=rect.top+boss.y;
     const shooterPageX=rect.left+tx;
     const shooterPageY=rect.top+ty;
-
-    // 25% of canvas width
     const vidW=rect.width*0.25;
     const vidH=vidW*(9/16);
     const angle=Math.atan2(ty-boss.y, tx-boss.x)-Math.PI/2;
-
-    vfxWaveVideo.style.width=vidW+'px';
-    vfxWaveVideo.style.height=vidH+'px';
-    vfxWaveVideo.style.display='block';
-
     const travelMs=(dist/BOSS_WAVE_SPEED)*(1000/60);
-    const startTime=performance.now();
 
-    function animateWave(now){
-      const elapsed=now-startTime;
-      const t=Math.min(1,elapsed/travelMs);
-      const cx=bossPageX+(shooterPageX-bossPageX)*t;
-      const cy=bossPageY+(shooterPageY-bossPageY)*t;
-      vfxWaveVideo.style.left=(cx-vidW/2)+'px';
-      vfxWaveVideo.style.top=(cy-vidH/2)+'px';
-      vfxWaveVideo.style.transform=`rotate(${angle}rad)`;
-      if(t<1&&state.running) vfxWaveRaf=requestAnimationFrame(animateWave);
-      else { vfxWaveVideo.style.display='none'; vfxWaveRaf=null; }
+    function styleVid(v){
+      v.style.width=vidW+'px';
+      v.style.height=vidH+'px';
+      v.style.transform=`rotate(${angle}rad)`;
     }
 
-    vfxWaveVideo.play().catch(()=>{});
-    vfxWaveVideo.onended=()=>{ vfxWaveVideo.style.display='none'; };
-    vfxWaveRaf=requestAnimationFrame(animateWave);
+    function animateVid(v, delayMs){
+      setTimeout(()=>{
+        if(!state.running){v.style.display='none';return;}
+        v.currentTime=0;
+        v.style.display='block';
+        styleVid(v);
+        v.play().catch(()=>{});
+        v.onended=()=>{ v.style.display='none'; };
+        const start=performance.now();
+        function step(now){
+          const t=Math.min(1,(now-start)/travelMs);
+          const cx=bossPageX+(shooterPageX-bossPageX)*t;
+          const cy=bossPageY+(shooterPageY-bossPageY)*t;
+          v.style.left=(cx-vidW/2)+'px';
+          v.style.top=(cy-vidH/2)+'px';
+          if(t<1&&state.running) requestAnimationFrame(step);
+          else v.style.display='none';
+        }
+        requestAnimationFrame(step);
+      }, delayMs);
+    }
+
+    animateVid(vfxWaveVideo, 0);
+    animateVid(vfxWaveEcho1, 120);
+    animateVid(vfxWaveEcho2, 220);
   }
 }
 
@@ -625,6 +639,8 @@ function stopBossAbilities(){
   if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
   if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
   if(vfxWaveVideo){vfxWaveVideo.pause();vfxWaveVideo.style.display='none';}
+  if(vfxWaveEcho1){vfxWaveEcho1.pause();vfxWaveEcho1.style.display='none';}
+  if(vfxWaveEcho2){vfxWaveEcho2.pause();vfxWaveEcho2.style.display='none';}
   bossShockwaves=[];bossPincers=[];bossTeleportFlash=0;
 }
 
@@ -725,9 +741,9 @@ function drawBossAbilities(){
     invCtx.save();
     invCtx.translate(s.x,s.y);
     invCtx.rotate(angle-Math.PI/2);
-    invCtx.globalAlpha=0.65;
-    invCtx.strokeStyle='rgba(255,230,80,0.9)';
-    invCtx.lineWidth=3.5;
+    invCtx.globalAlpha=0.18;
+    invCtx.strokeStyle='rgba(255,230,80,0.7)';
+    invCtx.lineWidth=2;
     invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
     invCtx.restore();
   }
@@ -743,30 +759,18 @@ function showBossUpgradeModal(){
   modal.style.display='flex';
   btn1.onclick=null; btn2.onclick=null;
 
-  const isMissileDoublets=invWave2Upgrade==='beam'&&invWave4Upgrade==='dua beam';
-  const isRapidaMachina=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='rapida');
+  const isMissileDoublets=invWave2Upgrade==='missile'&&invWave4Upgrade==='doublets';
 
   if(isMissileDoublets){
-    if(desc) desc.innerHTML='the void.<br>beam + dua beam.<br>choose your final augment.';
+    if(desc) desc.innerHTML='the void.<br>missile + doublets.<br>choose your final augment.';
     btn1.textContent='salvo.';
     btn2.textContent='overcharge.';
-    btn1.style.cssText='';
-    btn2.style.display='';
     btn1.onclick=()=>pickBossUpgrade('salvo');
     btn2.onclick=()=>pickBossUpgrade('overcharge');
-  } else if(isRapidaMachina){
-    if(desc) desc.innerHTML='the void.<br>rapida + rapid\'aa.<br>convergence.';
-    btn1.textContent='machina.';
-    btn1.style.cssText='display:block;margin:0 auto;';
-    btn2.style.display='none';
-    btn1.onclick=()=>pickBossUpgrade('machina');
-    btn2.onclick=null;
   } else {
     if(desc) desc.innerHTML='the void.<br>choose your final augment.';
     btn1.textContent='???';
     btn2.textContent='???';
-    btn1.style.cssText='';
-    btn2.style.display='';
     btn1.onclick=()=>pickBossUpgrade(null);
     btn2.onclick=()=>pickBossUpgrade(null);
   }
@@ -791,8 +795,10 @@ function stopInvaders(){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
   stopWarhAutoFire();
-  invBeamCooldownUntil=0;
-  invDuaBeamCooldownUntil=0;
+  if(invMissileHoldInterval){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;}
+  if(invDoubletsHoldInterval){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;}
+  invMissileCooldownUntil=0;
+  invDoubletsCooldownUntil=0;
   invMouseDown=false;
   invUpgrade=null;
   invBossUpgrade=null;
@@ -821,10 +827,9 @@ function invHandleMove(e){
 function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
-  // Snap shooter to exact cursor position on press — no lag during hold-fire
-  const _r=invCanvas.getBoundingClientRect();
-  invShooterX=e.clientX-_r.left;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
+  if(invMissileHoldInterval){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;}
+  if(invDoubletsHoldInterval){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;}
 
   const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
 
@@ -834,27 +839,31 @@ function invHandleMouseDown(e){
   // boss combos — hold-to-fire
   if(invBossUpgrade==='salvo'){
     fireSalvo();
-    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireSalvo();},SALVO_CD);
+    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireSalvo();},SALVO_CD);
     return;
   }
   if(invBossUpgrade==='overcharge'){
     fireOvercharge();
-    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireOvercharge();},OVERCHARGE_CD);
+    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireOvercharge();},OVERCHARGE_CD);
     return;
   }
 
-  // dua beam (wave4) — hold-to-fire, suppresses base bullet
-  // beam (wave2) is subsumed by dua beam width — no separate interval when stacked
-  if(activeUpgradeForRate==='dua beam'){
-    fireDuaBeam();
-    invDuaBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;return;}fireDuaBeam();},DUA_BEAM_CD);
+  // doublets (wave4) — hold-to-fire, suppresses base bullet
+  if(activeUpgradeForRate==='doublets'){
+    fireDoublets();
+    invDoubletsHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;return;}fireDoublets();},DOUBLETS_CD);
+    // missile (wave2) still stacks alongside doublets
+    if(invWave2Upgrade==='missile'){
+      fireMissile();
+      invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
+    }
     return;
   }
 
-  // beam (wave2) alone — hold-to-fire, suppress base bullet
-  if(invWave2Upgrade==='beam'){
-    fireBeam();
-    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireBeam();},BEAM_CD);
+  // missile (wave2) alone — hold-to-fire, suppress base bullet
+  if(invWave2Upgrade==='missile'){
+    fireMissile();
+    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
     // only skip base bullet if no wave4/boss upgrade that uses bullet fire
     const needsBullet=activeUpgradeForRate==='rapida'||activeUpgradeForRate==='rapidaaa'||activeUpgradeForRate==='machina';
     if(!needsBullet) return;
@@ -876,6 +885,8 @@ function invHandleMouseDown(e){
 function invHandleMouseUp(){
   invMouseDown=false;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
+  if(invMissileHoldInterval){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;}
+  if(invDoubletsHoldInterval){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;}
 }
 
 function invHandleSingleClick(e){
@@ -887,7 +898,8 @@ function invHandleSingleClick(e){
   if((invBossUpgrade||invUpgrade)==='warh') fireWarh();
   if(invBossUpgrade==='salvo') fireSalvo();
   if(invBossUpgrade==='overcharge') fireOvercharge();
-  // beam/dua beam fire handled by mousedown only — no double-fire here
+  if(invWave2Upgrade==='missile'&&invBossUpgrade!=='salvo'&&invBossUpgrade!=='overcharge') fireMissile();
+  if((invWave4Upgrade||invUpgrade)==='doublets'&&invBossUpgrade!=='salvo'&&invBossUpgrade!=='overcharge') fireDoublets();
 }
 
 function invFire(){
@@ -897,7 +909,7 @@ function invFire(){
   const activeUpgrade=invBossUpgrade==='machina'?'machina':invWave4Upgrade||invUpgrade;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
-    const isMissile=activeUpgrade==='beam'||activeUpgrade==='rapidaaa';
+    const isMissile=activeUpgrade==='missile'||activeUpgrade==='rapidaaa';
     const spd=isMissile?INV_BULLET_SPEED:INV_BULLET_SPEED_UPGRADED;
     invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
@@ -919,7 +931,7 @@ function invFire(){
       });
     }
     try{playMachinaBurst();}catch(e){}
-  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='beam'||activeUpgrade==='dua beam'){
+  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='missile'){
     spawnBullet(invShooterX);
     try{playMissileFire();}catch(e){}
   } else {
@@ -928,52 +940,74 @@ function invFire(){
   }
 }
 
-// ── BEAM — click-fire, 1.5s CD, 113px wide, instant vertical clear + cast VFX ──
-const BEAM_WIDTH=113;
-function fireBeam(widthOverride){
+// ── MISSILE — click-fire, 1.3s cooldown, AOE column-clear ──
+function fireMissile(){
   if(!state.running||!invCanvas)return;
-  _castAndFireBeam(invShooterX, widthOverride||BEAM_WIDTH, 1);
-}
-
-function _castAndFireBeam(cx, bw, dmg){
+  const now=Date.now();
+  if(now<invMissileCooldownUntil)return;
+  invMissileCooldownUntil=now+MISSILE_CD;
   const ch=invCanvas.height;
-  if(Date.now()<invWave5ProtectUntil) return;
-  // Instant hit — hit radius matches visual beam width
-  const hitR=bw/2;
+  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
+  let targetY=invCanvas.height/2;
+  if(aliveRows.length){
+    targetY=aliveRows.reduce((best,row)=>
+      Math.abs(row-invCanvas.height/2)<Math.abs(best-invCanvas.height/2)?row:best
+    ,aliveRows[0]);
+  }
+  invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
+  try{playAoeTrigger();}catch(e){}
   for(let e of invEntities){
     if(!e.alive)continue;
-    if(Math.abs(e.x-cx)<=hitR){
-      if(e.isBoss){
-        e.hp-=dmg;
-        if(e.hp<=0){
-          e.alive=false;
-          invSpawnParticles(e.x,e.y,2);
-          try{playEnemyDeath(0.4);}catch(ex){}
-        }
-      } else {
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+      e.hp--;
+      if(e.hp<=0){
         e.alive=false;
         invSpawnParticles(e.x,e.y,1);
         try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
         state.combo=Math.min(state.combo+1,8);
         setComboValue('×'+state.combo);
-      }
+      } else { e.glitchTimer=10; }
     }
   }
-  try{playAoeTrigger();}catch(e){}
-  // Push beam VFX into particles pool — drawn in draw loop
-  invParticles.push({
-    isBeam:true, x:cx, bw,
-    startTime:Date.now(),
-    castDur:150, flashDur:120, fadeDur:180,
-    life:1, alpha:1, vx:0, vy:0
-  });
 }
 
-// ── DUA BEAM — click-fire, 1.0s CD, 280px wide, instant vertical clear + cast VFX ──
-const DUA_BEAM_WIDTH=280;
-function fireDuaBeam(){
+// ── DOUBLETS — click-fire, 0.8s cooldown, straight + diagonal homing missiles ──
+function fireDoublets(){
   if(!state.running||!invCanvas)return;
-  _castAndFireBeam(invShooterX, DUA_BEAM_WIDTH, 1);
+  const now=Date.now();
+  if(now<invDoubletsCooldownUntil)return;
+  invDoubletsCooldownUntil=now+DOUBLETS_CD;
+  const ch=invCanvas.height;
+  // Missile 1 — straight up
+  invBullets.push({
+    x:invShooterX-18, y:ch-67,
+    vx:0, vy:-INV_BULLET_SPEED,
+    trail:[], hit:false, kind:'missile', pierceLeft:0
+  });
+  // Missile 2 — diagonal homing toward densest enemy cluster, kills ±2 cols (5 total)
+  const alive=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
+  let targetE=null;
+  if(alive.length){
+    targetE=alive.reduce((best,e)=>{
+      const score=alive.filter(o=>Math.abs(o.col-e.col)<=2).length;
+      const bestScore=alive.filter(o=>Math.abs(o.col-best.col)<=2).length;
+      return score>bestScore?e:best;
+    }, alive[0]);
+  }
+  let vx=12, vy=-INV_BULLET_SPEED;
+  if(targetE){
+    const dx=targetE.x-(invShooterX+18), dy=targetE.y-(ch-67);
+    const dist=Math.hypot(dx,dy)||1;
+    const spd=INV_BULLET_SPEED;
+    vx=(dx/dist)*spd; vy=(dy/dist)*spd;
+  }
+  invBullets.push({
+    x:invShooterX+18, y:ch-67,
+    vx, vy,
+    trail:[], hit:false, kind:'missile', pierceLeft:0,
+    isDiagonalHoming:true
+  });
+  try{playMissileFire();}catch(e){}
 }
 
 // ── SALVO — boss combo: fires missile AOE + doublet pair simultaneously, 1s cooldown ──
@@ -991,8 +1025,20 @@ function fireSalvo(){
       Math.abs(row-ch/2)<Math.abs(best-ch/2)?row:best
     ,aliveRows[0]);
   }
-  // Beam AOE — use shared beam logic (113px)
-  _castAndFireBeam(invShooterX, BEAM_WIDTH, 1);
+  invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
+  for(let e of invEntities){
+    if(!e.alive)continue;
+    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
+      e.hp--;
+      if(e.hp<=0){
+        e.alive=false;
+        invSpawnParticles(e.x,e.y,1);
+        try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
+        state.combo=Math.min(state.combo+1,8);
+        setComboValue('×'+state.combo);
+      } else { e.glitchTimer=10; }
+    }
+  }
   // Doublet pair — straight + diagonal homing
   invBullets.push({x:invShooterX-18,y:ch-67,vx:0,vy:-INV_BULLET_SPEED,trail:[],hit:false,kind:'missile',pierceLeft:0});
   const alive=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
@@ -1168,7 +1214,7 @@ function invUpdate(){
       for(let e of invEntities){
         if(!e.alive)continue;
         if(Math.abs(b.x-e.x)<e.cellW*0.48&&Math.abs(b.y-e.y)<e.cellH*0.52){
-          if((b.kind==='beam-proj' || b.kind==='warh') && !e.isBoss && e.col!==undefined){
+          if((b.kind==='missile' || b.kind==='warh') && !e.isBoss && e.col!==undefined){
             b.hit=true;
             const colRange=b.kind==='warh'?1:b.isDiagonalHoming?2:0; // warh ±1, diag ±2, normal col only
             const cols=[];
@@ -1192,7 +1238,7 @@ function invUpdate(){
             break;
           } else {
             b.hit=true;
-            const damage=e.isBoss?((b.kind==='beam-proj')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.5:0.5):1;
+            const damage=e.isBoss?((b.kind==='missile')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.3:0.5):1;
             e.hp-=damage;
             if(e.hp<=0){
               e.alive=false;
@@ -1224,15 +1270,7 @@ function invUpdate(){
     if(b.vx&&(b.x<-60||b.x>invCanvas.width+60)) return false;
     return true;
   });
-  for(let p of invParticles){
-    if(p.isBeam){
-      const elapsed=Date.now()-p.startTime;
-      const total=p.castDur+p.flashDur+p.fadeDur;
-      if(elapsed>=total){ p.life=0; } // mark dead
-    } else {
-      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life-=0.045;
-    }
-  }
+  for(let p of invParticles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045;}
   invParticles=invParticles.filter(p=>p.life>0);
 
   const alive=invEntities.filter(e=>e.alive);
@@ -1268,7 +1306,7 @@ function getProjectilePalette(kind){
       outline:'#180f14'
     };
   }
-  if(kind==='beam-proj'){
+  if(kind==='missile'){
     return{
       trail:'rgba(62, 96, 151, 0.24)',
       glow:'rgba(84, 118, 179, 0.2)',
@@ -1375,7 +1413,7 @@ function drawProjectileVisual(b){
     invCtx.restore();
     return;
   }
-  if(b.kind==='beam-proj'||b.kind==='warh'){
+  if(b.kind==='missile'||b.kind==='warh'){
     const missileScale=getMissileScale(b.kind);
     if(b.trail.length>1){
       const trail=b.trail.slice(-8);
@@ -1502,113 +1540,6 @@ function invDraw(){
       invCtx.strokeStyle='#c084fc';
       invCtx.lineWidth=2.5;
       invCtx.beginPath();invCtx.arc(bx,by,maxR*0.75*(2-p.life*1.3),0,Math.PI*2);invCtx.stroke();
-    } else if(p.isBeam){
-      // Beam cast sequence: thin line (60px) → full width (bw) → fade
-      const elapsed=Date.now()-p.startTime;
-      const {castDur,flashDur,fadeDur,bw,x:cx}=p;
-      const ch2=invCanvas.height;
-      let currentW, alpha;
-      if(elapsed<castDur){
-        // Cast: 60px → bw over castDur ms
-        const t=elapsed/castDur;
-        currentW=60+(bw-60)*t;
-        alpha=0.55+0.45*t;
-      } else if(elapsed<castDur+flashDur){
-        currentW=bw;
-        alpha=1;
-      } else {
-        const t=(elapsed-(castDur+flashDur))/fadeDur;
-        currentW=bw*(1-t*0.2);
-        alpha=1-t;
-      }
-      const bx=Math.round(cx);
-      // Beam starts ~38px above shooter sprite top (ch-67-38 = ch-105)
-      const beamTop=0;
-      const beamBot=ch2-105;
-      const beamH=beamBot-beamTop;
-      const isDua=p.bw>=200;
-      // Colour: beam=ice blue, dua beam=mid purple
-      const glowCol=isDua?'rgba(180,100,255,':'rgba(180,220,255,';
-      const coreCol0=isDua?'rgba(140,60,220,0)':'rgba(160,210,255,0)';
-      const coreCol1=isDua?'rgba(210,160,255,1)':'rgba(230,245,255,1)';
-      const edgeCol=isDua?'rgba(200,130,255,0.9)':'rgba(180,230,255,0.9)';
-      // Glow column
-      invCtx.globalAlpha=alpha*0.18;
-      const grad=invCtx.createLinearGradient(bx-currentW/2,0,bx+currentW/2,0);
-      grad.addColorStop(0,glowCol+'0)');
-      grad.addColorStop(0.5,glowCol+'1)');
-      grad.addColorStop(1,glowCol+'0)');
-      invCtx.fillStyle=grad;
-      invCtx.fillRect(bx-currentW/2,beamTop,currentW,beamH);
-      // Core bright fill
-      invCtx.globalAlpha=alpha*0.72;
-      const coreW=currentW*0.28;
-      const coreGrad=invCtx.createLinearGradient(bx-coreW/2,0,bx+coreW/2,0);
-      coreGrad.addColorStop(0,coreCol0);
-      coreGrad.addColorStop(0.5,coreCol1);
-      coreGrad.addColorStop(1,coreCol0);
-      invCtx.fillStyle=coreGrad;
-      invCtx.fillRect(bx-coreW/2,beamTop,coreW,beamH);
-      // Chromatic aberration: red left, blue right
-      invCtx.globalAlpha=alpha*0.18;
-      invCtx.fillStyle='rgba(255,80,80,0.7)';
-      invCtx.fillRect(bx-currentW/2-4,beamTop,6,beamH);
-      invCtx.fillStyle='rgba(80,160,255,0.7)';
-      invCtx.fillRect(bx+currentW/2-2,beamTop,6,beamH);
-      // Edge glow lines — blurred + 40% fractal glitch noise
-      invCtx.save();
-      invCtx.filter='blur(1.8px)';
-      invCtx.globalAlpha=alpha*0.55;
-      invCtx.strokeStyle=edgeCol;
-      invCtx.lineWidth=1.5;
-      invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
-      invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
-      invCtx.filter='none';
-      // Fractal glitch noise — short jittered segments at 40% opacity
-      invCtx.globalAlpha=alpha*0.40;
-      invCtx.lineWidth=1;
-      const _segH=8; // height of each noise segment
-      const _segs=Math.ceil((beamBot-beamTop)/_segH);
-      for(let _i=0;_i<_segs;_i++){
-        const _sy=beamTop+_i*_segH;
-        const _ey=Math.min(_sy+_segH*(0.4+Math.random()*0.6),beamBot);
-        // left edge
-        const _lx=bx-currentW/2+(Math.random()-0.5)*3.5;
-        invCtx.strokeStyle=edgeCol;
-        invCtx.beginPath();invCtx.moveTo(_lx,_sy);invCtx.lineTo(_lx+(Math.random()-0.5)*2,_ey);invCtx.stroke();
-        // right edge
-        const _rx=bx+currentW/2+(Math.random()-0.5)*3.5;
-        invCtx.beginPath();invCtx.moveTo(_rx,_sy);invCtx.lineTo(_rx+(Math.random()-0.5)*2,_ey);invCtx.stroke();
-      }
-      invCtx.restore();
-      // Curved muzzle flash — soft full ellipse, radial gradient fades to transparent
-      const muzzleY=beamBot+muzzleR*0.18; // push centre down so top half dissolves into beam
-      const muzzleR=currentW*0.85;
-      const muzzleGrad=invCtx.createRadialGradient(bx,muzzleY,0,bx,muzzleY,muzzleR);
-      muzzleGrad.addColorStop(0,isDua?'rgba(210,160,255,'+(alpha*0.7)+')':'rgba(230,245,255,'+(alpha*0.7)+')');
-      muzzleGrad.addColorStop(0.4,isDua?'rgba(180,100,255,'+(alpha*0.35)+')':'rgba(180,220,255,'+(alpha*0.35)+')');
-      muzzleGrad.addColorStop(0.75,isDua?'rgba(120,60,200,'+(alpha*0.1)+')':'rgba(140,190,255,'+(alpha*0.1)+')');
-      muzzleGrad.addColorStop(1,'rgba(0,0,0,0)');
-      invCtx.globalAlpha=1;
-      invCtx.fillStyle=muzzleGrad;
-      invCtx.beginPath();
-      invCtx.ellipse(bx, muzzleY, muzzleR, muzzleR*0.42, 0, 0, Math.PI*2);
-      invCtx.fill();
-      // Curved base: radial gradient ellipse at beam origin point
-      const baseRx=currentW*0.65, baseRy=currentW*0.22;
-      const baseGrad=invCtx.createRadialGradient(bx,beamBot,0,bx,beamBot,baseRx);
-      baseGrad.addColorStop(0,isDua?'rgba(200,130,255,'+alpha*0.55+')':'rgba(200,235,255,'+alpha*0.55+')');
-      baseGrad.addColorStop(0.5,isDua?'rgba(160,80,220,'+alpha*0.25+')':'rgba(160,210,255,'+alpha*0.25+')');
-      baseGrad.addColorStop(1,'rgba(0,0,0,0)');
-      invCtx.globalAlpha=1;
-      invCtx.save();
-      invCtx.translate(bx,beamBot);
-      invCtx.scale(1, baseRy/baseRx);
-      invCtx.beginPath();
-      invCtx.arc(0,0,baseRx,0,Math.PI*2);
-      invCtx.fillStyle=baseGrad;
-      invCtx.fill();
-      invCtx.restore();
     } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
@@ -1841,10 +1772,4 @@ function getRound2DebugInfo() {
   };
 }
 
-function resumeInvaders(){
-  if(state.running) return; // already running
-  state.running=true;
-  if(!invRaf && invCanvas) invLoop();
-}
-
-export { startInvaders, stopInvaders, resumeInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };
+export { startInvaders, stopInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };
