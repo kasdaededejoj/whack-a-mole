@@ -38,17 +38,17 @@ let invPlayerHp=PLAYER_MAX_HP;
 let invWave2Upgrade=null;  // tracks wave 2 pick independently
 let invWave4Upgrade=null;  // tracks wave 4 pick independently
 
-// missile + doublets click-fire cooldowns
-const MISSILE_CD=1300;
-const DOUBLETS_CD=800;
+// beam + dua beam click-fire cooldowns
+const BEAM_CD=450;
+const DUA_BEAM_CD=450;
 const SALVO_CD=1000;
 const OVERCHARGE_CD=2000;
-let invMissileCooldownUntil=0;
-let invDoubletsCooldownUntil=0;
+let invBeamCooldownUntil=0;
+let invDuaBeamCooldownUntil=0;
 let invSalvoCooldownUntil=0;
 let invOverchargeCooldownUntil=0;
-let invMissileHoldInterval=null;
-let invDoubletsHoldInterval=null;
+let invBeamHoldInterval=null;
+let invDuaBeamHoldInterval=null;
 
 // Boss abilities
 let bossShockwaves=[];
@@ -98,6 +98,16 @@ let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
 let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
+let invWave5ProtectUntil=0; // 300ms beam immunity for wave 5 only
+
+// ── Fokus Lina state ──
+let flChargeStart=0;
+let flCharging=false;
+let flFiring=false;
+let flFireStart=0;
+let flCurrentW=113;
+let flLastWidthStep=0;
+let flRaf=null;
 
 function updatePlayerHpBar(){
   // Player HP is drawn on-canvas each frame in invDraw — nothing to update in DOM
@@ -305,8 +315,8 @@ function startInvaders(){
   invBossUpgrade=null;
   invWave2Upgrade=null;
   invWave4Upgrade=null;
-  invMissileCooldownUntil=0;
-  invDoubletsCooldownUntil=0;
+  invBeamCooldownUntil=0;
+  invDuaBeamCooldownUntil=0;
   invSalvoCooldownUntil=0;
   invOverchargeCooldownUntil=0;
   invNukaCooldownUntil=0;
@@ -319,6 +329,10 @@ function startInvaders(){
   invPlayerHp=PLAYER_MAX_HP;
   updatePlayerHpBar();
   loadVfxAssets();
+  flChargeStart=0; flCharging=false; flFiring=false; flFireStart=0;
+  flCurrentW=113; flLastWidthStep=0;
+  if(flRaf){cancelAnimationFrame(flRaf);flRaf=null;}
+  invWave5ProtectUntil=0;
   // Boss abilities
   bossShockwaves=[];bossPincers=[];bossPhase2=false;
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
@@ -351,6 +365,7 @@ function startInvaders(){
 }
 
 function spawnInvaderWave(waveIdx){
+  if(waveIdx===4) invWave5ProtectUntil=Date.now()+300;
   invDescentY=0;
   invEntities=[];
   const cw=invCanvas.width,ch=invCanvas.height;
@@ -459,7 +474,7 @@ function showUpgradeModal(mode='wave2'){
     rapidBtn.style.display='none'; aoeBtn.style.display='none';
     dblBtn.style.display=''; homingBtn.style.display='';
     nukaBtn.style.display='none'; machinaBtn.style.display='none';
-    desc.innerHTML='wave 4.<br>choose your augment.<br>doublets.<br>rapid\'aa.';
+    desc.innerHTML='wave 4.<br>choose your augment.<br>dua beam.<br>rapid\'aa.';
   }
 
   function pickUpgrade(type){
@@ -477,8 +492,8 @@ function showUpgradeModal(mode='wave2'){
   rapidBtn.onclick=null; aoeBtn.onclick=null; dblBtn.onclick=null;
   homingBtn.onclick=null; nukaBtn.onclick=null; machinaBtn.onclick=null;
   rapidBtn.onclick=()=>pickUpgrade('rapida');
-  aoeBtn.onclick=()=>pickUpgrade('missile');
-  dblBtn.onclick=()=>pickUpgrade('doublets');
+  aoeBtn.onclick=()=>pickUpgrade('beam');
+  dblBtn.onclick=()=>pickUpgrade('dua beam');
   homingBtn.onclick=()=>pickUpgrade('rapidaaa');
   nukaBtn.onclick=()=>pickUpgrade('nuka');
   machinaBtn.onclick=()=>pickUpgrade('machina');
@@ -759,10 +774,11 @@ function showBossUpgradeModal(){
   modal.style.display='flex';
   btn1.onclick=null; btn2.onclick=null;
 
-  const isMissileDoublets=invWave2Upgrade==='missile'&&invWave4Upgrade==='doublets';
+  const isMissileDoublets=invWave2Upgrade==='beam'&&invWave4Upgrade==='dua beam';
+  const isRapidaMachina=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='rapida');
 
   if(isMissileDoublets){
-    if(desc) desc.innerHTML='the void.<br>missile + doublets.<br>choose your final augment.';
+    if(desc) desc.innerHTML='the void.<br>beam + dua beam.<br>choose your final augment.';
     btn1.textContent='salvo.';
     btn2.textContent='overcharge.';
     btn1.onclick=()=>pickBossUpgrade('salvo');
@@ -795,10 +811,10 @@ function stopInvaders(){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
   stopWarhAutoFire();
-  if(invMissileHoldInterval){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;}
-  if(invDoubletsHoldInterval){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;}
-  invMissileCooldownUntil=0;
-  invDoubletsCooldownUntil=0;
+  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
+  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
+  invBeamCooldownUntil=0;
+  invDuaBeamCooldownUntil=0;
   invMouseDown=false;
   invUpgrade=null;
   invBossUpgrade=null;
@@ -821,39 +837,46 @@ function stopInvaders(){
 function invHandleMove(e){
   if(!state.running)return;
   const r=invCanvas.getBoundingClientRect();
-  invShooterX+=(e.clientX-r.left-invShooterX)*0.18;
+  let lerp=0.18;
+  if(flFiring) lerp=0.18*0.30;
+  else if(flCharging) lerp=0.18*0.50;
+  invShooterX+=(e.clientX-r.left-invShooterX)*lerp;
 }
 
 function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
+  const _r=invCanvas.getBoundingClientRect();
+  invShooterX=e.clientX-_r.left;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
-  if(invMissileHoldInterval){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;}
-  if(invDoubletsHoldInterval){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;}
+  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
+  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
 
   const activeUpgradeForRate=invBossUpgrade||invWave4Upgrade||invUpgrade;
 
+  // Fokus Lina — intercepts beam/dua beam on boss wave
+  if(flCanActivate()&&!flFiring&&!flCharging){ flStartCharge(); return; }
   // warh — single shot per click, no hold
   if(activeUpgradeForRate==='warh'){ fireWarh(); return; }
 
   // boss combos — hold-to-fire
   if(invBossUpgrade==='salvo'){
     fireSalvo();
-    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireSalvo();},SALVO_CD);
+    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireSalvo();},SALVO_CD);
     return;
   }
   if(invBossUpgrade==='overcharge'){
     fireOvercharge();
-    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireOvercharge();},OVERCHARGE_CD);
+    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireOvercharge();},OVERCHARGE_CD);
     return;
   }
 
   // doublets (wave4) — hold-to-fire, suppresses base bullet
-  if(activeUpgradeForRate==='doublets'){
-    fireDoublets();
-    invDoubletsHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;return;}fireDoublets();},DOUBLETS_CD);
-    // missile (wave2) still stacks alongside doublets
-    if(invWave2Upgrade==='missile'){
+  if(activeUpgradeForRate==='dua beam'){
+    fireDuaBeam();
+    invDuaBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;return;}fireDuaBeam();},DUA_BEAM_CD);
+    // beam (wave2) subsumed by dua beam — no separate interval when stacked
+    if(false && invWave2Upgrade==='beam'){
       fireMissile();
       invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
     }
@@ -861,9 +884,9 @@ function invHandleMouseDown(e){
   }
 
   // missile (wave2) alone — hold-to-fire, suppress base bullet
-  if(invWave2Upgrade==='missile'){
-    fireMissile();
-    invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
+  if(invWave2Upgrade==='beam'){
+    fireBeam();
+    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireBeam();},BEAM_CD);
     // only skip base bullet if no wave4/boss upgrade that uses bullet fire
     const needsBullet=activeUpgradeForRate==='rapida'||activeUpgradeForRate==='rapidaaa'||activeUpgradeForRate==='machina';
     if(!needsBullet) return;
@@ -885,8 +908,8 @@ function invHandleMouseDown(e){
 function invHandleMouseUp(){
   invMouseDown=false;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
-  if(invMissileHoldInterval){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;}
-  if(invDoubletsHoldInterval){clearInterval(invDoubletsHoldInterval);invDoubletsHoldInterval=null;}
+  if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
+  if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
 }
 
 function invHandleSingleClick(e){
@@ -898,8 +921,7 @@ function invHandleSingleClick(e){
   if((invBossUpgrade||invUpgrade)==='warh') fireWarh();
   if(invBossUpgrade==='salvo') fireSalvo();
   if(invBossUpgrade==='overcharge') fireOvercharge();
-  if(invWave2Upgrade==='missile'&&invBossUpgrade!=='salvo'&&invBossUpgrade!=='overcharge') fireMissile();
-  if((invWave4Upgrade||invUpgrade)==='doublets'&&invBossUpgrade!=='salvo'&&invBossUpgrade!=='overcharge') fireDoublets();
+  // beam/dua beam fire handled by mousedown only
 }
 
 function invFire(){
@@ -909,7 +931,7 @@ function invFire(){
   const activeUpgrade=invBossUpgrade==='machina'?'machina':invWave4Upgrade||invUpgrade;
   const ch=invCanvas.height;
   const spawnBullet=(x)=>{
-    const isMissile=activeUpgrade==='missile'||activeUpgrade==='rapidaaa';
+    const isMissile=activeUpgrade==='beam'||activeUpgrade==='rapidaaa';
     const spd=isMissile?INV_BULLET_SPEED:INV_BULLET_SPEED_UPGRADED;
     invBullets.push({x:x,y:ch-67,vy:-spd,trail:[],hit:false,kind:isMissile?'missile':'bullet',pierceLeft:isMissile?0:2});
   };
@@ -931,7 +953,7 @@ function invFire(){
       });
     }
     try{playMachinaBurst();}catch(e){}
-  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='missile'){
+  } else if(activeUpgrade==='rapidaaa'||activeUpgrade==='beam'||activeUpgrade==='dua beam'){
     spawnBullet(invShooterX);
     try{playMissileFire();}catch(e){}
   } else {
@@ -940,75 +962,124 @@ function invFire(){
   }
 }
 
-// ── MISSILE — click-fire, 1.3s cooldown, AOE column-clear ──
-function fireMissile(){
+// ── BEAM — click-fire, 450ms interval, 113px wide, instant vertical clear + cast VFX ──
+const BEAM_WIDTH=113;
+function fireBeam(widthOverride){
   if(!state.running||!invCanvas)return;
-  const now=Date.now();
-  if(now<invMissileCooldownUntil)return;
-  invMissileCooldownUntil=now+MISSILE_CD;
+  _castAndFireBeam(invShooterX, widthOverride||BEAM_WIDTH, 1);
+}
+
+function _castAndFireBeam(cx, bw, dmg){
   const ch=invCanvas.height;
-  const aliveRows=[...new Set(invEntities.filter(e=>e.alive).map(e=>Math.round(e.y)))].sort((a,b)=>a-b);
-  let targetY=invCanvas.height/2;
-  if(aliveRows.length){
-    targetY=aliveRows.reduce((best,row)=>
-      Math.abs(row-invCanvas.height/2)<Math.abs(best-invCanvas.height/2)?row:best
-    ,aliveRows[0]);
-  }
-  invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
-  try{playAoeTrigger();}catch(e){}
+  if(Date.now()<invWave5ProtectUntil) return;
+  const hitR=bw/2;
   for(let e of invEntities){
     if(!e.alive)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
-      e.hp--;
-      if(e.hp<=0){
+    if(Math.abs(e.x-cx)<=hitR){
+      if(e.isBoss){
+        e.hp-=dmg;
+        if(e.hp<=0){
+          e.alive=false;
+          invSpawnParticles(e.x,e.y,2);
+          try{playEnemyDeath(0.4);}catch(ex){}
+        }
+      } else {
         e.alive=false;
         invSpawnParticles(e.x,e.y,1);
         try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
         state.combo=Math.min(state.combo+1,8);
         setComboValue('×'+state.combo);
-      } else { e.glitchTimer=10; }
+      }
     }
   }
+  try{playAoeTrigger();}catch(e){}
+  invParticles.push({
+    isBeam:true, x:cx, bw,
+    startTime:Date.now(),
+    castDur:150, flashDur:120, fadeDur:180,
+    life:1, alpha:1, vx:0, vy:0
+  });
 }
 
-// ── DOUBLETS — click-fire, 0.8s cooldown, straight + diagonal homing missiles ──
-function fireDoublets(){
+// ── DUA BEAM — click-fire, 450ms interval, 280px wide ──
+const DUA_BEAM_WIDTH=280;
+function fireDuaBeam(){
   if(!state.running||!invCanvas)return;
-  const now=Date.now();
-  if(now<invDoubletsCooldownUntil)return;
-  invDoubletsCooldownUntil=now+DOUBLETS_CD;
-  const ch=invCanvas.height;
-  // Missile 1 — straight up
-  invBullets.push({
-    x:invShooterX-18, y:ch-67,
-    vx:0, vy:-INV_BULLET_SPEED,
-    trail:[], hit:false, kind:'missile', pierceLeft:0
-  });
-  // Missile 2 — diagonal homing toward densest enemy cluster, kills ±2 cols (5 total)
-  const alive=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
-  let targetE=null;
-  if(alive.length){
-    targetE=alive.reduce((best,e)=>{
-      const score=alive.filter(o=>Math.abs(o.col-e.col)<=2).length;
-      const bestScore=alive.filter(o=>Math.abs(o.col-best.col)<=2).length;
-      return score>bestScore?e:best;
-    }, alive[0]);
-  }
-  let vx=12, vy=-INV_BULLET_SPEED;
-  if(targetE){
-    const dx=targetE.x-(invShooterX+18), dy=targetE.y-(ch-67);
-    const dist=Math.hypot(dx,dy)||1;
-    const spd=INV_BULLET_SPEED;
-    vx=(dx/dist)*spd; vy=(dy/dist)*spd;
-  }
-  invBullets.push({
-    x:invShooterX+18, y:ch-67,
-    vx, vy,
-    trail:[], hit:false, kind:'missile', pierceLeft:0,
-    isDiagonalHoming:true
-  });
-  try{playMissileFire();}catch(e){}
+  _castAndFireBeam(invShooterX, DUA_BEAM_WIDTH, 1);
 }
+
+// ── FOKUS LINA — boss-wave only, 3s charge + 4s ramping beam ──
+const FL_CHARGE_DUR=3000;
+const FL_FIRE_DUR=4000;
+const FL_DMG_START=4;
+const FL_DMG_CAP=27;
+const FL_WIDTH_BASE=113;
+const FL_TICK_MS=50;
+
+function flCanActivate(){
+  return (invWave2Upgrade==='beam'||invWave4Upgrade==='dua beam') && invWave===5;
+}
+
+function flCancel(){
+  flCharging=false; flFiring=false;
+  flChargeStart=0; flFireStart=0;
+  flCurrentW=FL_WIDTH_BASE; flLastWidthStep=0;
+  if(flRaf){cancelAnimationFrame(flRaf);flRaf=null;}
+}
+
+function flStartCharge(){
+  if(flFiring) return;
+  flCharging=true; flFiring=false;
+  flChargeStart=Date.now();
+  flCurrentW=FL_WIDTH_BASE; flLastWidthStep=0;
+  flRaf=requestAnimationFrame(flChargeLoop);
+}
+
+function flChargeLoop(){
+  if(!flCharging||!state.running||!invMouseDown){ flCancel(); return; }
+  if(Date.now()-flChargeStart>=FL_CHARGE_DUR){
+    flCharging=false; flFiring=true;
+    flFireStart=Date.now();
+    flRaf=requestAnimationFrame(flFireLoop);
+    return;
+  }
+  flRaf=requestAnimationFrame(flChargeLoop);
+}
+
+function flFireLoop(){
+  if(!flFiring||!state.running||!invMouseDown){ flCancel(); return; }
+  const t=(Date.now()-flFireStart)/1000;
+  const tClamped=Math.min(t, FL_FIRE_DUR/1000);
+  const dmg=Math.min(FL_DMG_START+(FL_DMG_CAP-FL_DMG_START)*(tClamped/(FL_FIRE_DUR/1000)), FL_DMG_CAP);
+  const stepIdx=Math.floor(tClamped);
+  if(stepIdx>flLastWidthStep && stepIdx<=4){
+    flCurrentW=Math.round(flCurrentW*1.25);
+    flLastWidthStep=stepIdx;
+  }
+  const hitR=flCurrentW/2;
+  for(let e of invEntities){
+    if(!e.alive||!e.isBoss)continue;
+    if(Math.abs(e.x-invShooterX)<=hitR){
+      e.hp-=dmg*(FL_TICK_MS/1000);
+      if(e.hp<=0){
+        e.alive=false;
+        invSpawnParticles(e.x,e.y,3);
+        try{playEnemyDeath(0.3);}catch(ex){}
+        flCancel(); return;
+      }
+    }
+  }
+  invParticles.push({
+    isBeam:true, x:invShooterX, bw:flCurrentW,
+    startTime:Date.now(),
+    castDur:0, flashDur:FL_TICK_MS, fadeDur:80,
+    life:1, alpha:1, vx:0, vy:0, isFokusLina:true
+  });
+  if(tClamped<FL_FIRE_DUR/1000){
+    setTimeout(()=>{flRaf=requestAnimationFrame(flFireLoop);}, FL_TICK_MS);
+  } else { flCancel(); }
+}
+
 
 // ── SALVO — boss combo: fires missile AOE + doublet pair simultaneously, 1s cooldown ──
 function fireSalvo(){
@@ -1025,20 +1096,7 @@ function fireSalvo(){
       Math.abs(row-ch/2)<Math.abs(best-ch/2)?row:best
     ,aliveRows[0]);
   }
-  invParticles.push({x:invShooterX,y:targetY,vx:0,vy:0,life:0.7,alpha:1,isAoe:true,r:INV_AOE_RADIUS*1.5});
-  for(let e of invEntities){
-    if(!e.alive)continue;
-    if(Math.abs(e.x-invShooterX)<=INV_AOE_RADIUS && Math.abs(e.y-targetY)<=90){
-      e.hp--;
-      if(e.hp<=0){
-        e.alive=false;
-        invSpawnParticles(e.x,e.y,1);
-        try{playEnemyDeath(0.8+Math.random()*0.6);}catch(ex){}
-        state.combo=Math.min(state.combo+1,8);
-        setComboValue('×'+state.combo);
-      } else { e.glitchTimer=10; }
-    }
-  }
+  _castAndFireBeam(invShooterX, BEAM_WIDTH, 1);
   // Doublet pair — straight + diagonal homing
   invBullets.push({x:invShooterX-18,y:ch-67,vx:0,vy:-INV_BULLET_SPEED,trail:[],hit:false,kind:'missile',pierceLeft:0});
   const alive=invEntities.filter(e=>e.alive&&!e.isBoss&&e.col!==undefined);
@@ -1270,7 +1328,13 @@ function invUpdate(){
     if(b.vx&&(b.x<-60||b.x>invCanvas.width+60)) return false;
     return true;
   });
-  for(let p of invParticles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045;}
+  for(let p of invParticles){
+    if(p.isBeam){
+      const elapsed=Date.now()-p.startTime;
+      const total=p.castDur+p.flashDur+p.fadeDur;
+      if(elapsed>=total){ p.life=0; }
+    } else { p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045; }
+  }
   invParticles=invParticles.filter(p=>p.life>0);
 
   const alive=invEntities.filter(e=>e.alive);
@@ -1522,6 +1586,44 @@ function invDraw(){
   // Boss ability visuals drawn below everything else
   if(invWave===5) drawBossAbilities();
 
+  // ── Fokus Lina charge VFX ──
+  if(flCharging && flChargeStart>0){
+    const ch2=invCanvas.height;
+    const progress=(Date.now()-flChargeStart)/FL_CHARGE_DUR;
+    const sx=invShooterX, sy=ch2-105;
+    const pulse=0.5+0.5*Math.sin(Date.now()*0.012);
+    const glowR=(40+progress*80)*(0.85+pulse*0.15);
+    const glowAlpha=0.18+progress*0.35;
+    const glowGrad=invCtx.createRadialGradient(sx,sy,0,sx,sy,glowR);
+    glowGrad.addColorStop(0,'rgba(200,235,255,'+glowAlpha+')');
+    glowGrad.addColorStop(0.5,'rgba(160,210,255,'+(glowAlpha*0.5)+')');
+    glowGrad.addColorStop(1,'rgba(0,0,0,0)');
+    invCtx.save();
+    invCtx.globalAlpha=1;
+    invCtx.fillStyle=glowGrad;
+    invCtx.beginPath();invCtx.arc(sx,sy,glowR,0,Math.PI*2);invCtx.fill();
+    const origins=[{ox:sx-190,oy:sy+60},{ox:sx,oy:sy+190},{ox:sx+190,oy:sy+60}];
+    invCtx.lineWidth=1.5+progress*1.5;
+    invCtx.strokeStyle='rgba(200,235,255,'+(0.3+progress*0.6)+')';
+    invCtx.shadowColor='rgba(160,210,255,0.8)';
+    invCtx.shadowBlur=6+progress*8;
+    for(let o of origins){
+      const cpx=o.ox+(sx-o.ox)*progress*0.7;
+      const cpy=o.oy+(sy-o.oy)*progress*0.7;
+      const steps=20;
+      invCtx.beginPath();
+      for(let i=0;i<=steps;i++){
+        const t=(i/steps)*progress;
+        const x=(1-t)*(1-t)*o.ox+2*(1-t)*t*cpx+t*t*sx;
+        const y=(1-t)*(1-t)*o.oy+2*(1-t)*t*cpy+t*t*sy;
+        if(i===0) invCtx.moveTo(x,y); else invCtx.lineTo(x,y);
+      }
+      invCtx.stroke();
+    }
+    invCtx.shadowBlur=0;
+    invCtx.restore();
+  }
+
   for(let p of invParticles){
     invCtx.save();
     if(p.isNukaBomb){
@@ -1540,6 +1642,66 @@ function invDraw(){
       invCtx.strokeStyle='#c084fc';
       invCtx.lineWidth=2.5;
       invCtx.beginPath();invCtx.arc(bx,by,maxR*0.75*(2-p.life*1.3),0,Math.PI*2);invCtx.stroke();
+    } else if(p.isBeam){
+      const elapsed=Date.now()-p.startTime;
+      const {castDur,flashDur,fadeDur,bw,x:cx}=p;
+      const ch2=invCanvas.height;
+      let currentW, alpha;
+      if(elapsed<castDur){
+        const t=elapsed/castDur;
+        currentW=60+(bw-60)*t; alpha=0.55+0.45*t;
+      } else if(elapsed<castDur+flashDur){
+        currentW=bw; alpha=1;
+      } else {
+        const t=(elapsed-(castDur+flashDur))/fadeDur;
+        currentW=bw*(1-t*0.2); alpha=1-t;
+      }
+      const bx=Math.round(cx);
+      const beamTop=0, beamBot=ch2-105, beamH=beamBot-beamTop;
+      const isDua=p.bw>=200;
+      const glowCol=isDua?'rgba(180,100,255,':'rgba(180,220,255,';
+      const coreCol0=isDua?'rgba(140,60,220,0)':'rgba(160,210,255,0)';
+      const coreCol1=isDua?'rgba(210,160,255,1)':'rgba(230,245,255,1)';
+      const edgeCol=isDua?'rgba(200,130,255,0.9)':'rgba(180,230,255,0.9)';
+      invCtx.globalAlpha=alpha*0.18;
+      const grad=invCtx.createLinearGradient(bx-currentW/2,0,bx+currentW/2,0);
+      grad.addColorStop(0,glowCol+'0)'); grad.addColorStop(0.5,glowCol+'1)'); grad.addColorStop(1,glowCol+'0)');
+      invCtx.fillStyle=grad; invCtx.fillRect(bx-currentW/2,beamTop,currentW,beamH);
+      invCtx.globalAlpha=alpha*0.72;
+      const coreW=currentW*0.28;
+      const coreGrad=invCtx.createLinearGradient(bx-coreW/2,0,bx+coreW/2,0);
+      coreGrad.addColorStop(0,coreCol0); coreGrad.addColorStop(0.5,coreCol1); coreGrad.addColorStop(1,coreCol0);
+      invCtx.fillStyle=coreGrad; invCtx.fillRect(bx-coreW/2,beamTop,coreW,beamH);
+      invCtx.globalAlpha=alpha*0.18;
+      invCtx.fillStyle='rgba(255,80,80,0.7)'; invCtx.fillRect(bx-currentW/2-4,beamTop,6,beamH);
+      invCtx.fillStyle='rgba(80,160,255,0.7)'; invCtx.fillRect(bx+currentW/2-2,beamTop,6,beamH);
+      invCtx.save();
+      invCtx.filter='blur(1.8px)';
+      invCtx.globalAlpha=alpha*0.55;
+      invCtx.strokeStyle=edgeCol; invCtx.lineWidth=1.5;
+      invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
+      invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
+      invCtx.filter='none';
+      invCtx.globalAlpha=alpha*0.40; invCtx.lineWidth=1;
+      const _segH=8, _segs=Math.ceil((beamBot-beamTop)/_segH);
+      for(let _i=0;_i<_segs;_i++){
+        const _sy=beamTop+_i*_segH, _ey=Math.min(_sy+_segH*(0.4+Math.random()*0.6),beamBot);
+        const _lx=bx-currentW/2+(Math.random()-0.5)*3.5;
+        invCtx.strokeStyle=edgeCol;
+        invCtx.beginPath();invCtx.moveTo(_lx,_sy);invCtx.lineTo(_lx+(Math.random()-0.5)*2,_ey);invCtx.stroke();
+        const _rx=bx+currentW/2+(Math.random()-0.5)*3.5;
+        invCtx.beginPath();invCtx.moveTo(_rx,_sy);invCtx.lineTo(_rx+(Math.random()-0.5)*2,_ey);invCtx.stroke();
+      }
+      invCtx.restore();
+      const muzzleR=currentW*0.85;
+      const muzzleY=beamBot+muzzleR*0.18;
+      const muzzleGrad=invCtx.createRadialGradient(bx,muzzleY,0,bx,muzzleY,muzzleR);
+      muzzleGrad.addColorStop(0,isDua?'rgba(210,160,255,'+(alpha*0.7)+')':'rgba(230,245,255,'+(alpha*0.7)+')');
+      muzzleGrad.addColorStop(0.4,isDua?'rgba(180,100,255,'+(alpha*0.35)+')':'rgba(180,220,255,'+(alpha*0.35)+')');
+      muzzleGrad.addColorStop(0.75,isDua?'rgba(120,60,200,'+(alpha*0.1)+')':'rgba(140,190,255,'+(alpha*0.1)+')');
+      muzzleGrad.addColorStop(1,'rgba(0,0,0,0)');
+      invCtx.globalAlpha=1; invCtx.fillStyle=muzzleGrad;
+      invCtx.beginPath(); invCtx.ellipse(bx,muzzleY,muzzleR,muzzleR*0.42,0,0,Math.PI*2); invCtx.fill();
     } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
@@ -1772,4 +1934,10 @@ function getRound2DebugInfo() {
   };
 }
 
-export { startInvaders, stopInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };
+function resumeInvaders(){
+  if(state.running) return;
+  state.running=true;
+  if(!invRaf && invCanvas) invLoop();
+}
+
+export { startInvaders, stopInvaders, resumeInvaders, resolveNukaInput, handleInvaderKeydown, getRound2DebugInfo };
