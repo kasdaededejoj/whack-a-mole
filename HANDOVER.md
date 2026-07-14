@@ -2,6 +2,27 @@
 
 ---
 
+## wave phantom hits + misc fixes — 2026-07-14
+
+### Committed & pushed to `main` (`eae0bb5`)
+
+**Wave phantom hit fix (3 changes):**
+- Wave now stores `tx/ty` (shooter position at spawn time) — hit detection uses stored target, not live `invShooterX`. Previously wave could miss visually but hit because player walked into its travel path
+- Hitbox tightened: `s.r*0.55` → `s.r*0.35` — less generous radius at full size (120px → 42px effective radius)
+- Wave killed immediately on hit (`s.alive=false`) — previously kept travelling 200px past target, allowing phantom hits during overshoot
+
+**Machina dmg:** `0.3` → `0.7` per stream on boss (2.1 dmg/burst at 3 streams)
+
+**Wave VFX:** `vfx_wave.webm` re-exported from ProRes 4444 with black background keyed out via ffmpeg `colorkey=0x000000:0.15:0.05`, VP9 alpha. `mix-blend-mode:normal` on all 3 video elements.
+
+**Syntax fix:** unescaped `'` in `rapid'aa` machina modal desc was breaking game load.
+
+**fokus lina boss modal:** beam+dua beam combo now shows single centred `fokus lina.` button (`invBossUpgrade='fokus_lina'`). `flCanActivate()` gated on `invBossUpgrade==='fokus_lina'` only.
+
+**Fokus lina fire phase:** only `!invMouseDown` cancels — removed `!state.running` check. No hard stop at 4s cap — continues at max dmg/width until mouseup.
+
+---
+
 ## fokus lina + wave VFX echo rebase — 2026-07-14
 
 ### Committed & pushed to `main` (`58b3f0b`) — force push over concurrent wave VFX echo commit
