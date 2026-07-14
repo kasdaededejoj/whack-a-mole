@@ -1028,7 +1028,7 @@ const FL_WIDTH_BASE=113;
 const FL_TICK_MS=50;
 
 function flCanActivate(){
-  return (invWave2Upgrade==='beam'||invWave4Upgrade==='dua beam') && invWave===5;
+  return invBossUpgrade==='fokus_lina' && invWave===5;
 }
 
 function flCancel(){
