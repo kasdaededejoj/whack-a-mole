@@ -155,7 +155,16 @@ function enemyChoose(){
 }
 
 function duelSetButtons(enabled){
-  Object.values(duelBtns).forEach(b=>{ b.disabled = !enabled; });
+  // void is locked above 30% player HP
+  const voidUnlocked = duelPlayerHP <= Math.ceil(DUEL_PLAYER_MAX * 0.3);
+  Object.entries(duelBtns).forEach(([action, b])=>{
+    b.disabled = !enabled || (action === 'void' && !voidUnlocked);
+    // Visual cue on void button
+    if(action === 'void'){
+      b.classList.toggle('void-locked', enabled && !voidUnlocked);
+      b.classList.toggle('void-unlocked', enabled && voidUnlocked);
+    }
+  });
 }
 
 function duelHighlight(choice){
@@ -196,11 +205,11 @@ function duelResolveTurn(playerAction){
   duelAnimState.player.anim = playerAction;
   duelAnimState.player.frame = 0;
 
-  // 3 second buffer in between, then boss can attack
+  // 1.5 second buffer, then boss attacks
   setTimeout(() => {
     duelTurn = 'boss';
     duelResolveBossTurn();
-  }, 3000);
+  }, 1500);
 }
 
 function duelResolveBossTurn(){
@@ -215,11 +224,6 @@ function duelResolveBossTurn(){
   duelAnimState.enemy.anim = enemyAction;
   duelAnimState.enemy.frame = 0;
 
-  // Heal mechanic: guard-guard both recover 1 if below max
-  if(duelPlayerChoice==='guard' && enemyAction==='guard'){
-    if(duelPlayerHP < DUEL_PLAYER_MAX){ duelPlayerHP++; msg = 'mutual guard — you recover.'; }
-    if(duelEnemyHP < DUEL_ENEMY_MAX)  { duelEnemyHP++;  }
-  }
 
   duelPlayerHP -= pDmg;
   duelEnemyHP  -= eDmg;
@@ -299,7 +303,7 @@ function duelResolveBossTurn(){
     duelTurn = 'player';
     duelPhase = 'choose';
     duelPhaseEl.textContent = 'choose';
-    duelSetButtons(true);
+    duelSetButtons(true); // re-evaluates void lock based on current HP
     duelMsgEl.textContent = '';
   }, 1800);
 }
@@ -666,3 +670,4 @@ function getRound3DebugInfo() {
 }
 
 export { startDuel, stopDuel, duelSFX, enemyChoose, duelSetButtons, duelHighlight, duelUpdateBars, duelSpawnParticles, duelResolveTurn, duelEnd, duelResizeCanvas, duelDrawFrame, getRound3DebugInfo };
+
