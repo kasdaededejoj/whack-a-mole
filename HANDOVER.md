@@ -2,6 +2,25 @@
 
 ---
 
+## [Antigravity] Round 3 — void unlock, heal removal, turn buffer — 2026-07-15
+
+**Agent:** Antigravity (Google DeepMind). Scope strictly limited to `js/rounds/round3.js` and `index.html` (CSS only). Did not touch `round1.js`, `round2.js`, `game.js`, `state.js`, `audio.js`, or any Round 2 logic.
+
+### Committed & pushed to `main` (`5baa2fc`, `7861d4d`)
+
+* **void locked above 30% HP** (`round3.js`): `duelSetButtons()` now checks `duelPlayerHP <= ceil(DUEL_PLAYER_MAX * 0.3)` (≤2 HP out of 8) before enabling the void button. Re-evaluated on every turn start, so it unlocks dynamically mid-duel.
+* **Heal mechanic removed** (`round3.js`): Deleted the guard-guard +1 HP recovery block entirely from `duelResolveBossTurn`. No healing in the duel anymore.
+* **Turn buffer reduced to 1.5s** (`round3.js`): `setTimeout` between player action and boss turn reduced from 3000ms → 1500ms.
+* **void button visual states** (`index.html` CSS only): `.void-locked` = dim red border + `⌀` glyph indicator. `.void-unlocked` = purple border + pulsing `voidPulse` glow animation signalling last-resort availability.
+
+### Round 3 state as of this session
+- Player HP: 8 max, boss HP: 16 max
+- void unlocks at ≤2 player HP (30% of 8)
+- No healing — all outcomes are pure damage or standoff
+- Turn flow: player acts → 1.5s buffer → boss acts → 1.8s result display → repeat
+
+---
+
 ## Round 1: click sync fix + session changes consolidated — 2026-07-15
 
 ### Committed to `main` (`bf26af2`) — single clean commit on top of `2e7e40c`
@@ -1243,3 +1262,4 @@ Settings → Pages again first before assuming it's a code bug.
  
  
  
+
