@@ -788,7 +788,7 @@ function showBossUpgradeModal(){
     btn1.onclick=()=>pickBossUpgrade('fokus_lina');
     btn2.onclick=null;
   } else if(isRapidaMachina){
-    if(desc) desc.innerHTML='the void.<br>rapida + rapid'aa.<br>convergence.';
+    if(desc) desc.innerHTML='the void.<br>rapida + rapid\'aa.<br>convergence.';
     btn1.textContent='machina.';
     btn1.style.cssText='display:block;margin:0 auto;';
     btn2.style.display='none';
