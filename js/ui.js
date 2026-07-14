@@ -2,12 +2,13 @@
 import { state } from './state.js';
 
 // DOM references - lazy-loaded to ensure DOM is ready
-let field, scoreEl, missEl, comboEl, msgEl, failOverlay, failMsgText;
+let field, scoreEl, missEl, comboEl, msgEl, failOverlay, failMsgText, hudEl;
 let barEl, roundOverlay, roundText, gameScreen, welcomeScreen;
 let portalScreen, portalTimer, glitchTrans, portalQR, duelScreen;
 
 function initDOMRefs() {
   field = document.getElementById('field');
+  hudEl = document.querySelector('.hud');
   scoreEl = document.getElementById('score');
   missEl = document.getElementById('misses');
   comboEl = document.getElementById('combo');
@@ -44,6 +45,13 @@ function setComboValue(value) {
   comboEl.classList.add('combo-pulse');
   window.clearTimeout(comboEl._hudPulseTimer);
   comboEl._hudPulseTimer = setTimeout(() => comboEl.classList.remove('combo-pulse'), 180);
+
+  // Tonal heat ramp — mirrors the same 3/5 combo thresholds already used
+  // for "combo ×N" / "unstoppable" messaging in round1.js and round2.js.
+  const n = parseInt(String(value).replace(/[^\d]/g, ''), 10) || 1;
+  const tier = n >= 5 ? 'heat-2' : n >= 3 ? 'heat-1' : '';
+  hudEl?.classList.remove('heat-1', 'heat-2');
+  if (tier) hudEl?.classList.add(tier);
 }
 
 function setMissesValue(value) {

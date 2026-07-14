@@ -22,8 +22,7 @@ export function spawnMole() {
   const el = document.createElement('div');
   el.className = 'mole-el' + (type === 'purpality' ? ' purpality' : type === 'noise' ? ' noise' : '');
 
-  // Purpality: 40px, faster speed (ratio 0.43 of base speed)
-  const spd = type === 'purpality' ? Math.round(round.speed * 0.43) : round.speed;
+  const spd = round.speed;
 
   el.style.left = pos.x + '%';
   el.style.top = pos.y + '%';
@@ -51,6 +50,7 @@ export function spawnMole() {
       mole.alive = false;
       if (type === 'noise') {
         // Noise expires: no miss penalty, just disappears with reverse anim
+        el.style.pointerEvents = 'none';
         noiseGlitchDisappear(el);
       } else {
         state.misses++;
@@ -58,6 +58,7 @@ export function spawnMole() {
         setMissesValue(state.misses);
         setComboValue('×1');
         try { playMiss(); } catch (e) { }
+        el.style.pointerEvents = 'none';
         setTimeout(() => el.remove(), 220);
       }
     }
@@ -68,6 +69,7 @@ export function whack(mole, ptsEl) {
   if (!state.running || !mole.alive) return;
   clearTimeout(mole.timer);
   mole.alive = false;
+  mole.el.style.pointerEvents = 'none';
   const type = mole.type || 'normal';
 
   if (type === 'noise') {
@@ -131,42 +133,4 @@ export function spawnLoop() {
   state.gTimer = setTimeout(spawnLoop, round.speed * 0.45 + Math.random() * round.speed * 0.4);
 }
 
-export function startRound1() {
-  state.running = true;
-  state.roundScore = 0;
-  state.combo = 1;
-  state.misses = 0;
-  state.moles = [];
-  state.timeLeft = ROUNDS[0].duration;
-  spawnLoop();
-  
-  // Timer countdown
-  const timerFunc = () => {
-    state.timeLeft--;
-    if (state.timeLeft <= 0) {
-      state.running = false;
-      clearTimeout(state.gTimer);
-      state.bTimer = null;
-      // Round 1 complete, move to next
-      setTimeout(() => startRound(1), 1500);
-    } else {
-      state.bTimer = setTimeout(timerFunc, 1000);
-    }
-  };
-  state.bTimer = setTimeout(timerFunc, 1000);
-}
 
-export function endRound1() {
-  state.running = false;
-  clearTimeout(state.gTimer);
-  if (state.bTimer) clearTimeout(state.bTimer);
-  state.bTimer = null;
-  state.moles.forEach(m => {
-    if (m.alive) {
-      m.alive = false;
-      clearTimeout(m.timer);
-      m.el.remove();
-    }
-  });
-  state.moles = [];
-}
