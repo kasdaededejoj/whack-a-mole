@@ -2,6 +2,38 @@
 
 ---
 
+## fokus lina + wave VFX echo rebase — 2026-07-14
+
+### Committed & pushed to `main` (`58b3f0b`) — force push over concurrent wave VFX echo commit
+
+**Wave VFX echo system (from concurrent session `e60dd6f`) preserved:**
+- `_makeWaveVideo(opacity)` factory, 3 video elements: `vfxWaveVideo` (100%), `vfxWaveEcho1` (45%), `vfxWaveEcho2` (20%)
+
+**Fokus Lina (beam + dua beam boss wave ability):**
+- Trigger: hold mouse 3s on boss wave — releases early cancels, must recharge
+- Charge phase (0–3s): pulsing radial glow at shooter + 3 curved bezier lines emerging from 190px, converging to beam origin. Player speed 50% slow (lerp 0.09)
+- Fire phase (3–7s): constant beam, dmg ramps 4→27hp over 4s (`FL_DMG_START=4`, `FL_DMG_CAP=27`, `FL_TICK_MS=50ms`). Player speed 70% slow (lerp 0.054)
+- Width: starts 113px, grows ×1.25 at each second of fire phase (steps at t=1,2,3,4s). Compounds on new value
+- Cancel: mouseup at any point resets fully. `flCancel()` clears rAF and all state
+- `flCanActivate()`: requires `invWave2Upgrade==='beam'` OR `invWave4Upgrade==='dua beam'` AND `invWave===5`
+
+**Other changes carried forward:**
+- beam/dua beam rename complete (missile→beam, doublets→dua beam everywhere)
+- Beam VFX: glow column, core, chromatic aberration, blurred edge lines with 40% fractal noise, soft muzzle ellipse
+- Wave 5 300ms beam immunity (`invWave5ProtectUntil`)
+- `resumeInvaders()` exported; devpanel close resumes game
+- Salvo AOE replaced with `_castAndFireBeam`
+- `invShooterX` snapped on mousedown
+
+### Open items
+- Boss SFX: pincer and teleport still paused
+- Wave VFX `playbackRate` sync: not yet done
+- `???` combos: beam+rapidaaa, beam+dua beam TBD (rapida+rapidaaa → machina done)
+- All boss-wave upgrade combos need live playtesting
+- **Rebase conflict rule: if conflict on `round2.js`, always take `--ours`**
+
+---
+
 ## beam + dua beam VFX + fixes — 2026-07-13
 
 ### Committed & pushed to `main` (`4571b27`)
