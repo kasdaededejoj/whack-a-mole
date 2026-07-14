@@ -1306,7 +1306,7 @@ function invUpdate(){
             break;
           } else {
             b.hit=true;
-            const damage=e.isBoss?((b.kind==='missile')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.3:0.5):1;
+            const damage=e.isBoss?((b.kind==='missile')?7:b.kind==='warh'?WARH_DAMAGE:b.kind==='machina'?0.7:0.5):1;
             e.hp-=damage;
             if(e.hp<=0){
               e.alive=false;
