@@ -76,7 +76,7 @@ function _makeWaveVideo(opacity){
   v.preload='auto';
   v.muted=true;
   v.playsInline=true;
-  v.style.cssText=`position:fixed;pointer-events:none;mix-blend-mode:screen;display:none;z-index:50;transform-origin:center center;opacity:${opacity};`;
+  v.style.cssText=`position:fixed;pointer-events:none;mix-blend-mode:normal;display:none;z-index:50;transform-origin:center center;opacity:${opacity};`;
   document.body.appendChild(v);
   return v;
 }
@@ -777,12 +777,23 @@ function showBossUpgradeModal(){
   const isMissileDoublets=invWave2Upgrade==='beam'&&invWave4Upgrade==='dua beam';
   const isRapidaMachina=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='rapida');
 
+  // Reset button styles
+  btn1.style.cssText=''; btn2.style.display=''; btn2.style.cssText='';
+
   if(isMissileDoublets){
-    if(desc) desc.innerHTML='the void.<br>beam + dua beam.<br>choose your final augment.';
-    btn1.textContent='salvo.';
-    btn2.textContent='overcharge.';
-    btn1.onclick=()=>pickBossUpgrade('salvo');
-    btn2.onclick=()=>pickBossUpgrade('overcharge');
+    if(desc) desc.innerHTML='the void.<br>beam + dua beam.<br>fokus lina.';
+    btn1.textContent='fokus lina.';
+    btn1.style.cssText='display:block;margin:0 auto;';
+    btn2.style.display='none';
+    btn1.onclick=()=>pickBossUpgrade('fokus_lina');
+    btn2.onclick=null;
+  } else if(isRapidaMachina){
+    if(desc) desc.innerHTML='the void.<br>rapida + rapid'aa.<br>convergence.';
+    btn1.textContent='machina.';
+    btn1.style.cssText='display:block;margin:0 auto;';
+    btn2.style.display='none';
+    btn1.onclick=()=>pickBossUpgrade('machina');
+    btn2.onclick=null;
   } else {
     if(desc) desc.innerHTML='the void.<br>choose your final augment.';
     btn1.textContent='???';
@@ -1047,7 +1058,7 @@ function flChargeLoop(){
 }
 
 function flFireLoop(){
-  if(!flFiring||!state.running||!invMouseDown){ flCancel(); return; }
+  if(!flFiring||!invMouseDown){ flCancel(); return; } // only mouseup cancels fire phase
   const t=(Date.now()-flFireStart)/1000;
   const tClamped=Math.min(t, FL_FIRE_DUR/1000);
   const dmg=Math.min(FL_DMG_START+(FL_DMG_CAP-FL_DMG_START)*(tClamped/(FL_FIRE_DUR/1000)), FL_DMG_CAP);
@@ -1075,9 +1086,8 @@ function flFireLoop(){
     castDur:0, flashDur:FL_TICK_MS, fadeDur:80,
     life:1, alpha:1, vx:0, vy:0, isFokusLina:true
   });
-  if(tClamped<FL_FIRE_DUR/1000){
-    setTimeout(()=>{flRaf=requestAnimationFrame(flFireLoop);}, FL_TICK_MS);
-  } else { flCancel(); }
+  // Continue firing at max damage/width until mouseup — no hard stop at duration cap
+  setTimeout(()=>{flRaf=requestAnimationFrame(flFireLoop);}, FL_TICK_MS);
 }
 
 
