@@ -2,6 +2,45 @@
 
 ---
 
+## Round 1: click sync fix + session changes consolidated — 2026-07-15
+
+### Committed to `main` (`bf26af2`) — single clean commit on top of `2e7e40c`
+
+**Root cause of the click miss bug (web + mobile):**
+
+1. **Dead element eating clicks (primary cause):** on mole expire, `mole.alive`
+   was set false immediately but `el.remove()` was delayed 220ms. During that
+   window the dead element sat in the DOM with full pointer-events, directly
+   over the next spawn (max:1). Every click hit the dead element, `whack()`
+   returned on `!mole.alive`, new mole got nothing. ~27% of lifespan silently
+   broken. Fixed: `el.style.pointerEvents = 'none'` set immediately on all
+   three exit paths — normal expire, noise expire, and whack.
+
+2. **Hit area collapsed during spawn animation:** `scale(0)` was on `.mole-el`
+   (outer). CSS `scale()` shrinks pointer-events hit area — at `scale(0)` the
+   target is zero. The 7-frame `sonidoAppear` flicker runs ~110ms at near-zero
+   scale. Fixed: moved `scale(0)` off the outer `.mole-el` onto `.mole-glyph`
+   (CSS). Outer now only holds `translate(-50%,-50%)` — full 80×80px hit area
+   from DOM entry. `effects.js`: `sonidoAppear` and `noiseGlitchDisappear` now
+   target `el.firstElementChild` for all scale/filter/opacity. `cssGlitch`
+   (post-click) still operates on outer.
+
+**Also in this commit:**
+- `touch-action:manipulation` on `.field`, `touch-action:none` on `.mole-el`
+- Dead `startRound1`/`endRound1` removed from `round1.js`
+- Purpality lifespan restored to 800ms (was `speed * 0.43` = 344ms)
+- HUD asymmetric weighting: score `clamp(44px,8.5vw,64px)`, misses/combo
+  `clamp(16px,2.6vw,20px)` at `opacity:.68`
+- Tonal heat ramp on `.hud`: combo ≥3 → ivory, ≥5 → purpality-purple;
+  `hudEl` cached in `ui.js`; Round 2/3 inherit automatically
+
+### Open items
+- Live confirmation of HUD heat ramp across all rounds
+- `game.js` dead `ROUNDS[0].speed`/`.max` fields — cosmetic, not touched
+- Lu'u Dan-style per-round codename — deferred (naming convention needed first)
+
+---
+
 ## wave phantom hits + misc fixes — 2026-07-14
 
 ### Committed & pushed to `main` (`eae0bb5`)
