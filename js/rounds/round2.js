@@ -527,6 +527,7 @@ function spawnWave(){
     vx:(dx/dist)*BOSS_WAVE_SPEED, vy:(dy/dist)*BOSS_WAVE_SPEED,
     r:20, targetDist:dist,
     travelledDist:0,
+    tx, ty, // store target at spawn time — hit detection uses this, not live shooter pos
     hit:false, alive:true
   });
   try{playBossWaveCast();}catch(e){}
@@ -682,14 +683,15 @@ function updateBossAbilities(){
     // Expand from r=20 to r=120 as it closes on targetDist
     const progress=Math.min(1, s.travelledDist/s.targetDist);
     s.r=20+(120-20)*progress;
-    // Player hit — shooter at (invShooterX, ch-54)
-    if(!s.hit && Math.hypot(s.x-invShooterX, s.y-(ch-54))<s.r*0.55){
+    // Player hit — use stored target position, tightened hitbox
+    if(!s.hit && Math.hypot(s.x-s.tx, s.y-s.ty)<s.r*0.35){
       s.hit=true;
+      s.alive=false; // kill wave immediately on hit
       const dmg=31+Math.floor(Math.random()*4); // 31-34
       damagePlayer(dmg);
     }
-    // Despawn once past the bottom or well past target
-    if(s.y>ch+40 || s.travelledDist>s.targetDist+200) s.alive=false;
+    // Despawn once past the bottom or past target
+    if(s.y>ch+40 || s.travelledDist>s.targetDist+60) s.alive=false;
   }
   bossShockwaves=bossShockwaves.filter(s=>s.alive);
 
