@@ -395,7 +395,103 @@ function playBossWaveCast() {
   } catch(e) {}
 }
 
+// Dua beam charge — rising sweep on mousedown
+function playDuaBeamCharge() {
+  if (state.sfxMuted) return;
+  try {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+
+    // Layer 1: sawtooth sweep 180→720Hz over 0.4s — the charge-up whine
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(720, now + 0.4);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.linearRampToValueAtTime(0.18 * state.sfxVolScale, now + 0.08);
+    g.gain.setValueAtTime(0.18 * state.sfxVolScale, now + 0.32);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.45);
+
+    // Layer 2: bandpass noise underneath for body
+    const bufLen = Math.floor(ctx.sampleRate * 0.45);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufLen, 0.6);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 1.4;
+    const gn = ctx.createGain();
+    gn.gain.setValueAtTime(0.001, now);
+    gn.gain.linearRampToValueAtTime(0.12 * state.sfxVolScale, now + 0.1);
+    gn.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    src.connect(bp); bp.connect(gn); gn.connect(ctx.destination);
+    src.start(now); src.stop(now + 0.45);
+  } catch(e) {}
+}
+
+// Dua beam fire — sustained laser with variation + grain degradation
+// _duaBeamShotCount tracks consecutive shots for degradation; reset externally on mouseup
+let _duaBeamShotCount = 0;
+function resetDuaBeamDegradation() { _duaBeamShotCount = 0; }
+function playDuaBeamFire() {
+  if (state.sfxMuted) return;
+  try {
+    const ctx = getAudio();
+    const now = ctx.currentTime;
+    const deg = Math.min(_duaBeamShotCount, 6); // 0–6 degradation steps
+    _duaBeamShotCount++;
+
+    // Layer 1: core laser tone — sawtooth with slow LFO pitch drift
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    // Base pitch drifts slightly each shot via degradation
+    const basePitch = 280 + deg * 12;
+    osc.frequency.setValueAtTime(basePitch, now);
+    // Slow pitch wobble — laser shimmer
+    osc.frequency.linearRampToValueAtTime(basePitch * 1.04, now + 0.12);
+    osc.frequency.linearRampToValueAtTime(basePitch * 0.97, now + 0.28);
+    osc.frequency.linearRampToValueAtTime(basePitch * 1.02, now + 0.42);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'bandpass'; lp.frequency.value = 900 + deg * 40; lp.Q.value = 1.8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.linearRampToValueAtTime(0.22 * state.sfxVolScale, now + 0.03);
+    // LFO amplitude variation — 4Hz modulation
+    g.gain.setValueAtTime(0.22 * state.sfxVolScale, now + 0.03);
+    g.gain.linearRampToValueAtTime(0.16 * state.sfxVolScale, now + 0.15);
+    g.gain.linearRampToValueAtTime(0.22 * state.sfxVolScale, now + 0.28);
+    g.gain.linearRampToValueAtTime(0.14 * state.sfxVolScale, now + 0.40);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.44);
+    osc.connect(lp); lp.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.44);
+
+    // Layer 2: grain noise — increases with degradation
+    const grainAmt = 0.06 + deg * 0.04; // 0.06 → 0.30 over 6 shots
+    const bufLen = Math.floor(ctx.sampleRate * 0.44);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      // Sparse grain bursts — random crackle character
+      data[i] = Math.random() < 0.15 ? (Math.random() * 2 - 1) : (Math.random() * 2 - 1) * 0.1;
+    }
+    const nSrc = ctx.createBufferSource();
+    nSrc.buffer = buf;
+    const nhp = ctx.createBiquadFilter();
+    nhp.type = 'highpass'; nhp.frequency.value = 2000 + deg * 200; // grain gets harsher
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(grainAmt * state.sfxVolScale, now);
+    ng.gain.exponentialRampToValueAtTime(0.001, now + 0.44);
+    nSrc.connect(nhp); nhp.connect(ng); ng.connect(ctx.destination);
+    nSrc.start(now); nSrc.stop(now + 0.44);
+  } catch(e) {}
+}
+
 export { reverseBuffer, getAudio, preloadThud, playThud, playMiss, initAudio,
   playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
   playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
-  playPlayerDamage, playBossWaveCast };
+  playPlayerDamage, playBossWaveCast,
+  playDuaBeamCharge, playDuaBeamFire, resetDuaBeamDegradation };

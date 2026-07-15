@@ -3,7 +3,8 @@ import { state } from '../state.js';
 import { field, msgEl, setComboValue, showFail } from '../ui.js';
 import { playThud, playBulletFire, playMissileFire, playEnemyDeath, playWaveClear,
   playUpgradePick, playAoeTrigger, playMachinaBurst, playNukaActivate, playNukaSuccess,
-  playPlayerDamage, playBossWaveCast } from '../audio.js';
+  playPlayerDamage, playBossWaveCast,
+  playDuaBeamCharge, playDuaBeamFire, resetDuaBeamDegradation } from '../audio.js';
 import { endRound } from '../game.js';
 
 let invCanvas=null,invCtx=null,invRaf=null;
@@ -308,6 +309,25 @@ function setNukaCooldown(active, duration=2000, isFail=false){
   invNukaCooldownRaf=requestAnimationFrame(step);
 }
 
+// wave 0–5: black opacity 15/25/40/55/65/70%, orb opacity scales proportionally
+const _BG_BLACK=[0.15,0.25,0.40,0.55,0.65,0.70];
+const _BG_ORB  =[0.12,0.22,0.35,0.50,0.62,0.72];
+function _updateInvBg(wave){
+  const invBg=document.getElementById('inv-bg');
+  if(!invBg) return;
+  const w=Math.min(wave,5);
+  const blackAlpha=_BG_BLACK[w];
+  const orbAlpha=_BG_ORB[w];
+  invBg.style.backgroundColor=`rgba(0,0,0,${blackAlpha})`;
+  const orbs=invBg.querySelectorAll('.inv-orb');
+  // Boss wave: orbs grow slightly
+  const scale=w===5?1.35:1;
+  orbs.forEach(orb=>{
+    orb.style.opacity=orbAlpha;
+    orb.style.transform=scale!==1?`scale(${scale})`:'';
+  });
+}
+
 function startInvaders(){
   invWave=0;
   invTransitioning=false;
@@ -346,8 +366,54 @@ function startInvaders(){
   const wp=document.getElementById('wave-progress');
   wp.style.display='flex';
   for(let i=0;i<6;i++) document.getElementById('wseg-'+i).className='wave-seg';
+  // ── BACKGROUND — black+purple orbs, intensity scales with wave ──
+  if(!field.style.position||field.style.position==='') field.style.position='relative';
+  let invBg=document.getElementById('inv-bg');
+  if(!invBg){
+    invBg=document.createElement('div');
+    invBg.id='inv-bg';
+    invBg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;z-index:0;';
+    // Inject orb CSS once
+    if(!document.getElementById('inv-bg-style')){
+      const st=document.createElement('style');
+      st.id='inv-bg-style';
+      st.textContent=`
+        #inv-bg { background: transparent; }
+        #inv-bg .inv-orb {
+          position:absolute; border-radius:50%;
+          filter:blur(60px); opacity:0;
+          animation: invOrbFloat 0s ease-in-out infinite alternate;
+          will-change: transform;
+        }
+        @keyframes invOrbFloat0 { from{transform:translate(0,0)} to{transform:translate(30px,22px)} }
+        @keyframes invOrbFloat1 { from{transform:translate(0,0)} to{transform:translate(-24px,35px)} }
+        @keyframes invOrbFloat2 { from{transform:translate(0,0)} to{transform:translate(18px,-28px)} }
+        @keyframes invOrbFloat3 { from{transform:translate(0,0)} to{transform:translate(-32px,16px)} }
+        @keyframes invOrbFloat4 { from{transform:translate(0,0)} to{transform:translate(22px,-18px)} }
+      `;
+      document.head.appendChild(st);
+    }
+    // Create 5 orbs with fixed positions/sizes — updated opacity/scale per wave
+    const orbDefs=[
+      {left:'10%',top:'15%',w:220,h:200,anim:'invOrbFloat0',dur:11},
+      {left:'65%',top:'8%', w:260,h:240,anim:'invOrbFloat1',dur:13},
+      {left:'40%',top:'50%',w:180,h:200,anim:'invOrbFloat2',dur:9},
+      {left:'75%',top:'55%',w:240,h:220,anim:'invOrbFloat3',dur:14},
+      {left:'20%',top:'65%',w:200,h:180,anim:'invOrbFloat4',dur:10},
+    ];
+    orbDefs.forEach((o,i)=>{
+      const orb=document.createElement('div');
+      orb.className='inv-orb';
+      orb.dataset.idx=i;
+      orb.style.cssText=`left:${o.left};top:${o.top};width:${o.w}px;height:${o.h}px;background:rgba(120,0,200,0.55);animation:${o.anim} ${o.dur}s ease-in-out infinite alternate;`;
+      invBg.appendChild(orb);
+    });
+    field.insertBefore(invBg,field.firstChild);
+  }
+  _updateInvBg(0);
+
   invCanvas=document.createElement('canvas');
-  invCanvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;';
+  invCanvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:1;';
   field.appendChild(invCanvas);
   invCanvas.width=field.offsetWidth||window.innerWidth;
   invCanvas.height=field.offsetHeight||window.innerHeight-80;
@@ -420,6 +486,7 @@ function nextInvaderWave(){
   try{playWaveClear();}catch(e){}
   const completedWave=invWave;
   invWave++;
+  try{_updateInvBg(invWave);}catch(ex){}
 
   // Fill wave progress segment
   const seg=document.getElementById('wseg-'+completedWave);
@@ -845,6 +912,9 @@ function stopInvaders(){
     invCanvas.removeEventListener('click',invHandleSingleClick);
     invCanvas.remove();invCanvas=null;invCtx=null;
   }
+  const _bg=document.getElementById('inv-bg');
+  if(_bg) _bg.remove();
+  try{resetDuaBeamDegradation();}catch(ex){}
 }
 
 function invHandleMove(e){
@@ -886,8 +956,9 @@ function invHandleMouseDown(e){
 
   // doublets (wave4) — hold-to-fire, suppresses base bullet
   if(activeUpgradeForRate==='dua beam'){
-    fireDuaBeam();
-    invDuaBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;return;}fireDuaBeam();},DUA_BEAM_CD);
+    try{playDuaBeamCharge();}catch(ex){}
+    fireDuaBeam(); try{playDuaBeamFire();}catch(ex){}
+    invDuaBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;return;}fireDuaBeam();try{playDuaBeamFire();}catch(ex){}},DUA_BEAM_CD);
     // beam (wave2) subsumed by dua beam — no separate interval when stacked
     if(false && invWave2Upgrade==='beam'){
       fireMissile();
@@ -923,6 +994,7 @@ function invHandleMouseUp(){
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
   if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
+  try{resetDuaBeamDegradation();}catch(ex){}
 }
 
 function invHandleSingleClick(e){
@@ -1006,11 +1078,15 @@ function _castAndFireBeam(cx, bw, dmg){
     }
   }
   try{playAoeTrigger();}catch(e){}
+  const _cfg=INV_WAVE_CONFIG[Math.min(invWave,INV_WAVE_CONFIG.length-2)];
+  const _rows=_cfg?_cfg.rows:5;
+  const _beamTopOverride=(bw>=200)?36+Math.max(0,_rows-4)*44:0;
   invParticles.push({
     isBeam:true, x:cx, bw,
     startTime:Date.now(),
     castDur:150, flashDur:120, fadeDur:180,
-    life:1, alpha:1, vx:0, vy:0
+    life:1, alpha:1, vx:0, vy:0,
+    beamTopOverride:_beamTopOverride
   });
 }
 
@@ -1669,7 +1745,7 @@ function invDraw(){
         currentW=bw*(1-t*0.2); alpha=1-t;
       }
       const bx=Math.round(cx);
-      const beamTop=0, beamBot=ch2-105, beamH=beamBot-beamTop;
+      const beamTop=p.beamTopOverride||0, beamBot=ch2-105, beamH=beamBot-beamTop;
       const isDua=p.bw>=200;
       const glowCol=isDua?'rgba(180,100,255,':'rgba(180,220,255,';
       const coreCol0=isDua?'rgba(140,60,220,0)':'rgba(160,210,255,0)';
