@@ -44,11 +44,8 @@ const BEAM_CD=450;
 const DUA_BEAM_CD=450;
 const SALVO_CD=1000;
 const OVERCHARGE_CD=2000;
-let invBeamCooldownUntil=0;
-let invDuaBeamCooldownUntil=0;
 let invSalvoCooldownUntil=0;
 let invOverchargeCooldownUntil=0;
-let invSemicCooldownUntil=0;
 let invBeamHoldInterval=null;
 let invDuaBeamHoldInterval=null;
 
@@ -336,11 +333,8 @@ function startInvaders(){
   invBossUpgrade=null;
   invWave2Upgrade=null;
   invWave4Upgrade=null;
-  invBeamCooldownUntil=0;
-  invDuaBeamCooldownUntil=0;
   invSalvoCooldownUntil=0;
   invOverchargeCooldownUntil=0;
-  invSemicCooldownUntil=0;
   invNukaCooldownUntil=0;
   invNukaSkillActive=false;
   invNukaPromptLetter='';
@@ -891,21 +885,19 @@ function showBossUpgradeModal(){
     spawnInvaderWave(invWave);
     invSalvoCooldownUntil=0;
     invOverchargeCooldownUntil=0;
-    invSemicCooldownUntil=0;
     invLoop();
   }
 }
 
 function stopInvaders(){
   if(invRaf){cancelAnimationFrame(invRaf);invRaf=null;}
+  if(_hpScreenFlashRaf){cancelAnimationFrame(_hpScreenFlashRaf);_hpScreenFlashRaf=null;}
   if(invNukaKeycapRaf){cancelAnimationFrame(invNukaKeycapRaf);invNukaKeycapRaf=null;}
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}
   stopBossAbilities();
   stopWarhAutoFire();
   if(invBeamHoldInterval){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;}
   if(invDuaBeamHoldInterval){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;}
-  invBeamCooldownUntil=0;
-  invDuaBeamCooldownUntil=0;
   invMouseDown=false;
   invUpgrade=null;
   invBossUpgrade=null;
@@ -1022,6 +1014,7 @@ function invHandleSingleClick(e){
   if((invBossUpgrade||invUpgrade)==='warh') fireWarh();
   if(invBossUpgrade==='salvo') fireSalvo();
   if(invBossUpgrade==='overcharge') fireOvercharge();
+  if(invBossUpgrade==='semic') fireSemic();
   // beam/dua beam fire handled by mousedown only
 }
 
@@ -1123,9 +1116,7 @@ const SEMIC_TOTAL_DMG = 30;
 
 function fireSemic(){
   if(!state.running||!invCanvas) return;
-  if(Date.now()<invSemicCooldownUntil) return;
   if(Date.now()<invWave5ProtectUntil) return;
-  invSemicCooldownUntil = Date.now() + SEMIC_BURST_MS;
   const cx = invShooterX;
   const startTime = Date.now();
   invParticles.push({
@@ -1488,10 +1479,13 @@ function invUpdate(){
             boss.hp-=dmg;
             if(boss.hp<=0){
               boss.hp=0; boss.alive=false;
+              msgEl.textContent='';
               invSpawnParticles(boss.x,boss.y,2);
               try{playEnemyDeath(0.4);}catch(ex){}
             } else {
               boss.glitchTimer=6;
+              const _hp=boss.hp;
+              msgEl.textContent=(_hp%1===0?Math.round(_hp):_hp.toFixed(1))+' / '+INV_BOSS_HP;
             }
           }
         }
