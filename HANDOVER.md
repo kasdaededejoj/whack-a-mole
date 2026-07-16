@@ -2,6 +2,38 @@
 
 ---
 
+## round2: dua beam 4-row VFX + SFX + wave background — 2026-07-16
+
+### Committed & pushed to `main` (`09f7318`)
+Scope: `js/rounds/round2.js` and `js/audio.js` only. `round1.js` and `round3.js` untouched.
+
+**Dua beam VFX — 4-row height limit:**
+- Hit logic untouched. VFX-only constraint: `_castAndFireBeam` computes `_beamTopOverride` when `bw>=200` (dua beam): `36 + Math.max(0, rows-4) * 44`. Uses `INV_WAVE_CONFIG[Math.min(invWave, length-2)]` for row count — safe across all wave values, skips null boss entry.
+- Beam particle carries `beamTopOverride`; draw block reads `p.beamTopOverride||0` as `beamTop`. All `fillRect`/`moveTo`/`lineTo` calls that use `beamTop` constrained automatically.
+- Wave 4 (5 rows) → `beamTop=80px`; waves 1–3 (4 rows) → `beamTop=36` (full grid, visually no change for regular beam).
+
+**Dua beam SFX (`audio.js`):**
+- `playDuaBeamCharge()`: fires on mousedown when dua beam active. Rising sawtooth 180→720Hz / 0.45s + bandpass noise at 600Hz underneath.
+- `playDuaBeamFire()`: fires on first shot and each 450ms hold interval. Sawtooth core with slow LFO-style pitch wobble (linear ramps). Grain degradation layer: sparse highpass noise that increases in amplitude and harshness over consecutive shots (`_duaBeamShotCount` 0→6, gain 0.06→0.30, highpass 2000→3200Hz). Degradation gives a "beam wearing out" character on sustained fire.
+- `resetDuaBeamDegradation()`: resets `_duaBeamShotCount=0`. Called on mouseup (both `invHandleMouseUp` call sites) and `stopInvaders()`.
+- All three exported from `audio.js`, imported in `round2.js`.
+
+**Wave background — black + purple orb system:**
+- `_BG_BLACK` / `_BG_ORB` arrays: black base opacity `[0.15,0.25,0.40,0.55,0.65,0.70]` and orb opacity `[0.12,0.22,0.35,0.50,0.62,0.72]` across waves 0–5.
+- `inv-bg` div injected before canvas (z-index 0) on `startInvaders`, removed on `stopInvaders`. Canvas z-index bumped to 1. `field.style.position='relative'` set if not already.
+- CSS injected once to `<head>` (`#inv-bg-style`): 5 `@keyframes invOrbFloat0–4` with unique translate targets (organic drift, 9–14s, infinite alternate).
+- 5 orb divs: `border-radius:50%`, `filter:blur(60px)`, `rgba(120,0,200,0.55)`, each with different position/size/animation duration.
+- `_updateInvBg(wave)` called on `startInvaders` (wave 0) and inside `nextInvaderWave()` after `invWave++`.
+- Boss wave (5): orbs scale to 1.35× via CSS transform.
+
+### Open items
+- Boss SFX: pincer and teleport still paused
+- Wave VFX `playbackRate` sync: `animateVid()` sets position but never `v.playbackRate` — video plays at 1× regardless of travel distance
+- `???` combos: beam+rapidaaa, rapida+dua beam mechanics TBD (needs design input before code)
+- All boss-wave upgrade combos need live playtesting
+
+---
+
 ## round2: dua beam VFX limit + SFX + wave background — 2026-07-16
 
 ### Committed & pushed to `main` (`09f7318`)
