@@ -48,6 +48,7 @@ let invBeamCooldownUntil=0;
 let invDuaBeamCooldownUntil=0;
 let invSalvoCooldownUntil=0;
 let invOverchargeCooldownUntil=0;
+let invSemicCooldownUntil=0;
 let invBeamHoldInterval=null;
 let invDuaBeamHoldInterval=null;
 
@@ -339,6 +340,7 @@ function startInvaders(){
   invDuaBeamCooldownUntil=0;
   invSalvoCooldownUntil=0;
   invOverchargeCooldownUntil=0;
+  invSemicCooldownUntil=0;
   invNukaCooldownUntil=0;
   invNukaSkillActive=false;
   invNukaPromptLetter='';
@@ -845,6 +847,7 @@ function showBossUpgradeModal(){
 
   const isMissileDoublets=invWave2Upgrade==='beam'&&invWave4Upgrade==='dua beam';
   const isRapidaMachina=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='rapida');
+  const isSemic=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='dua beam')||(invWave2Upgrade==='dua beam'&&invWave4Upgrade==='rapida');
 
   // Reset button styles
   btn1.style.cssText=''; btn2.style.display=''; btn2.style.cssText='';
@@ -855,6 +858,13 @@ function showBossUpgradeModal(){
     btn1.style.cssText='display:block;margin:0 auto;';
     btn2.style.display='none';
     btn1.onclick=()=>pickBossUpgrade('fokus_lina');
+    btn2.onclick=null;
+  } else if(isSemic){
+    if(desc) desc.innerHTML='the void.<br>rapida + dua beam.<br>burst.';
+    btn1.textContent='semic.';
+    btn1.style.cssText='display:block;margin:0 auto;';
+    btn2.style.display='none';
+    btn1.onclick=()=>pickBossUpgrade('semic');
     btn2.onclick=null;
   } else if(isRapidaMachina){
     if(desc) desc.innerHTML='the void.<br>rapida + rapid\'aa.<br>convergence.';
@@ -881,6 +891,7 @@ function showBossUpgradeModal(){
     spawnInvaderWave(invWave);
     invSalvoCooldownUntil=0;
     invOverchargeCooldownUntil=0;
+    invSemicCooldownUntil=0;
     invLoop();
   }
 }
@@ -951,6 +962,11 @@ function invHandleMouseDown(e){
   if(invBossUpgrade==='overcharge'){
     fireOvercharge();
     invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireOvercharge();},OVERCHARGE_CD);
+    return;
+  }
+  if(invBossUpgrade==='semic'){
+    fireSemic();
+    invBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invBeamHoldInterval);invBeamHoldInterval=null;return;}fireSemic();},SEMIC_BURST_MS);
     return;
   }
 
@@ -1095,6 +1111,31 @@ const DUA_BEAM_WIDTH=280;
 function fireDuaBeam(){
   if(!state.running||!invCanvas)return;
   _castAndFireBeam(invShooterX, DUA_BEAM_WIDTH, 1);
+}
+
+
+// ── SEMIC — boss-wave only (rapida + dua beam), 500ms burst interval ──
+// Width: 2cm→4cm over 0–300ms, 4cm→0 over 300–500ms. Damage scales with overlap.
+const SEMIC_BURST_MS = 500;
+const SEMIC_W_START  = 76;   // ~2cm at 96dpi
+const SEMIC_W_PEAK   = 152;  // ~4cm at 96dpi
+const SEMIC_TOTAL_DMG = 30;
+
+function fireSemic(){
+  if(!state.running||!invCanvas) return;
+  if(Date.now()<invSemicCooldownUntil) return;
+  if(Date.now()<invWave5ProtectUntil) return;
+  invSemicCooldownUntil = Date.now() + SEMIC_BURST_MS;
+  const cx = invShooterX;
+  const startTime = Date.now();
+  invParticles.push({
+    isSemic:true, x:cx,
+    startTime,
+    totalMs: SEMIC_BURST_MS,
+    dmgDealt: 0,               // accumulated so we cap at SEMIC_TOTAL_DMG
+    lastDmgT: startTime,       // for per-frame delta
+    life:1, alpha:1, vx:0, vy:0
+  });
 }
 
 // ── FOKUS LINA — boss-wave only, 3s charge + 4s ramping beam ──
@@ -1421,6 +1462,40 @@ function invUpdate(){
       const elapsed=Date.now()-p.startTime;
       const total=p.castDur+p.flashDur+p.fadeDur;
       if(elapsed>=total){ p.life=0; }
+    } else if(p.isSemic){
+      const now=Date.now();
+      const elapsed=now-p.startTime;
+      if(elapsed>=p.totalMs){ p.life=0; }
+      else {
+        // Width at this moment — ramp up 0→300ms, ramp down 300→500ms
+        const halfBw = elapsed<300
+          ? (SEMIC_W_START+(SEMIC_W_PEAK-SEMIC_W_START)*(elapsed/300))/2
+          : (SEMIC_W_PEAK*(1-(elapsed-300)/200))/2;
+        // Per-frame damage: proportional to overlap fraction with boss
+        const boss=invEntities.find(e=>e.alive&&e.isBoss);
+        if(boss && p.dmgDealt<SEMIC_TOTAL_DMG){
+          const dt=now-p.lastDmgT;
+          p.lastDmgT=now;
+          const bossR=50*bossGrowthScale;
+          const overlapL=Math.max(p.x-halfBw, boss.x-bossR);
+          const overlapR=Math.min(p.x+halfBw, boss.x+bossR);
+          const overlap=Math.max(0,overlapR-overlapL);
+          const overlapFrac=overlap/(bossR*2);
+          const rawDmg=(SEMIC_TOTAL_DMG/p.totalMs)*dt*overlapFrac;
+          const dmg=Math.min(rawDmg, SEMIC_TOTAL_DMG-p.dmgDealt);
+          if(dmg>0){
+            p.dmgDealt+=dmg;
+            boss.hp-=dmg;
+            if(boss.hp<=0){
+              boss.hp=0; boss.alive=false;
+              invSpawnParticles(boss.x,boss.y,2);
+              try{playEnemyDeath(0.4);}catch(ex){}
+            } else {
+              boss.glitchTimer=6;
+            }
+          }
+        }
+      }
     } else { p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life-=0.045; }
   }
   invParticles=invParticles.filter(p=>p.life>0);
@@ -1790,6 +1865,56 @@ function invDraw(){
       muzzleGrad.addColorStop(1,'rgba(0,0,0,0)');
       invCtx.globalAlpha=1; invCtx.fillStyle=muzzleGrad;
       invCtx.beginPath(); invCtx.ellipse(bx,muzzleY,muzzleR,muzzleR*0.42,0,0,Math.PI*2); invCtx.fill();
+    } else if(p.isSemic){
+      // SEMIC — amber/gold burst beam, width ramps 2cm→4cm→0 over 500ms
+      const elapsed=Date.now()-p.startTime;
+      const semT=Math.min(elapsed,p.totalMs)/p.totalMs; // 0→1 lifetime alpha
+      const currentW=elapsed<300
+        ? SEMIC_W_START+(SEMIC_W_PEAK-SEMIC_W_START)*(elapsed/300)
+        : SEMIC_W_PEAK*(1-(elapsed-300)/200);
+      if(currentW<=0){ /* collapsed — skip draw */ } else {
+        const alpha=semT<0.1?semT/0.1:semT>0.85?(1-(semT-0.85)/0.15):1;
+        const bx=Math.round(p.x);
+        const beamTop=36, beamBot=ch2-105, beamH=beamBot-beamTop;
+        invCtx.save();
+        // Outer glow — amber
+        invCtx.globalAlpha=alpha*0.20;
+        const sg=invCtx.createLinearGradient(bx-currentW/2,0,bx+currentW/2,0);
+        sg.addColorStop(0,'rgba(255,160,30,0)');
+        sg.addColorStop(0.5,'rgba(255,200,80,1)');
+        sg.addColorStop(1,'rgba(255,160,30,0)');
+        invCtx.fillStyle=sg; invCtx.fillRect(bx-currentW/2,beamTop,currentW,beamH);
+        // Core — bright gold
+        invCtx.globalAlpha=alpha*0.80;
+        const coreW=currentW*0.30;
+        const cg=invCtx.createLinearGradient(bx-coreW/2,0,bx+coreW/2,0);
+        cg.addColorStop(0,'rgba(255,220,100,0)');
+        cg.addColorStop(0.5,'rgba(255,245,180,1)');
+        cg.addColorStop(1,'rgba(255,220,100,0)');
+        invCtx.fillStyle=cg; invCtx.fillRect(bx-coreW/2,beamTop,coreW,beamH);
+        // Chromatic fringe — red left, yellow-orange right
+        invCtx.globalAlpha=alpha*0.18;
+        invCtx.fillStyle='rgba(255,60,0,0.8)';  invCtx.fillRect(bx-currentW/2-4,beamTop,6,beamH);
+        invCtx.fillStyle='rgba(255,200,0,0.8)'; invCtx.fillRect(bx+currentW/2-2,beamTop,6,beamH);
+        // Blurred edge lines
+        invCtx.filter='blur(1.8px)';
+        invCtx.globalAlpha=alpha*0.55;
+        invCtx.strokeStyle='rgba(255,180,40,0.9)'; invCtx.lineWidth=1.5;
+        invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
+        invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
+        invCtx.filter='none';
+        // Muzzle ellipse
+        const muzzleR=currentW*0.85;
+        const muzzleY=beamBot+muzzleR*0.18;
+        const mg=invCtx.createRadialGradient(bx,muzzleY,0,bx,muzzleY,muzzleR);
+        mg.addColorStop(0,'rgba(255,245,180,'+(alpha*0.75)+')');
+        mg.addColorStop(0.4,'rgba(255,200,80,'+(alpha*0.35)+')');
+        mg.addColorStop(0.75,'rgba(200,120,20,'+(alpha*0.1)+')');
+        mg.addColorStop(1,'rgba(0,0,0,0)');
+        invCtx.globalAlpha=1; invCtx.fillStyle=mg;
+        invCtx.beginPath();invCtx.ellipse(bx,muzzleY,muzzleR,muzzleR*0.42,0,0,Math.PI*2);invCtx.fill();
+        invCtx.restore();
+      }
     } else if(p.isAoe){
       // AOE — full-height column flash + expanding ring
       const bx=Math.round(p.x);
