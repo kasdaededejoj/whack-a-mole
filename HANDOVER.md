@@ -2,6 +2,39 @@
 
 ---
 
+## round2: dua beam VFX limit + SFX + wave background — 2026-07-16
+
+### Committed & pushed to `main` (`09f7318`)
+Scope: `js/rounds/round2.js` and `js/audio.js` only. `round1.js` and `round3.js` untouched.
+
+**Dua beam VFX — 4-row height limit:**
+- `_castAndFireBeam` computes `_beamTopOverride` when `bw>=200` (dua beam): `36 + Math.max(0, rows-4) * 44` — grid top plus rows above the bottom 4, from `INV_WAVE_CONFIG[Math.min(invWave, length-2)]`
+- Beam particle carries `beamTopOverride`; draw block reads `p.beamTopOverride||0` as `beamTop`
+- Hit logic untouched — VFX only, avoids prior row-filter bugs
+- Wave 4 (5 rows) → `beamTop=80px`; waves 1–3 (4 rows) → `beamTop=36` (full grid, visually unchanged)
+
+**Dua beam SFX (`audio.js`):**
+- `playDuaBeamCharge()`: mousedown trigger. Rising sawtooth 180→720Hz / 0.4s + bandpass noise at 600Hz.
+- `playDuaBeamFire()`: each 450ms hold interval. Sawtooth with LFO pitch wobble + grain degradation noise layer that gets harsher over consecutive shots (`_duaBeamShotCount` 0→6, gain 0.06→0.30, highpass 2000→3200Hz).
+- `resetDuaBeamDegradation()`: resets count on mouseup and `stopInvaders()`.
+- All three exported from `audio.js`, imported in `round2.js`.
+
+**Wave background — black + purple orb system:**
+- `_BG_BLACK/ORB` arrays: black opacity `[0.15,0.25,0.40,0.55,0.65,0.70]`, orb opacity `[0.12,0.22,0.35,0.50,0.62,0.72]` across waves 0–5.
+- `inv-bg` div injected before canvas (z-index 0) on `startInvaders`, removed on `stopInvaders`. Canvas z-index bumped to 1.
+- CSS injected once to `<head>` (`#inv-bg-style`): 5 `@keyframes invOrbFloat0–4`.
+- 5 orb divs: `border-radius:50%`, `filter:blur(60px)`, `rgba(120,0,200,0.55)`, 9–14s alternate float animations.
+- `_updateInvBg(wave)` called on start (wave 0) and each `nextInvaderWave()`.
+- Boss wave: orbs scale to 1.35×.
+
+### Open items
+- Boss SFX: pincer and teleport still paused
+- Wave VFX `playbackRate` sync: not yet done
+- `???` combos: beam+rapidaaa, rapida+dua beam mechanics TBD
+- All boss-wave upgrade combos need live playtesting
+
+---
+
 ## [Antigravity] Round 3 — void unlock, heal removal, turn buffer — 2026-07-15
 
 **Agent:** Antigravity (Google DeepMind). Scope strictly limited to `js/rounds/round3.js` and `index.html` (CSS only). Did not touch `round1.js`, `round2.js`, `game.js`, `state.js`, `audio.js`, or any Round 2 logic.
