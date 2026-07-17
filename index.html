@@ -60,6 +60,40 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 
 /* ── MOLE ── */
 .mole-el{position:absolute;width:80px;height:80px;transform:translate(-50%,-50%);cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:none}
+/* ── GATE LOCKOUT ── */
+#gate-lockout{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:2rem}
+#gate-inner{text-align:center;max-width:420px}
+#gate-copy{font-family:var(--fraktur);font-size:clamp(14px,2.2vw,18px);color:rgba(255,255,255,0.72);line-height:1.7;letter-spacing:.06em;margin-bottom:2.4rem}
+#gate-sub{display:block;margin-top:.8rem;color:rgba(255,255,255,0.38);font-size:.85em}
+#gate-timer{font-family:var(--num);font-size:clamp(28px,5vw,42px);letter-spacing:.12em;color:rgba(255,255,255,0.18);tabular-nums:all}
+#gate-inner{transition:filter .06s,transform .06s,opacity .15s}
+
+/* ── ROUND 1 PERCEPTION GATE ── */
+.r1-progress{display:flex;gap:.5rem;justify-content:center;margin-bottom:2rem;flex-shrink:0}
+.r1-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.12);transition:background .2s}
+.r1-dot-done{background:rgba(255,255,255,0.5)}
+.r1-dot-active{background:rgba(255,255,255,0.9)}
+.r1-label{font-family:var(--fraktur);font-size:11px;letter-spacing:.28em;color:rgba(255,255,255,0.32);text-transform:lowercase;margin-bottom:2.4rem;text-align:center}
+.r1-comp-wrap{display:flex;align-items:center;justify-content:center;width:100%;flex:1;min-height:160px;opacity:0;transition:opacity .3s ease}
+.r1-comp-visible{opacity:1}
+.r1-comp-hidden{opacity:0}
+.r1-observe-comp{display:flex;align-items:center;justify-content:center;width:100%;min-height:140px;position:relative}
+.r1-glyph{font-family:var(--fraktur);color:rgba(255,255,255,0.88);line-height:1;user-select:none}
+.r1-glyph-lg{font-size:clamp(52px,10vw,80px)}
+.r1-glyph-md{font-size:clamp(36px,6vw,52px)}
+.r1-glyph-sm{font-size:clamp(24px,4vw,36px);position:absolute}
+.r1-question{font-family:var(--fraktur);font-size:clamp(13px,2vw,16px);letter-spacing:.1em;color:rgba(255,255,255,0.6);text-align:center;margin-bottom:2rem}
+.r1-options{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.r1-opt{font-family:var(--fraktur);font-size:13px;letter-spacing:.18em;color:rgba(255,255,255,0.55);background:none;border:1px solid rgba(255,255,255,0.12);padding:.6rem 1.4rem;cursor:pointer;transition:border-color .15s,color .15s;touch-action:manipulation}
+.r1-opt:hover{border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.9)}
+.r1-opt:disabled{cursor:default}
+.r1-auth-grid{display:flex;gap:2rem;justify-content:center;align-items:center;flex-wrap:wrap}
+.r1-auth-opt{font-family:var(--fraktur);font-size:clamp(36px,7vw,56px);color:rgba(255,255,255,0.7);background:none;border:1px solid rgba(255,255,255,0.08);width:100px;height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,color .15s,transform .1s;touch-action:manipulation}
+.r1-auth-opt:hover{border-color:rgba(255,255,255,0.35);color:#fff;transform:scale(1.04)}
+.r1-auth-opt:disabled{cursor:default;transform:none}
+.r1-correct{border-color:rgba(255,255,255,0.8)!important;color:#fff!important}
+.r1-wrong{border-color:rgba(255,80,80,0.6)!important;color:rgba(255,80,80,0.7)!important}
+.r1-conclude{font-family:var(--fraktur);font-size:clamp(14px,2.4vw,18px);letter-spacing:.14em;color:rgba(255,255,255,0.5);text-align:center}
 /* glyph targets — † and ⌀ as text */
 .mole-glyph{font-size:42px;line-height:1;color:#fff;pointer-events:none;user-select:none;display:block;transform:scale(0)}
 .mole-el.purpality .mole-glyph{font-size:22px;color:rgba(180,100,255,0.9)}

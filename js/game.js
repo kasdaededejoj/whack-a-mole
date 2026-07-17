@@ -8,7 +8,8 @@ import {
   portalScreen, portalTimer, glitchTrans, portalQR, duelScreen,
   setScoreValue, setComboValue, setMissesValue, showHudActive, showFail
 } from './ui.js';
-import { spawnLoop } from './rounds/round1.js';
+import { spawnLoop, startRound1, endRound1 } from './rounds/round1.js';
+import { initGate } from './gate.js';
 import { startInvaders, stopInvaders, handleInvaderKeydown } from './rounds/round2.js';
 import { startDuel, stopDuel } from './rounds/round3.js';
 import { getAudio } from './audio.js';
@@ -49,7 +50,14 @@ export function startRound(idx) {
     startDuel();
     return;
   } else {
-    spawnLoop();
+    // Round 1 — perception gate mechanic manages its own flow
+    clearInterval(state.bTimer);
+    barEl.style.width = '0%';
+    startRound1(
+      () => { endRound(); },   // pass → endRound() → showRoundTransition → startRound(1)
+      () => { endRound(); }    // fail handled internally (lockout + reload), endRound cleans up
+    );
+    return;
   }
 
   const t0 = Date.now();
@@ -76,11 +84,14 @@ export function endRound() {
   state.moles = [];
   stopInvaders();
   stopDuel();
+  endRound1();
   barEl.style.width = '0%';
 
   const round = ROUNDS[state.currentRound];
-  // Invaders: pass = cleared all waves (score not used)
-  const passed = round.type === 'invaders' ? true : state.roundScore >= round.threshold;
+  // Round 1 (mole) manages its own pass/fail — always treat as passed here
+  const passed = round.type === 'mole' ? true
+    : round.type === 'invaders' ? true
+    : state.roundScore >= round.threshold;
   const isLast = state.currentRound === ROUNDS.length - 1;
 
   if (!passed) {
@@ -322,6 +333,9 @@ export function showPortal() {
 export function initGame() {
   // Initialize DOM references first
   initDOMRefs();
+
+  // Gate check — must run before anything else is shown
+  initGate(welcomeScreen);
   
   // Setup event listeners
   document.addEventListener('click', initAudio);
