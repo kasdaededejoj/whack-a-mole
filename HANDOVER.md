@@ -190,7 +190,7 @@ Scope: `js/rounds/round2.js` and `js/audio.js` only. `round1.js` and `round3.js`
 - `flCanActivate()`: requires `invWave2Upgrade==='beam'` OR `invWave4Upgrade==='dua beam'` AND `invWave===5`
 
 **Other changes carried forward:**
-- beam/dua beam rename complete (missile→beam, doublets→dua beam everywhere)
+- beam/dua beam rename complete (missile→beam everywhere)
 - Beam VFX: glow column, core, chromatic aberration, blurred edge lines with 40% fractal noise, soft muzzle ellipse
 - Wave 5 300ms beam immunity (`invWave5ProtectUntil`)
 - `resumeInvaders()` exported; devpanel close resumes game
@@ -225,7 +225,7 @@ Scope: `js/rounds/round2.js` and `js/audio.js` only. `round1.js` and `round3.js`
 ### Open items
 - Boss SFX: pincer and teleport still paused
 - Wave VFX `playbackRate` sync: not yet done
-- `???` combos: missile+rapidaaa, rapida+doublets → now beam+rapidaaa, beam+dua beam paths TBD (rapida+dua beam already handled)
+- `???` combos: beam+rapidaaa, rapida+dua beam → now beam+rapidaaa, beam+dua beam paths TBD (rapida+dua beam already handled)
 - All boss-wave upgrade combos need live playtesting
 
 ---
@@ -246,7 +246,7 @@ Scope: `js/rounds/round2.js` and `js/audio.js` only. `round1.js` and `round3.js`
 
 ### Committed & pushed to `main` (`3b3a55c`)
 
-**missile → beam (wave 2, 1.5s CD, 113px wide):**
+**missile→beam (wave 2, 1.5s CD, 113px wide):**
 - Instant-hit vertical clear: all enemies with `Math.abs(e.x - cx) <= 56.5` die immediately on fire
 - 150ms cast sequence: thin 60px line expands to 113px, then 120ms full flash, 180ms fade
 - VFX drawn via `isBeam` particle: outer glow column (linear gradient), bright core (28% of width), chromatic aberration fringe (red left, blue right), edge glow lines
@@ -280,14 +280,14 @@ Scope: `js/rounds/round2.js` and `js/audio.js` only. `round1.js` and `round3.js`
 `showBossUpgradeModal` now has a third combo branch: `invWave2Upgrade==='rapida' && invWave4Upgrade==='rapidaaa'` (and reverse order).
 - Both buttons reset cleanly on each modal open (`style.cssText`, `style.display` restored) to avoid bleed from previous combo branches
 - rapida+rapidaaa path: `btn2` hidden (`display:none`), `btn1` centred (`display:block;margin:0 auto`), label `machina.`, desc `the void.<br>rapida + rapid'aa.<br>convergence.`, assigns `invBossUpgrade='machina'`
-- missile+doublets path: unchanged (salvo / overcharge)
+- beam+dua beam path: unchanged (salvo / overcharge)
 - all other combos: unchanged (`???` → null)
 - machina mechanics unchanged: 3 converging streams, `INV_FIRE_RATE/3.2`, 0.3 dmg/stream on boss
 
 ### Open items
 - Boss SFX: pincer and teleport SFX still paused
 - Wave VFX speed/sync: `video.playbackRate` not yet set dynamically to match travel distance
-- `???` combos (missile+rapidaaa, rapida+doublets) — mechanics TBD
+- `???` combos (beam+rapidaaa, rapida+dua beam) — mechanics TBD
 - All boss-wave upgrade combos need live playtesting
 
 ---
@@ -312,16 +312,16 @@ Waves 1–4 → boss wave (wave 5). All upgrades working. No known broken behavi
 - `doublets` — hold-to-fire, 0.8s cooldown: missile 1 straight up, missile 2 diagonal homing toward densest cluster, clears ±2 cols (5 sprites). Display: "doublets"
 - `rapidaaa` — hold-to-fire bullets at 2.8× rate (`INV_FIRE_RATE/2.8`), steers toward nearest enemy by y. Display: "rapid'aa"
 
-**Boss modal** (pick one — evolves the missile+doublets combo):
+**Boss modal** (pick one — evolves the beam+dua beam combo):
 - `salvo` — hold-to-fire, 1s cooldown: fires missile AOE + doublet pair simultaneously. Display: "salvo."
 - `overcharge` — hold-to-fire, 2s cooldown: wide column-clear (AOE radius ×2.5, instant-kills all non-boss enemies in column) + warh-class missile aimed directly at boss. Display: "overcharge."
 
 **Upgrade carry-over:**
 - Wave 2 and wave 4 picks tracked in `invWave2Upgrade` + `invWave4Upgrade` independently
 - `missile` (wave 2) stacks alongside `doublets` (wave 4) — both fire on hold
-- When boss combo is active (`salvo`/`overcharge`), it replaces individual missile+doublets bindings
-- `invFire()` resolves: `invBossUpgrade==='machina'` → machina; else `invWave4Upgrade||invUpgrade` (legacy path, not used in current missile+doublets combo)
-- Base bullet suppressed when `invWave2Upgrade==='missile'` and no bullet-firing wave4/boss upgrade active
+- When boss combo is active (`salvo`/`overcharge`), it replaces individual beam+dua beam bindings
+- `invFire()` resolves: `invBossUpgrade==='machina'` → machina; else `invWave4Upgrade||invUpgrade` (legacy path, not used in current beam+dua beam combo)
+- Base bullet suppressed when `invWave2Upgrade==='beam'` and no bullet-firing wave4/boss upgrade active
 
 **Boss HP scaling:**
 - Base `INV_BOSS_HP=313`; scales `×1.5^upgradeCount` at `spawnInvaderWave(5)`
@@ -399,7 +399,7 @@ Screen-level purple vignette + `-hp` float still active alongside the sprite eff
 ### Open items
 - Boss SFX: pincer and teleport SFX still paused
 - Wave VFX speed/sync: `video.playbackRate` not yet set dynamically to match travel distance
-- `???` combos (rapida+doublets, rapida+rapidaaa, missile+rapidaaa) — mechanics TBD
+- `???` combos (rapida+dua beam, rapida+rapidaaa, beam+rapidaaa) — mechanics TBD
 - All boss-wave upgrade combos need live playtesting
 
 ---
@@ -449,7 +449,7 @@ Screen-level purple vignette + `-hp` float still active alongside the sprite eff
 ### Open items
 - Boss SFX: pincer and teleport SFX still paused
 - Wave VFX speed/sync tuning — video `playbackRate` not yet set dynamically to match travel distance
-- `???` combos (rapida+doublets, rapida+rapidaaa, missile+rapidaaa) — mechanics TBD
+- `???` combos (rapida+dua beam, rapida+rapidaaa, beam+rapidaaa) — mechanics TBD
 - All boss-wave upgrade combos need live playtesting
 
 ---
@@ -458,13 +458,13 @@ Screen-level purple vignette + `-hp` float still active alongside the sprite eff
 
 ### Committed & pushed to `main` (`5a40176`)
 
-`showBossUpgradeModal` is now combo-aware. Checks `invWave2Upgrade==='missile' && invWave4Upgrade==='doublets'`:
-- **missile + doublets** → buttons show `salvo.` / `overcharge.` as before
+`showBossUpgradeModal` is now combo-aware. Checks `invWave2Upgrade==='beam' && invWave4Upgrade==='dua beam'`:
+- **beam + dua beam** → buttons show `salvo.` / `overcharge.` as before
 - **all other combos** → both buttons show `???`, both assign `invBossUpgrade=null` (no-op). Boss wave starts normally; wave 2 + wave 4 carries still active. Placeholder until mechanics are designed.
 
 ### Open items
 - Boss SFX (wave, pincer, teleport) — still paused
-- `???` combos (rapida+doublets, rapida+rapidaaa, missile+rapidaaa) — mechanics TBD
+- `???` combos (rapida+dua beam, rapida+rapidaaa, beam+rapidaaa) — mechanics TBD
 - All boss-wave upgrade combos need live playtesting
 
 ---
@@ -480,14 +480,14 @@ Screen-level purple vignette + `-hp` float still active alongside the sprite eff
 - `doublemissile` → `doublets` / display "doublets"
 - All modal button labels lowercase
 
-**missile + doublets → click-fire with hold-to-repeat:**
+**beam + dua beam → click-fire with hold-to-repeat:**
 - `missile` (wave 2): hold-to-fire, repeats every `MISSILE_CD=1300ms`. AOE column-clear logic unchanged. Fires `fireMissile()`.
 - `doublets` (wave 4): hold-to-fire, repeats every `DOUBLETS_CD=800ms`. Straight + diagonal homing pair. Fires `fireDoublets()`.
 - Both use separate hold intervals: `invMissileHoldInterval`, `invDoubletsHoldInterval` — cleared on mouseup, mouseleave, and `stopInvaders()`.
-- Base bullet (`invFire()` + `invFireInterval`) suppressed when `invWave2Upgrade==='missile'` and no bullet-firing wave4/boss upgrade active (`rapida`/`rapidaaa`/`machina` would re-enable it).
+- Base bullet (`invFire()` + `invFireInterval`) suppressed when `invWave2Upgrade==='beam'` and no bullet-firing wave4/boss upgrade active (`rapida`/`rapidaaa`/`machina` would re-enable it).
 - Old autofire system (`startDoubleMissileAutoFire`, `stopDoubleMissileAutoFire`, `invDoubleMissileInterval`, `DOUBLEMISSILE_CD`, `invAoeCooldown`, `INV_AOE_INTERVAL`) fully removed.
 
-**Boss modal — salvo + overcharge (missile+doublets combo evolutions):**
+**Boss modal — salvo + overcharge (beam+dua beam combo evolutions):**
 - Modal desc updates dynamically to show combo context.
 - `salvo` (`SALVO_CD=1000ms`): fires missile AOE + full doublet pair simultaneously on each interval.
 - `overcharge` (`OVERCHARGE_CD=2000ms`): wide column-clear (`INV_AOE_RADIUS×2.5`, instant-kills all non-boss enemies in column) + `warh`-class missile aimed directly at boss position.
@@ -497,7 +497,7 @@ Screen-level purple vignette + `-hp` float still active alongside the sprite eff
 
 ### Open items
 - Boss SFX (wave, pincer, teleport) — still paused
-- Only missile+doublets combo path exists; rapida/rapidaaa boss combos (combos 3–8) not yet built
+- Only beam+dua beam combo path exists; rapida/rapidaaa boss combos (combos 3–8) not yet built
 - All boss-wave upgrade combos need live playtesting
 
 ---
