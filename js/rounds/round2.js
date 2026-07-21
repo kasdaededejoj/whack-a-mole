@@ -1110,8 +1110,7 @@ function fireDuaBeam(){
 // ── SEMIC — boss-wave only (rapida + dua beam), 500ms burst interval ──
 // Width: 2cm→4cm over 0–300ms, 4cm→0 over 300–500ms. Damage scales with overlap.
 const SEMIC_BURST_MS = 500;
-const SEMIC_W_START  = 76;   // ~2cm at 96dpi
-const SEMIC_W_PEAK   = 152;  // ~4cm at 96dpi
+const SEMIC_W_PEAK   = 57;   // ~1.5cm at 96dpi — peak cone mouth width
 const SEMIC_TOTAL_DMG = 30;
 
 function fireSemic(){
@@ -1125,6 +1124,7 @@ function fireSemic(){
     totalMs: SEMIC_BURST_MS,
     dmgDealt: 0,               // accumulated so we cap at SEMIC_TOTAL_DMG
     lastDmgT: startTime,       // for per-frame delta
+    colorPhase: Math.floor((Date.now()/300)%3)|0,  // 0=purple, 1=cyan, 2=amber — cycles per burst
     life:1, alpha:1, vx:0, vy:0
   });
 }
@@ -1860,53 +1860,126 @@ function invDraw(){
       invCtx.globalAlpha=1; invCtx.fillStyle=muzzleGrad;
       invCtx.beginPath(); invCtx.ellipse(bx,muzzleY,muzzleR,muzzleR*0.42,0,0,Math.PI*2); invCtx.fill();
     } else if(p.isSemic){
-      // SEMIC — amber/gold burst beam, width ramps 2cm→4cm→0 over 500ms
-      const elapsed=Date.now()-p.startTime;
-      const semT=Math.min(elapsed,p.totalMs)/p.totalMs; // 0→1 lifetime alpha
-      const currentW=elapsed<300
-        ? SEMIC_W_START+(SEMIC_W_PEAK-SEMIC_W_START)*(elapsed/300)
-        : SEMIC_W_PEAK*(1-(elapsed-300)/200);
-      if(currentW<=0){ /* collapsed — skip draw */ } else {
-        const alpha=semT<0.1?semT/0.1:semT>0.85?(1-(semT-0.85)/0.15):1;
-        const bx=Math.round(p.x);
-        const beamTop=36, beamBot=ch2-105, beamH=beamBot-beamTop;
+      // SEMIC — semi-cone burst: 0 → 1.5cm → 0 width over 500ms, point at shooter
+      const elapsed = Date.now() - p.startTime;
+      const semT = Math.min(elapsed, p.totalMs) / p.totalMs; // 0→1
+      // Symmetric ramp: open 0→250ms, close 250→500ms
+      const halfMs = p.totalMs * 0.5;
+      const currentW = elapsed < halfMs
+        ? SEMIC_W_PEAK * (elapsed / halfMs)
+        : SEMIC_W_PEAK * (1 - (elapsed - halfMs) / halfMs);
+      if (currentW > 0.5) {
+        const ch2 = invCanvas.height; // own declaration — never relies on beam block scope
+        const cw2 = invCanvas.width;
+        const alpha = semT < 0.08 ? semT / 0.08 : semT > 0.88 ? (1 - (semT - 0.88) / 0.12) : 1;
+        const bx = Math.round(p.x);
+        // Cone tip at shooter, mouth at beamTop
+        const tipY = ch2 - 105;   // shooter Y
+        const mouthY = 36;        // top of grid — cone mouth
+        const coneH = tipY - mouthY;
+        // colour phase stored at fire time for consistency per burst
+        const cp = p.colorPhase || 0;
+        const glowR  = cp === 0 ? 'rgba(180,80,255,' : cp === 1 ? 'rgba(80,220,255,' : 'rgba(255,180,80,';
+        const coreR  = cp === 0 ? 'rgba(220,160,255,' : cp === 1 ? 'rgba(180,245,255,' : 'rgba(255,240,160,';
+        const edgeR  = cp === 0 ? 'rgba(200,100,255,' : cp === 1 ? 'rgba(60,200,255,'  : 'rgba(255,200,60,';
+
         invCtx.save();
-        // Outer glow — amber
-        invCtx.globalAlpha=alpha*0.20;
-        const sg=invCtx.createLinearGradient(bx-currentW/2,0,bx+currentW/2,0);
-        sg.addColorStop(0,'rgba(255,160,30,0)');
-        sg.addColorStop(0.5,'rgba(255,200,80,1)');
-        sg.addColorStop(1,'rgba(255,160,30,0)');
-        invCtx.fillStyle=sg; invCtx.fillRect(bx-currentW/2,beamTop,currentW,beamH);
-        // Core — bright gold
-        invCtx.globalAlpha=alpha*0.80;
-        const coreW=currentW*0.30;
-        const cg=invCtx.createLinearGradient(bx-coreW/2,0,bx+coreW/2,0);
-        cg.addColorStop(0,'rgba(255,220,100,0)');
-        cg.addColorStop(0.5,'rgba(255,245,180,1)');
-        cg.addColorStop(1,'rgba(255,220,100,0)');
-        invCtx.fillStyle=cg; invCtx.fillRect(bx-coreW/2,beamTop,coreW,beamH);
-        // Chromatic fringe — red left, yellow-orange right
-        invCtx.globalAlpha=alpha*0.18;
-        invCtx.fillStyle='rgba(255,60,0,0.8)';  invCtx.fillRect(bx-currentW/2-4,beamTop,6,beamH);
-        invCtx.fillStyle='rgba(255,200,0,0.8)'; invCtx.fillRect(bx+currentW/2-2,beamTop,6,beamH);
-        // Blurred edge lines
-        invCtx.filter='blur(1.8px)';
-        invCtx.globalAlpha=alpha*0.55;
-        invCtx.strokeStyle='rgba(255,180,40,0.9)'; invCtx.lineWidth=1.5;
-        invCtx.beginPath();invCtx.moveTo(bx-currentW/2,beamTop);invCtx.lineTo(bx-currentW/2,beamBot);invCtx.stroke();
-        invCtx.beginPath();invCtx.moveTo(bx+currentW/2,beamTop);invCtx.lineTo(bx+currentW/2,beamBot);invCtx.stroke();
-        invCtx.filter='none';
-        // Muzzle ellipse
-        const muzzleR=currentW*0.85;
-        const muzzleY=beamBot+muzzleR*0.18;
-        const mg=invCtx.createRadialGradient(bx,muzzleY,0,bx,muzzleY,muzzleR);
-        mg.addColorStop(0,'rgba(255,245,180,'+(alpha*0.75)+')');
-        mg.addColorStop(0.4,'rgba(255,200,80,'+(alpha*0.35)+')');
-        mg.addColorStop(0.75,'rgba(200,120,20,'+(alpha*0.1)+')');
-        mg.addColorStop(1,'rgba(0,0,0,0)');
-        invCtx.globalAlpha=1; invCtx.fillStyle=mg;
-        invCtx.beginPath();invCtx.ellipse(bx,muzzleY,muzzleR,muzzleR*0.42,0,0,Math.PI*2);invCtx.fill();
+
+        // Helper — cone path: tip at (bx, tipY), mouth half-width w at mouthY
+        function _semicone(w) {
+          invCtx.beginPath();
+          invCtx.moveTo(bx, tipY);
+          invCtx.lineTo(bx - w / 2, mouthY);
+          invCtx.lineTo(bx + w / 2, mouthY);
+          invCtx.closePath();
+        }
+
+        // ── Layer 1: outer glow cone ──
+        const glowW = currentW * 1.6;
+        _semicone(glowW);
+        const glowGrad = invCtx.createLinearGradient(bx, mouthY, bx, tipY);
+        glowGrad.addColorStop(0, glowR + (alpha * 0.28) + ')');
+        glowGrad.addColorStop(0.6, glowR + (alpha * 0.12) + ')');
+        glowGrad.addColorStop(1, glowR + '0)');
+        invCtx.globalAlpha = 1;
+        invCtx.fillStyle = glowGrad;
+        invCtx.fill();
+
+        // ── Layer 2: inner core cone ──
+        const coreW = currentW * 0.55;
+        _semicone(coreW);
+        const coreGrad = invCtx.createLinearGradient(bx, mouthY, bx, tipY);
+        coreGrad.addColorStop(0, coreR + (alpha * 0.85) + ')');
+        coreGrad.addColorStop(0.5, coreR + (alpha * 0.55) + ')');
+        coreGrad.addColorStop(1, coreR + '0)');
+        invCtx.fillStyle = coreGrad;
+        invCtx.fill();
+
+        // ── Layer 3: blurred edge lines along cone sides ──
+        invCtx.save();
+        invCtx.filter = 'blur(2px)';
+        invCtx.globalAlpha = alpha * 0.7;
+        invCtx.strokeStyle = edgeR + '0.9)';
+        invCtx.lineWidth = 1.5;
+        invCtx.beginPath();
+        invCtx.moveTo(bx, tipY);
+        invCtx.lineTo(bx - currentW / 2, mouthY);
+        invCtx.stroke();
+        invCtx.beginPath();
+        invCtx.moveTo(bx, tipY);
+        invCtx.lineTo(bx + currentW / 2, mouthY);
+        invCtx.stroke();
+        invCtx.filter = 'none';
+        invCtx.restore();
+
+        // ── Layer 4: fractal noise — jittered segments inside the cone ──
+        invCtx.save();
+        invCtx.globalAlpha = alpha * 0.45;
+        invCtx.strokeStyle = coreR + '0.8)';
+        invCtx.lineWidth = 1;
+        const noiseSeed = Math.floor(elapsed / 16); // re-roll every frame
+        for (let ni = 0; ni < 10; ni++) {
+          // Pseudo-random using seed + index
+          const rng = (n) => ((Math.sin(noiseSeed * 127.1 + ni * 311.7 + n * 74.3)) * 43758.5453) % 1;
+          const ny = mouthY + Math.abs(rng(0)) * coneH;
+          // cone half-width at this Y
+          const coneWatY = currentW * (tipY - ny) / coneH;
+          if (coneWatY < 1) continue;
+          const nx = bx + (rng(1) * 2 - 1) * coneWatY * 0.8;
+          const segLen = 4 + Math.abs(rng(2)) * 10;
+          invCtx.beginPath();
+          invCtx.moveTo(nx + rng(3) * 3, ny);
+          invCtx.lineTo(nx + rng(4) * 3, ny + segLen);
+          invCtx.stroke();
+        }
+        invCtx.restore();
+
+        // ── Layer 5: glitch strips — 2 random horizontal bars, shifted ──
+        if (Math.random() < 0.35) {
+          invCtx.save();
+          invCtx.globalAlpha = alpha * 0.22;
+          invCtx.fillStyle = coreR + '1)';
+          for (let gi = 0; gi < 2; gi++) {
+            const gy = mouthY + Math.random() * coneH;
+            const gconeW = currentW * (tipY - gy) / coneH;
+            const gshift = (Math.random() - 0.5) * 10;
+            invCtx.fillRect(bx - gconeW / 2 + gshift, gy, gconeW, 1.5 + Math.random() * 2.5);
+          }
+          invCtx.restore();
+        }
+
+        // ── Muzzle glow at tip (shooter origin) ──
+        const muzzleR = currentW * 0.6;
+        const mg = invCtx.createRadialGradient(bx, tipY, 0, bx, tipY, muzzleR);
+        mg.addColorStop(0, coreR + (alpha * 0.9) + ')');
+        mg.addColorStop(0.4, glowR + (alpha * 0.4) + ')');
+        mg.addColorStop(1, 'rgba(0,0,0,0)');
+        invCtx.globalAlpha = 1;
+        invCtx.fillStyle = mg;
+        invCtx.beginPath();
+        invCtx.arc(bx, tipY, muzzleR, 0, Math.PI * 2);
+        invCtx.fill();
+
         invCtx.restore();
       }
     } else if(p.isAoe){
