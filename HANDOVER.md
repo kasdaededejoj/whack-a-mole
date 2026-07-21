@@ -2,6 +2,34 @@
 
 ---
 
+## round2: semic semi-cone VFX rewrite + ch2 bugfix — 2026-07-16
+
+### Committed & pushed to `main` (`6cd9b4e`)
+Scope: `js/rounds/round2.js` only.
+
+**Semic VFX — semi-cone (replaces full-height amber beam):**
+- `SEMIC_W_START` removed. `SEMIC_W_PEAK=57px` (~1.5cm). Symmetric ramp: 0→57px over 0–250ms, 57→0px over 250–500ms.
+- Shape: triangle path — tip at shooter `(bx, ch2-105)`, mouth at grid top `(y=36)`. Width at any Y = `currentW * (tipY - y) / coneH`.
+- `colorPhase` stored per-burst at fire time: `Math.floor((Date.now()/300)%3)` → 0=purple, 1=cyan, 2=amber. Cycles between bursts.
+- Layer 1: outer glow cone (1.6× width), phased linear gradient tip→mouth, low alpha.
+- Layer 2: inner core cone (0.55× width), near-white tinted by phase, high alpha.
+- Layer 3: blurred edge strokes (`filter:blur(2px)`) along both cone sides.
+- Layer 4: fractal noise — 10 jittered vertical segments per frame, seeded by `elapsed/16` (re-rolls every frame), X/Y constrained inside cone bounds.
+- Layer 5: glitch strips — 35% chance per frame, 2 horizontal bars with ±5px X shift inside cone.
+- Muzzle: radial glow at tip `(bx, ch2-105)`, radius `currentW*0.6`.
+
+**Bug fixed — boss screen disappearing on semic fire:**
+- Root cause: semic draw block was reading `ch2` from the `isBeam` block scope. When no beam particle was active, `ch2` was `undefined` → `NaN` coordinates → canvas error state → entire frame render stopped.
+- Fix: `const ch2 = invCanvas.height;` declared independently inside the `isSemic` block.
+
+### Open items
+- Boss SFX: pincer and teleport still paused
+- Wave VFX `playbackRate` sync: not yet done
+- `???` combos: beam+rapidaaa mechanics TBD
+- All boss-wave upgrade combos need live playtesting
+
+---
+
 ## round2: dua beam 4-row VFX + SFX + wave background — 2026-07-16
 
 ### Committed & pushed to `main` (`09f7318`)
