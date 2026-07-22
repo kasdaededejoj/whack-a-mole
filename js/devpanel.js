@@ -158,6 +158,14 @@ export function initDevPanel() {
     if (e.key === 'Shift') shiftHeld = false;
   });
 
+  // ── Long-press (500ms) anywhere to open on mobile ──
+  let _lpTimer = null;
+  document.addEventListener('touchstart', (e) => {
+    _lpTimer = setTimeout(() => { _lpTimer = null; openDevPanel(); }, 500);
+  }, { passive: true });
+  document.addEventListener('touchend',   () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
+  document.addEventListener('touchmove',  () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
+
   // ── Password gate ──
   devPwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkDevPassword(); });
   devPwInput.addEventListener('input', () => { devPwError.textContent = ''; });
