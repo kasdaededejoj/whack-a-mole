@@ -982,10 +982,6 @@ function invHandleMouseDown(e){
     fireDuaBeam(); try{playDuaBeamFire();}catch(ex){}
     invDuaBeamHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invDuaBeamHoldInterval);invDuaBeamHoldInterval=null;return;}fireDuaBeam();try{playDuaBeamFire();}catch(ex){}},DUA_BEAM_CD);
     // beam (wave2) subsumed by dua beam — no separate interval when stacked
-    if(false && invWave2Upgrade==='beam'){
-      fireMissile();
-      invMissileHoldInterval=setInterval(()=>{if(!state.running||!invMouseDown){clearInterval(invMissileHoldInterval);invMissileHoldInterval=null;return;}fireMissile();},MISSILE_CD);
-    }
     return;
   }
 
@@ -1535,9 +1531,11 @@ function invUpdate(){
       if(elapsed>=p.totalMs){ p.life=0; }
       else {
         // Width at this moment — ramp up 0→300ms, ramp down 300→500ms
-        const halfBw = elapsed<300
-          ? (SEMIC_W_START+(SEMIC_W_PEAK-SEMIC_W_START)*(elapsed/300))/2
-          : (SEMIC_W_PEAK*(1-(elapsed-300)/200))/2;
+        const halfMs2=p.totalMs*0.5;
+        const _semW=elapsed<halfMs2
+          ? SEMIC_W_PEAK*(elapsed/halfMs2)
+          : SEMIC_W_PEAK*(1-(elapsed-halfMs2)/halfMs2);
+        const halfBw=_semW/2;
         // Per-frame damage: proportional to overlap fraction with boss
         const boss=invEntities.find(e=>e.alive&&e.isBoss);
         if(boss && p.dmgDealt<SEMIC_TOTAL_DMG){
@@ -2008,7 +2006,6 @@ function invDraw(){
         : SEMIC_W_PEAK * (1 - (elapsed - halfMs) / halfMs);
       if (currentW > 0.5) {
         const ch2 = invCanvas.height; // own declaration — never relies on beam block scope
-        const cw2 = invCanvas.width;
         const alpha = semT < 0.08 ? semT / 0.08 : semT > 0.88 ? (1 - (semT - 0.88) / 0.12) : 1;
         const bx = Math.round(p.x);
         // Cone tip at shooter, mouth at beamTop
