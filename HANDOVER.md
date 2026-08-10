@@ -2,6 +2,38 @@
 
 ---
 
+## round2: plasma ability (beam+rapidaaa) — 2026-08-10
+
+### Committed & pushed to `main` (`0197bd4`)
+Scope: `js/rounds/round2.js` only.
+
+**Plasma — beam+rapidaaa boss combo (final missing combo):**
+- `isBeamRapidaaa` detection in `showBossUpgradeModal` — replaces the `???` fallback branch
+- Modal: `'the void.<br>beam + rapidaaa.<br>plasma.'`, single button, `pickBossUpgrade('plasma')`
+- `firePlasma()`: pierce-through bullet, `kind='plasma'`, speed=14px/frame (0.5× rapidaaa), fire rate `INV_FIRE_RATE/1.4` (half rapidaaa cadence), hold-to-fire via `invPlasmaInterval`
+- Hit logic: never sets `b.hit=true` — bullet passes through all entities. `hitEntities` Set on each bullet prevents double-hitting the same entity per pass.
+- `PLASMA_HIT_DMG=4` on contact; DOT entry pushed to `invPlasmaDots[]` if not already present
+- `PLASMA_DOT_DMG=3hp`, `PLASMA_DOT_MS=2000ms` — one tick then removed. Entity killed on 0hp, DOT cleared on entity death.
+- Canvas DOT indicator: pulsing ring (sin oscillation) + shrinking arc showing time remaining + `-3` text above entity — drawn over all entities with active DOT
+- VFX: 7px dark red trail + 2.5px bright core line + chromatic aberration ±10px (red left, blue right) + triangular glow at head (point upward/forward) + 3 glitch strips per frame at ±10px intensity
+- Cleanup: `invPlasmaInterval` cleared on mouseup + `stopInvaders()`; `invPlasmaDots=[]` on stop
+
+**All four boss combos now complete:**
+| Wave 2 | Wave 4 | Boss ability | Status |
+|--------|--------|-------------|--------|
+| beam | dua beam | fokus lina | ✅ |
+| rapida | dua beam | semic | ✅ |
+| rapida | rapidaaa | machina | ✅ |
+| beam | rapidaaa | plasma | ✅ |
+
+### Open items
+- Boss SFX: pincer and teleport still paused (standing hold)
+- Wave VFX `playbackRate` sync: `animateVid()` never sets `v.playbackRate` — video plays at 1× regardless of travel distance
+- Live playtesting of all four boss combos
+- `isMissileDoublets` / fokus lina conflict: both check `beam+dua beam` — `isMissileDoublets` runs first in `showBossUpgradeModal`, shadowing fokus lina. Should clean up dead `isMissileDoublets` variable (salvo/overcharge are orphaned — no combo routes to them).
+
+---
+
 ## round2: semic semi-cone VFX rewrite + ch2 bugfix — 2026-07-16
 
 ### Committed & pushed to `main` (`6cd9b4e`)
