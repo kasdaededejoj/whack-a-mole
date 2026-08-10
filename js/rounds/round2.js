@@ -99,6 +99,10 @@ let invUpgrade=null;
 let invBossUpgrade=null; // additional upgrade chosen at boss start
 let invWave5ProtectUntil=0; // 300ms beam immunity for wave 5 only
 
+// ── Plasma DOT tracker ──
+let invPlasmaDots=[]; // {entity, hp, tickAt}
+let invPlasmaInterval=null;
+
 // ── Fokus Lina state ──
 let flChargeStart=0;
 let flCharging=false;
@@ -840,6 +844,7 @@ function showBossUpgradeModal(){
   btn1.onclick=null; btn2.onclick=null;
 
   const isMissileDoublets=invWave2Upgrade==='beam'&&invWave4Upgrade==='dua beam';
+  const isBeamRapidaaa=(invWave2Upgrade==='beam'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='beam');
   const isRapidaMachina=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='rapidaaa')||(invWave2Upgrade==='rapidaaa'&&invWave4Upgrade==='rapida');
   const isSemic=(invWave2Upgrade==='rapida'&&invWave4Upgrade==='dua beam')||(invWave2Upgrade==='dua beam'&&invWave4Upgrade==='rapida');
 
@@ -866,6 +871,13 @@ function showBossUpgradeModal(){
     btn1.style.cssText='display:block;margin:0 auto;';
     btn2.style.display='none';
     btn1.onclick=()=>pickBossUpgrade('machina');
+    btn2.onclick=null;
+  } else if(isBeamRapidaaa){
+    if(desc) desc.innerHTML='the void.<br>beam + rapidaaa.<br>plasma.';
+    btn1.textContent='plasma.';
+    btn1.style.cssText='display:block;margin:0 auto;';
+    btn2.style.display='none';
+    btn1.onclick=()=>pickBossUpgrade('plasma');
     btn2.onclick=null;
   } else {
     if(desc) desc.innerHTML='the void.<br>choose your final augment.';
@@ -918,6 +930,8 @@ function stopInvaders(){
   const _bg=document.getElementById('inv-bg');
   if(_bg) _bg.remove();
   try{resetDuaBeamDegradation();}catch(ex){}
+  if(invPlasmaInterval){clearInterval(invPlasmaInterval);invPlasmaInterval=null;}
+  invPlasmaDots=[];
 }
 
 function invHandleMove(e){
@@ -1057,6 +1071,26 @@ function invFire(){
 }
 
 // ── BEAM — click-fire, 450ms interval, 113px wide, instant vertical clear + cast VFX ──
+// ── PLASMA — beam+rapidaaa boss combo, pierce-through with DOT ──
+const PLASMA_SPEED   = INV_BULLET_SPEED * 0.5; // 14px/frame
+const PLASMA_FIRE_MS = INV_FIRE_RATE / 1.4;    // half rapidaaa fire rate
+const PLASMA_HIT_DMG = 4;
+const PLASMA_DOT_DMG = 3;
+const PLASMA_DOT_MS  = 2000;
+
+function firePlasma(){
+  if(!state.running||!invCanvas)return;
+  if(Date.now()<invWave5ProtectUntil)return;
+  const ch=invCanvas.height;
+  invBullets.push({
+    x:invShooterX, y:ch-67,
+    vy:-PLASMA_SPEED, vx:0,
+    trail:[], hit:false,
+    kind:'plasma',
+    hitEntities: new Set()
+  });
+}
+
 const BEAM_WIDTH=113;
 function fireBeam(widthOverride){
   if(!state.running||!invCanvas)return;
@@ -1392,7 +1426,29 @@ function invUpdate(){
       for(let e of invEntities){
         if(!e.alive)continue;
         if(Math.abs(b.x-e.x)<e.cellW*0.48&&Math.abs(b.y-e.y)<e.cellH*0.52){
-          if((b.kind==='missile' || b.kind==='warh') && !e.isBoss && e.col!==undefined){
+          if(b.kind==='plasma'){
+            // Pierce-through — never set b.hit. One DOT per entity per bullet.
+            if(!b.hitEntities.has(e)){
+              b.hitEntities.add(e);
+              e.hp-=PLASMA_HIT_DMG;
+              e.glitchTimer=12;
+              if(e.hp<=0){
+                e.alive=false;
+                invSpawnParticles(e.x,e.y,1);
+                try{playEnemyDeath(e.isBoss?0.4:0.7+Math.random()*0.5);}catch(ex){}
+                state.combo=Math.min(state.combo+1,8);
+                setComboValue('×'+state.combo);
+                // Remove any DOT for this entity
+                invPlasmaDots=invPlasmaDots.filter(d=>d.entity!==e);
+              } else {
+                if(!invPlasmaDots.find(d=>d.entity===e)){
+                  invPlasmaDots.push({entity:e, hp:PLASMA_DOT_DMG, tickAt:Date.now()+PLASMA_DOT_MS});
+                }
+                if(e.isBoss) msgEl.textContent=(e.hp%1===0?e.hp:e.hp.toFixed(1))+' / '+INV_BOSS_HP;
+              }
+            }
+            continue; // bullet passes through — no break
+          } else if((b.kind==='missile' || b.kind==='warh') && !e.isBoss && e.col!==undefined){
             b.hit=true;
             const colRange=b.kind==='warh'?1:b.isDiagonalHoming?2:0; // warh ±1, diag ±2, normal col only
             const cols=[];
@@ -1446,6 +1502,26 @@ function invUpdate(){
     if(b.hit) return false;
     if(b.y<-20||b.y>invCanvas.height+20) return false;
     if(b.vx&&(b.x<-60||b.x>invCanvas.width+60)) return false;
+    return true;
+  });
+  // ── Plasma DOT tick ──
+  const _now=Date.now();
+  invPlasmaDots=invPlasmaDots.filter(d=>{
+    if(!d.entity.alive) return false;
+    if(_now>=d.tickAt){
+      d.entity.hp-=d.hp;
+      d.entity.glitchTimer=8;
+      if(d.entity.hp<=0){
+        d.entity.alive=false;
+        invSpawnParticles(d.entity.x,d.entity.y,1);
+        try{playEnemyDeath(d.entity.isBoss?0.4:0.7+Math.random()*0.5);}catch(ex){}
+        state.combo=Math.min(state.combo+1,8);
+        setComboValue('×'+state.combo);
+      } else if(d.entity.isBoss){
+        msgEl.textContent=(d.entity.hp%1===0?d.entity.hp:d.entity.hp.toFixed(1))+' / '+INV_BOSS_HP;
+      }
+      return false; // one tick only
+    }
     return true;
   });
   for(let p of invParticles){
@@ -1525,6 +1601,15 @@ function getProjectilePalette(kind){
       exhaust:'#8a4050',
       accent:'#f0d8de',
       outline:'#180f14'
+    };
+  }
+  if(kind==='plasma'){
+    return{
+      outer:'rgba(180,20,20,',
+      core:'rgba(255,60,40,',
+      glow:'rgba(255,120,60,',
+      aberR:'rgba(255,0,0,',
+      aberB:'rgba(0,0,180,',
     };
   }
   if(kind==='missile'){
@@ -1631,6 +1716,59 @@ function drawProjectileVisual(b){
     invCtx.fillStyle=palette.body;
     invCtx.globalAlpha=0.92;
     invCtx.beginPath();invCtx.arc(b.x,b.y,1.8,0,Math.PI*2);invCtx.fill();
+    invCtx.restore();
+    return;
+  }
+  if(b.kind==='plasma'){
+    const p2=palette;
+    const trail=b.trail.slice(-8);
+    invCtx.save();
+    // ── Chromatic aberration — ±10px R/B channels ──
+    if(trail.length>1){
+      invCtx.lineWidth=7; invCtx.lineCap='round';
+      invCtx.globalAlpha=0.42;
+      invCtx.strokeStyle=p2.aberR+'0.8)';
+      invCtx.beginPath(); invCtx.moveTo(trail[0].x-10,trail[0].y);
+      for(let t of trail) invCtx.lineTo(t.x-10,t.y);
+      invCtx.stroke();
+      invCtx.strokeStyle=p2.aberB+'0.8)';
+      invCtx.beginPath(); invCtx.moveTo(trail[0].x+10,trail[0].y);
+      for(let t of trail) invCtx.lineTo(t.x+10,t.y);
+      invCtx.stroke();
+    }
+    // ── Core beam — dark red outer + bright core ──
+    if(trail.length>1){
+      invCtx.globalAlpha=0.88;
+      invCtx.strokeStyle=p2.outer+'0.9)'; invCtx.lineWidth=7; invCtx.lineCap='round';
+      invCtx.beginPath(); invCtx.moveTo(trail[0].x,trail[0].y);
+      for(let t of trail) invCtx.lineTo(t.x,t.y);
+      invCtx.stroke();
+      invCtx.strokeStyle=p2.core+'1)'; invCtx.lineWidth=2.5;
+      invCtx.beginPath(); invCtx.moveTo(trail[0].x,trail[0].y);
+      for(let t of trail) invCtx.lineTo(t.x,t.y);
+      invCtx.stroke();
+    }
+    // ── Triangular glow at head (point upward/forward) ──
+    invCtx.globalAlpha=0.92;
+    const tx=b.x, ty=b.y, ts=8;
+    const triGrad=invCtx.createRadialGradient(tx,ty,0,tx,ty,ts*1.8);
+    triGrad.addColorStop(0,p2.glow+'1)');
+    triGrad.addColorStop(0.5,p2.core+'0.7)');
+    triGrad.addColorStop(1,p2.outer+'0)');
+    invCtx.fillStyle=triGrad;
+    invCtx.beginPath();
+    invCtx.moveTo(tx,ty-ts);
+    invCtx.lineTo(tx-ts*0.6,ty+ts*0.5);
+    invCtx.lineTo(tx+ts*0.6,ty+ts*0.5);
+    invCtx.closePath(); invCtx.fill();
+    // ── Glitch strips at head — intensity 10 ──
+    invCtx.globalAlpha=0.5;
+    for(let gi=0;gi<3;gi++){
+      const goff=(Math.random()-0.5)*20;
+      const gw=6+Math.random()*8, gh=1+Math.random()*2;
+      invCtx.fillStyle=gi===0?p2.aberR+'0.8)':gi===1?p2.aberB+'0.8)':p2.core+'0.8)';
+      invCtx.fillRect(tx+goff-gw/2, ty-ts+Math.random()*ts*2, gw, gh);
+    }
     invCtx.restore();
     return;
   }
@@ -2008,6 +2146,38 @@ function invDraw(){
 
   for(let b of invBullets){
     drawProjectileVisual(b);
+  }
+
+  // ── Plasma DOT indicators — drawn on canvas above affected entities ──
+  if(invPlasmaDots.length>0){
+    const _t=Date.now();
+    for(let d of invPlasmaDots){
+      const e=d.entity;
+      if(!e.alive) continue;
+      const pulse=0.5+0.5*Math.sin(_t/160); // 0→1 oscillation
+      const r=10+pulse*4;
+      const timeLeft=Math.max(0,d.tickAt-_t);
+      const arc=(timeLeft/PLASMA_DOT_MS)*Math.PI*2; // shrinking arc
+      invCtx.save();
+      // Pulsing ring
+      invCtx.strokeStyle=`rgba(255,60,40,${0.5+pulse*0.45})`;
+      invCtx.lineWidth=1.5;
+      invCtx.beginPath();
+      invCtx.arc(e.x,e.y,r,-Math.PI/2,-Math.PI/2+arc);
+      invCtx.stroke();
+      // Outer glow ring
+      invCtx.strokeStyle=`rgba(180,20,20,${0.2+pulse*0.2})`;
+      invCtx.lineWidth=4;
+      invCtx.beginPath();
+      invCtx.arc(e.x,e.y,r+3,-Math.PI/2,-Math.PI/2+arc);
+      invCtx.stroke();
+      // DOT damage text
+      invCtx.font=`bold 8px monospace`;
+      invCtx.textAlign='center';
+      invCtx.fillStyle=`rgba(255,80,40,${0.7+pulse*0.3})`;
+      invCtx.fillText(`-${PLASMA_DOT_DMG}`,e.x,e.y-r-4);
+      invCtx.restore();
+    }
   }
 
   for(let e of invEntities){
