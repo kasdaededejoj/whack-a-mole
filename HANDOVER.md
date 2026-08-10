@@ -2,6 +2,40 @@
 
 ---
 
+## Round 1: perception gate — 2026-08-10
+
+### Committed to `main` (`8933118`)
+
+**Replaced whack-a-mole entirely.** Round 1 is now a 7-question perception
+gate. Two mechanic types alternating: observe (composition shown 2.2s, then
+hidden, then one question about it) and authentication (3 glyphs, pick the
+real one). Sequence: auth/observe/auth/observe/auth/observe/auth. Pass = 5/7
+correct. Fail = 24hr lockout, whole experience gated before welcome screen.
+
+**New files:**
+- `js/gate.js` — lockout logic, localStorage (`realm_lockout_until`),
+  countdown timer, unlock animation. Exports `initGate`, `setLockout`, `clearLockout`.
+- `js/rounds/round1.js` — fully rewritten. Exports `startRound1`, `endRound1`,
+  `spawnLoop` (stub), `getRound1DebugInfo`.
+
+**Changes to existing files:**
+- `js/game.js`: `startRound()` routes `type:'mole'` through `startRound1()`.
+  `endRound()` calls `endRound1()` + treats `type:'mole'` as always-pass.
+  `initGame()` calls `initGate(welcomeScreen)` first.
+- `index.html`: gate + Round 1 UI CSS added. Round 2/3 untouched.
+
+**Lockout copy:** "this does not open for most. ...unless the user seeks to
+challenge that theory." + countdown. On expiry: glitch-out → welcome screen.
+
+**Placeholder content:** glyphs (†⌀⊘∅⊕ real; 10-glyph noise pool).
+Replace with real assets when available.
+
+**Open items:**
+- Live playtest of full 7-question flow + lockout → unlock cycle
+- `game.js` dead `ROUNDS[0].speed`/`.max` — cosmetic, not touched
+
+---
+
 ## round2: plasma ability (beam+rapidaaa) — 2026-08-10
 
 ### Committed & pushed to `main` (`0197bd4`)
