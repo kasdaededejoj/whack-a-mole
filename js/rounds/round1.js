@@ -43,14 +43,15 @@ const OBSERVE_QUESTIONS = [
 // ── AUTH PROMPTS ──
 // Shows 3 options, one is "real" (from REAL_GLYPHS), others are noise.
 // Instruction: "identify the form."
-const AUTH_COUNT = 4;
+// Real glyph queue shuffled once per game — no repeats across auth questions.
 
 // ── STATE ──
 let qIndex = 0;
 let correct = 0;
-let onRound1Complete = null; // callback to game.js endRound / startRound(1)
+let onRound1Complete = null;
 let onRound1Fail = null;
 let observeIdx = 0;
+let realGlyphQueue = []; // populated in startRound1
 
 // ── ENTRY POINT ──
 export function startRound1(onPass, onFail) {
@@ -59,6 +60,8 @@ export function startRound1(onPass, onFail) {
   qIndex = 0;
   correct = 0;
   observeIdx = 0;
+  // Shuffle real glyphs once — pop one per auth question so same glyph never repeats
+  realGlyphQueue = shuffle([...REAL_GLYPHS]);
   state.running = true;
   nextQuestion();
 }
@@ -181,6 +184,7 @@ function showObserve(q) {
 }
 
 function showQuestion(q) {
+  if (!state.running) return; // guard: endRound1() may have fired during the observe timeout window
   // Remove comp, keep progress + label
   const compWrap = field.querySelector('.r1-comp-wrap');
   if (compWrap) compWrap.remove();
@@ -220,8 +224,10 @@ function showAuth() {
   label.textContent = 'identify the form.';
   field.appendChild(label);
 
-  // Pick 1 real, 2 noise — shuffle
-  const real = REAL_GLYPHS[Math.floor(Math.random() * REAL_GLYPHS.length)];
+  // Pop next real glyph from the pre-shuffled queue (no repeats across questions)
+  const real = realGlyphQueue.length > 0
+    ? realGlyphQueue.pop()
+    : REAL_GLYPHS[Math.floor(Math.random() * REAL_GLYPHS.length)]; // fallback if queue exhausted
   const noisePool = NOISE_GLYPHS.filter(n => n !== real);
   const noise = shuffle(noisePool).slice(0, 2);
   const options = shuffle([real, ...noise]);
@@ -278,7 +284,7 @@ function conclude() {
     setLockout();
     msg.textContent = 'this does not open for most.';
     field.appendChild(msg);
-    // After brief pause, reload — gate.js will catch the lockout on next load
+    onRound1Fail?.();
     setTimeout(() => { location.reload(); }, 1800);
   }
 }
