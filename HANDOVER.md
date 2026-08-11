@@ -2,6 +2,32 @@
 
 ---
 
+## Session config — 2026-08-11
+
+### PAT updated
+New fine-grained PAT (replaces previous):
+`github_pat_11CFRQ2ZQ0m[REDACTED — paste fresh from your notes each session]`
+
+Scopes: Contents (Read & Write), Actions (Read). Scoped to `kasdaededejoj/whack-a-mole` only.
+
+Push pattern:
+```
+cd /home/claude/repo-push && git push https://{PAT}@github.com/kasdaededejoj/whack-a-mole.git main
+```
+
+Actions read now works — use to check workflow run status via API:
+```
+curl -s -H "Authorization: token {PAT}" \
+  "https://api.github.com/repos/kasdaededejoj/whack-a-mole/actions/runs?per_page=5"
+```
+
+### CI cleanup
+Removed `.github/workflows/deploy-pages.yml` — redundant Actions deploy was
+failing alongside branch deploy (main → Pages). Branch deploy is the live method.
+Site: https://kasdaededejoj.github.io/whack-a-mole/
+
+---
+
 ## gate: diamond-in-diamond tracing puzzle + Shift+D bypass — 2026-08-11
 
 ### Committed to `main` (`de02440`)
