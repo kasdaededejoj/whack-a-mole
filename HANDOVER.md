@@ -2,6 +2,32 @@
 
 ---
 
+## gate: diamond-in-diamond tracing puzzle + Shift+D bypass — 2026-08-11
+
+### Committed to `main` (`de02440`)
+
+**Diamond-in-diamond tracing puzzle on lockout screen:**
+Canvas (`#gate-canvas`, 320×320px) sits below the countdown timer.
+Player traces outer diamond first (top→right→bottom→left, clockwise), then
+inner diamond same order. Strict: must pass within 22px of each vertex in
+sequence. Lifting the finger/mouse mid-diamond resets that phase.
+
+Ghost trail: drawn on canvas, colour shifts white → purple proportional to
+vertices hit in the current diamond (0/4 = white, 4/4 = full purple).
+On solve: purple flash, `clearLockout()`, lockout screen removed, Round 1
+starts immediately (no welcome screen).
+
+**Shift+D dev bypass:** `keydown` listener on lockout screen only.
+`clearLockout()` + removes lockout el + shows welcome screen. No animation,
+no confirmation. Listener is cleaned up on solve, timer expiry, or bypass.
+
+**Changes:** `js/gate.js` rewritten (tracing logic self-contained, `initGate`
+now accepts `onPuzzleSolved` callback). `js/game.js`: `initGate` call passes
+callback that fires `gameScreen.classList.add('active')` + `startRound(0)`.
+`index.html`: `#gate-canvas` CSS added, `tabular-nums` fix on timer.
+
+---
+
 ## Round 1: perception gate — 2026-08-10
 
 ### Committed to `main` (`8933118`)
