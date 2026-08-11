@@ -335,7 +335,11 @@ export function initGame() {
   initDOMRefs();
 
   // Gate check — must run before anything else is shown
-  initGate(welcomeScreen);
+  initGate(welcomeScreen, () => {
+    // Puzzle solved — skip welcome, go straight into Round 1
+    gameScreen.classList.add('active');
+    startRound(0);
+  });
   
   // Setup event listeners
   document.addEventListener('click', initAudio);

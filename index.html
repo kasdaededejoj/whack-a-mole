@@ -62,11 +62,12 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 .mole-el{position:absolute;width:80px;height:80px;transform:translate(-50%,-50%);cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:none}
 /* ── GATE LOCKOUT ── */
 #gate-lockout{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:2rem}
-#gate-inner{text-align:center;max-width:420px}
+#gate-inner{text-align:center;max-width:420px;width:100%}
 #gate-copy{font-family:var(--fraktur);font-size:clamp(14px,2.2vw,18px);color:rgba(255,255,255,0.72);line-height:1.7;letter-spacing:.06em;margin-bottom:2.4rem}
 #gate-sub{display:block;margin-top:.8rem;color:rgba(255,255,255,0.38);font-size:.85em}
-#gate-timer{font-family:var(--num);font-size:clamp(28px,5vw,42px);letter-spacing:.12em;color:rgba(255,255,255,0.18);tabular-nums:all}
+#gate-timer{font-family:var(--num);font-size:clamp(28px,5vw,42px);letter-spacing:.12em;color:rgba(255,255,255,0.18);font-variant-numeric:tabular-nums;margin-bottom:2rem}
 #gate-inner{transition:filter .06s,transform .06s,opacity .15s}
+#gate-canvas{display:block;width:min(320px,80vw);height:min(320px,80vw);margin:0 auto;cursor:crosshair;touch-action:none}
 
 /* ── ROUND 1 PERCEPTION GATE ── */
 .r1-progress{display:flex;gap:.5rem;justify-content:center;margin-bottom:2rem;flex-shrink:0}
