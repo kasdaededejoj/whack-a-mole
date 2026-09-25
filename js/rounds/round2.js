@@ -413,7 +413,7 @@ function startInvaders(){
   _updateInvBg(0);
 
   invCanvas=document.createElement('canvas');
-  invCanvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:1;';
+  invCanvas.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;cursor:crosshair;z-index:1;touch-action:none;';
   field.appendChild(invCanvas);
   invCanvas.width=field.offsetWidth||window.innerWidth;
   invCanvas.height=field.offsetHeight||window.innerHeight-80;

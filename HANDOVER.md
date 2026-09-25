@@ -2,6 +2,39 @@
 
 ---
 
+## Mobile pass — Batch 1: groundwork — 2026-09-25
+
+### Committed to `main`
+Scope: `js/devpanel.js`, `js/rounds/round2.js` only.
+
+**Active mobile pass — files under edit:**
+`index.html`, `js/devpanel.js`, `js/rounds/round2.js` are all under active edit for
+the mobile responsiveness pass (6 batches). Do not edit these files from another
+session until the pass is complete or Adam explicitly hands them off.
+
+**devpanel.js — long-press guard scoped to non-running state:**
+The dev panel's 500ms long-press-to-open listener on `document` was a latent
+conflict with Round 2's hold-to-fire mechanic (beam, dua beam, rapida, all boss
+weapons all require >500ms holds). As soon as Batch 2 adds touch input to Round 2,
+any held shot would have triggered the dev panel. Fixed by bailing early when
+`state.running === true`. Long-press still works from welcome screen, portal,
+between rounds. `state` was already imported in `devpanel.js` — no new import needed.
+
+**round2.js — touch-action:none on invCanvas:**
+Added `touch-action:none` to `invCanvas.style.cssText`. Prevents the browser from
+intercepting touch events on the canvas for scroll/zoom, which would swallow the
+pointer input before the game sees it. Required groundwork before Batch 2's pointer
+event migration. Zero behavior change on desktop.
+
+### Open items (mobile pass, remaining batches)
+- Batch 2: round2.js — mouse* → pointer* event migration + setPointerCapture
+- Batch 3: round2.js — debounced resize/orientation handler
+- Batch 4: index.html — @media queries, :hover gating, tap targets
+- Batch 5: index.html — viewport-fit=cover + safe-area insets
+- Batch 6: full live playtest (iOS Safari + Android Chrome)
+
+---
+
 ## SFX audit — needs eccentricity pass — 2026-08-13 (scoping only, not actioned)
 
 ### Adam's note: current bullet/weapon SFX sound "too kiddish"

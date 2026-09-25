@@ -161,6 +161,7 @@ export function initDevPanel() {
   // ── Long-press (500ms) anywhere to open on mobile ──
   let _lpTimer = null;
   document.addEventListener('touchstart', (e) => {
+    if (state.running) return;
     _lpTimer = setTimeout(() => { _lpTimer = null; openDevPanel(); }, 500);
   }, { passive: true });
   document.addEventListener('touchend',   () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
