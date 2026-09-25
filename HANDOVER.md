@@ -27,8 +27,43 @@ pointer input before the game sees it. Required groundwork before Batch 2's poin
 event migration. Zero behavior change on desktop.
 
 ### Open items (mobile pass, remaining batches)
-- Batch 5: index.html — viewport-fit=cover + safe-area insets
 - Batch 6: full live playtest by Adam (iOS Safari + Android Chrome)
+
+---
+
+## Mobile pass — Batch 5: safe-area polish — 2026-09-25
+
+### Committed to `main`
+Scope: `index.html` only.
+
+**`<meta viewport>` — added `viewport-fit=cover`:**
+Allows the page to extend into notch/Dynamic Island/home-indicator areas on iOS.
+Without this, `env(safe-area-inset-*)` returns 0 everywhere — it's the required
+prerequisite for the padding below to have any effect.
+
+**`@media (max-width: 600px)` — safe-area padding on edge-anchored screens:**
+- `#game-screen` — all four sides get `calc(base + env(safe-area-inset-*, 0px))`
+- `#gate-lockout` — top + bottom insets
+- `#portal-screen` — top + bottom insets
+- `.duel-top` — top inset only (sits at screen top)
+- `.duel-bottom` — bottom inset only (sits at screen bottom)
+`0px` fallback means zero effect on desktop/browsers without support.
+
+**Deliberately excluded:**
+- `#nuka-keycap` / `#nuka-cooldown` — JS-positioned, not edge-anchored
+- Modals (`#upgrade-modal`, `#boss-upgrade-modal`, `#round-overlay`) — centered flex,
+  nothing sits against a screen edge
+
+### Mobile pass complete — ready for Batch 6 (Adam's manual playtest)
+All 5 code batches pushed. Playtest checklist:
+- Gate tracing on touch
+- Round 1 — perception gate options, auth grid (tap targets)
+- Round 2 — aim by dragging, hold-to-fire all weapons, all 4 boss combos
+- Round 3 — duel action buttons
+- Portal/QR screen — QR visible and scannable
+- Rotate mid-Round-2 wave — shooter rescales, canvas redraws
+- Long-press during Round 2 hold-to-fire — dev panel must NOT open
+- Check notch/home-indicator clearance on iPhone (Safari)
 
 ---
 
