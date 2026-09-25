@@ -2,6 +2,50 @@
 
 ---
 
+## SFX audit — needs eccentricity pass — 2026-08-13 (scoping only, not actioned)
+
+### Adam's note: current bullet/weapon SFX sound "too kiddish"
+
+No code changed. This is a design brief handed to a separate audio-focused
+session for read-only analysis. Scope when work begins: `js/audio.js` only.
+
+### What exists today (`js/audio.js`)
+All SFX are synthesized in Web Audio (no sample files) — oscillators, filtered
+noise bursts, gain envelopes. Full function list as of last audit:
+`playThud`, `playMiss`, `playBulletFire`, `playMissileFire`, `playEnemyDeath`,
+`playWaveClear`, `playUpgradePick`, `playAoeTrigger`, `playMachinaBurst`,
+`playNukaActivate`, `playNukaSuccess`, `playPlayerDamage`, `playBossWaveCast`,
+`playDuaBeamCharge`, `playDuaBeamFire`, `resetDuaBeamDegradation`.
+
+### The specific complaint
+`playBulletFire()` — the base weapon sound — is a plain square-wave downward
+chirp, 900Hz→300Hz over 70ms, single oscillator, exponential gain decay.
+Textbook "8-bit arcade pew" — clean, symmetric, no texture. Reads as toy-like.
+`playMissileFire()` has the same shape problem (sawtooth 320→80Hz) — deeper,
+not more characterful.
+
+By contrast, `playDuaBeamFire()` (grain degradation, LFO wobble) and
+`playBossWaveCast()` already have the eccentric, degraded quality Adam wants
+game-wide. The gap is specifically in base-tier weapons — bullet, missile,
+and by extension rapida/rapidaaa/machina, which all route through
+`playBulletFire()` at different fire rates. Fixing the base sound cascades
+to three weapon tiers at once.
+
+### Open questions to resolve with Adam before building
+1. Direction — glitchy/broken (fits avant-garde brand direction) vs.
+   heavier/meatier vs. something else entirely
+2. Per-tier distinction — does rapida/rapidaaa/machina need a unique
+   character each, or one shared "family" sound made less clean
+3. Full scope — Adam intends to revamp other SFX too, list not yet finalized
+
+### Status
+A separate Claude session was asked to pull the repo and analyse `audio.js`
+against this brief. Read-only — no push access needed for that pass.
+Once Adam has actual SFX (specs, Web Audio code, or files) from that session,
+they'll be brought back here to wire into `audio.js` and push.
+
+---
+
 ## Session config — 2026-08-11
 
 ### PAT updated
