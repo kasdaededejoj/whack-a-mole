@@ -27,9 +27,34 @@ pointer input before the game sees it. Required groundwork before Batch 2's poin
 event migration. Zero behavior change on desktop.
 
 ### Open items (mobile pass, remaining batches)
-- Batch 4: index.html — @media queries, :hover gating, tap targets
 - Batch 5: index.html — viewport-fit=cover + safe-area insets
-- Batch 6: full live playtest (iOS Safari + Android Chrome)
+- Batch 6: full live playtest by Adam (iOS Safari + Android Chrome)
+
+---
+
+## Mobile pass — Batch 4: responsive CSS — 2026-09-25
+
+### Committed to `main`
+Scope: `index.html` only. Appended one `/* ── MOBILE ── */` block before `</style>`.
+No existing rules touched — zero cascade risk.
+
+**`@media (hover: hover)` — pointer-device hover block:**
+Duplicates all existing `:hover` rules inside a hover-capable media query. Desktop
+behavior identical. Touch devices (hover: none) never see stuck hover states.
+
+**`@media (hover: none)` — touch active states:**
+Adds `:active` equivalents for r1-opt, r1-auth-opt, btn, btn.primary,
+duel-action-btn. Touch feedback now fires on tap instead of being silent.
+
+**`@media (max-width: 600px)` — layout tightening:**
+- `#game-screen` padding reduced (.7rem .8rem .6rem) — more canvas space on small screens
+- `.hud` gap/margin reduced
+- `.duel-top/.bottom` padding reduced
+- `.duel-action-btn` padding increased to 12px vertical — hits 44px tap target
+- `.btn` min-height: 44px, padding 12px vertical
+- `.r1-opt` min-height: 44px
+- `.r1-auth-opt` 100px → 80px (still above 44px, fits 4 across at 320px)
+- `.portal-qr img` 200px → 160px (scannable, fits ≤375px with margin)
 
 ---
 

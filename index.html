@@ -336,6 +336,39 @@ html,body{width:100%;background:var(--bg);color:var(--text);font-family:monospac
 @keyframes voidPulse{0%,100%{box-shadow:0 0 0 0 rgba(123,63,255,.0)}50%{box-shadow:0 0 8px 2px rgba(123,63,255,.45)}}
 .duel-phase-label{font-family:var(--fraktur);font-size:10px;letter-spacing:.14em;color:#222;text-transform:uppercase}
 
+/* ── MOBILE ── */
+@media (hover: hover) {
+  .r1-opt:hover{border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.9)}
+  .r1-auth-opt:hover{border-color:rgba(255,255,255,0.35);color:#fff;transform:scale(1.04)}
+  .btn:hover{background:rgba(255,255,255,0.1);transform:translateY(-1px);opacity:.94}
+  .btn.primary:hover{background:#ddd;color:#000}
+  .dev-btn:hover{border-color:#fff;color:#fff}
+  #dev-close:hover{color:#555}
+  .dev-slider::-webkit-slider-thumb:hover{background:#fff}
+  .dev-toggle:hover{border-color:#555;color:#888}
+  .duel-action-btn:hover:not(:disabled){border-color:#888;color:#ccc}
+}
+@media (hover: none) {
+  .r1-opt:active{border-color:rgba(255,255,255,0.4);color:rgba(255,255,255,0.9)}
+  .r1-auth-opt:active{border-color:rgba(255,255,255,0.35);color:#fff}
+  .btn:active{background:rgba(255,255,255,0.1);opacity:.86}
+  .btn.primary:active{background:#ddd;color:#000}
+  .duel-action-btn:active:not(:disabled){border-color:#888;color:#ccc}
+}
+@media (max-width: 600px) {
+  #game-screen{padding:.7rem .8rem .6rem}
+  .hud{gap:.4rem;margin-bottom:.5rem}
+  .duel-top{padding:1rem 1rem 0}
+  .duel-bottom{padding:.7rem 1rem 1rem}
+  .duel-actions{gap:.5rem}
+  .duel-action-btn{padding:12px 16px;font-size:14px}
+  .btn{padding:12px 28px;min-height:44px}
+  .r1-opt{padding:.75rem 1.2rem;min-height:44px}
+  .r1-auth-opt{width:80px;height:80px}
+  .r1-auth-grid{gap:1rem}
+  .portal-qr img{width:160px;height:160px}
+}
+
 </style>
 </head>
 <body>
