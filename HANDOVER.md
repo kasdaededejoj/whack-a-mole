@@ -27,10 +27,33 @@ pointer input before the game sees it. Required groundwork before Batch 2's poin
 event migration. Zero behavior change on desktop.
 
 ### Open items (mobile pass, remaining batches)
-- Batch 3: round2.js — debounced resize/orientation handler
 - Batch 4: index.html — @media queries, :hover gating, tap targets
 - Batch 5: index.html — viewport-fit=cover + safe-area insets
 - Batch 6: full live playtest (iOS Safari + Android Chrome)
+
+---
+
+## Mobile pass — Batch 3: resize/orientation handler — 2026-09-25
+
+### Committed to `main`
+Scope: `js/rounds/round2.js` only.
+
+**Added `invResizeCanvas` + `_invResizeDebounced`:**
+New named resize function placed before `startInvaders()`. Recalculates canvas
+width/height from `field.offsetWidth/offsetHeight` on orientation change or resize.
+Rescales `invShooterX` proportionally (oldW ratio) so the shooter doesn't teleport
+on rotation. Guards `if(!invCanvas)return` and `if(oldW>0)` for safety.
+Debounced at 120ms — canvas redraws once after orientation animation settles.
+
+**Wired into `startInvaders` / `stopInvaders`:**
+`window.addEventListener('resize', _invResizeDebounced)` added after canvas event
+listeners in `startInvaders`. `window.removeEventListener` called at top of
+`stopInvaders` before canvas cleanup.
+
+**Note:** resize handler reads dimensions from `field` — correct by design, but
+`field` has no mobile-specific sizing yet. Batch 4 (@media queries) fixes field
+sizing; handler will automatically use correct mobile dimensions once that lands.
+No rework needed between batches.
 
 ---
 
