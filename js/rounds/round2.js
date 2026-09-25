@@ -421,10 +421,10 @@ function startInvaders(){
   invShooterX=invCanvas.width/2;
   invBullets=[];invParticles=[];
   invMouseDown=false;
-  invCanvas.addEventListener('mousemove',invHandleMove);
-  invCanvas.addEventListener('mousedown',invHandleMouseDown);
-  invCanvas.addEventListener('mouseup',invHandleMouseUp);
-  invCanvas.addEventListener('mouseleave',invHandleMouseUp);
+  invCanvas.addEventListener('pointermove',invHandleMove);
+  invCanvas.addEventListener('pointerdown',invHandleMouseDown);
+  invCanvas.addEventListener('pointerup',invHandleMouseUp);
+  invCanvas.addEventListener('pointercancel',invHandleMouseUp);
   invCanvas.addEventListener('click',invHandleSingleClick);
   spawnInvaderWave(0);
   invLoop();
@@ -920,10 +920,10 @@ function stopInvaders(){
   document.getElementById('wave-progress').style.display='none';
   document.getElementById('player-hp-wrap').style.display='none';
   if(invCanvas){
-    invCanvas.removeEventListener('mousemove',invHandleMove);
-    invCanvas.removeEventListener('mousedown',invHandleMouseDown);
-    invCanvas.removeEventListener('mouseup',invHandleMouseUp);
-    invCanvas.removeEventListener('mouseleave',invHandleMouseUp);
+    invCanvas.removeEventListener('pointermove',invHandleMove);
+    invCanvas.removeEventListener('pointerdown',invHandleMouseDown);
+    invCanvas.removeEventListener('pointerup',invHandleMouseUp);
+    invCanvas.removeEventListener('pointercancel',invHandleMouseUp);
     invCanvas.removeEventListener('click',invHandleSingleClick);
     invCanvas.remove();invCanvas=null;invCtx=null;
   }
@@ -946,6 +946,7 @@ function invHandleMove(e){
 function invHandleMouseDown(e){
   if(!state.running)return;
   invMouseDown=true;
+  try{invCanvas.setPointerCapture(e.pointerId);}catch(_){}
   const _r=invCanvas.getBoundingClientRect();
   invShooterX=e.clientX-_r.left;
   if(invFireInterval){clearInterval(invFireInterval);invFireInterval=null;}

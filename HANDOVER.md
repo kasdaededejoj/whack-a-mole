@@ -27,11 +27,34 @@ pointer input before the game sees it. Required groundwork before Batch 2's poin
 event migration. Zero behavior change on desktop.
 
 ### Open items (mobile pass, remaining batches)
-- Batch 2: round2.js — mouse* → pointer* event migration + setPointerCapture
 - Batch 3: round2.js — debounced resize/orientation handler
 - Batch 4: index.html — @media queries, :hover gating, tap targets
 - Batch 5: index.html — viewport-fit=cover + safe-area insets
 - Batch 6: full live playtest (iOS Safari + Android Chrome)
+
+---
+
+## Mobile pass — Batch 2: pointer event migration — 2026-09-25
+
+### Committed to `main`
+Scope: `js/rounds/round2.js` only.
+
+**Swapped mouse* → pointer* on invCanvas (add + remove blocks):**
+`mousemove/mousedown/mouseup/mouseleave` → `pointermove/pointerdown/pointerup/pointercancel`.
+Pointer Events unify mouse and touch into one model — desktop behavior fully preserved
+(pointerdown fires for mouse, touch, and stylus). `mouseleave` removed; replaced by
+`pointercancel` which fires when the browser forcibly interrupts a pointer (e.g. incoming
+call). No parallel mouse+touch branches — one code path handles both.
+
+**setPointerCapture added inside invHandleMouseDown:**
+`invCanvas.setPointerCapture(e.pointerId)` keeps the canvas receiving pointermove/pointerup
+even if the finger/cursor leaves the canvas bounds mid-drag. Fixes an existing desktop bug
+(dragging off-canvas mid-shot stopped fire) and is essential for full-bleed touch. Wrapped
+in try/catch because synthesized click events route through invHandleMouseDown via
+invHandleSingleClick and won't carry a pointerId.
+
+**Handler bodies untouched** — all gameplay logic (invShooterX lerp, invMouseDown flag,
+hold intervals, boss combos, fokus lina) unchanged. click listener also unchanged.
 
 ---
 
