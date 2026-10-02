@@ -778,16 +778,8 @@ function updateBossAbilities(){
 
   // Update pincers
   for(let p of bossPincers){
-    // Soft homing — gradually steer toward shooter's live position
+    // Directed — travels straight to spawn-time target position, no homing
     p.age++;
-    if(p.age%4===0){
-      const tx=invShooterX, ty=ch-54;
-      const dx=tx-p.x, dy=ty-p.y;
-      const dist=Math.hypot(dx,dy)||1;
-      const speed=Math.hypot(p.vx,p.vy);
-      p.vx+=(dx/dist*speed-p.vx)*0.08;
-      p.vy+=(dy/dist*speed-p.vy)*0.08;
-    }
     p.x+=p.vx; p.y+=p.vy;
     // Player hit
     if(Math.hypot(p.x-invShooterX,p.y-(ch-54))<20&&!p.hit){

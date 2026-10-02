@@ -56,6 +56,16 @@ prerequisite for the padding below to have any effect.
 
 ---
 
+## Batch 8 — Pincer: directed not homing — 2026-10-02
+
+Removed the per-4-frame soft-homing correction block from the pincer movement update.
+Pincers now travel in a straight line to the player's position at the moment they were
+spawned (`spawnPincer` already calculates `vx/vy` correctly at spawn time).
+Requires the player to dodge rather than just move laterally — more fair, more readable.
+`p.age++` retained (used for despawn/lifetime tracking elsewhere).
+
+---
+
 ## Batch 7 — Greenscreen fix on wave VFX — 2026-10-02
 
 `mix-blend-mode:normal` → `mix-blend-mode:screen` on `_makeWaveVideo()` cssText.
