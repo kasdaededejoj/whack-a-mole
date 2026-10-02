@@ -75,7 +75,7 @@ function _makeWaveVideo(opacity){
   v.preload='auto';
   v.muted=true;
   v.playsInline=true;
-  v.style.cssText=`position:fixed;pointer-events:none;mix-blend-mode:normal;display:none;z-index:50;transform-origin:center center;opacity:${opacity};`;
+  v.style.cssText=`position:fixed;pointer-events:none;mix-blend-mode:screen;display:none;z-index:50;transform-origin:center center;opacity:${opacity};`;
   document.body.appendChild(v);
   return v;
 }

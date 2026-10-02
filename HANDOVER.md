@@ -56,6 +56,16 @@ prerequisite for the padding below to have any effect.
 
 ---
 
+## Batch 7 — Greenscreen fix on wave VFX — 2026-10-02
+
+`mix-blend-mode:normal` → `mix-blend-mode:screen` on `_makeWaveVideo()` cssText.
+Applies to all three video elements (main + echo1 + echo2) since they share one
+factory function. `screen` blend mode composites the bright video content against
+the dark game background, making the flat chroma-key green disappear.
+Asset (vfx_wave.webm) is confirmed flat saturated green — no soft edges to worry about.
+
+---
+
 ## Batch 6 — Dev panel: begin-button long-press — 2026-10-02
 
 Replaced the global 500ms touchstart listener (which fired anywhere on the page and
