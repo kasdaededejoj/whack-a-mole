@@ -54,6 +54,18 @@ prerequisite for the padding below to have any effect.
 - Modals (`#upgrade-modal`, `#boss-upgrade-modal`, `#round-overlay`) — centered flex,
   nothing sits against a screen edge
 
+---
+
+## Batch 6 — Dev panel: begin-button long-press — 2026-10-02
+
+Replaced the global 500ms touchstart listener (which fired anywhere on the page and
+conflicted with Round 2 hold-to-fire) with a 5s hold scoped exclusively to #ok-btn.
+Works on both touch (touchstart/end/move) and mouse (mousedown/up/leave).
+5s threshold makes it discoverable as an easter egg without accidental triggers.
+`state.running` guard no longer needed — #ok-btn only exists on the welcome screen.
+
+---
+
 ### Mobile pass complete — ready for Batch 6 (Adam's manual playtest)
 All 5 code batches pushed. Playtest checklist:
 - Gate tracing on touch

@@ -158,14 +158,21 @@ export function initDevPanel() {
     if (e.key === 'Shift') shiftHeld = false;
   });
 
-  // ── Long-press (500ms) anywhere to open on mobile ──
+  // ── Long-press (5s) on begin button — secret entry, works on mobile + desktop ──
+  const _okBtn = document.getElementById('ok-btn');
   let _lpTimer = null;
-  document.addEventListener('touchstart', (e) => {
-    if (state.running) return;
-    _lpTimer = setTimeout(() => { _lpTimer = null; openDevPanel(); }, 500);
-  }, { passive: true });
-  document.addEventListener('touchend',   () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
-  document.addEventListener('touchmove',  () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } }, { passive: true });
+  if (_okBtn) {
+    const _lpStart = () => {
+      _lpTimer = setTimeout(() => { _lpTimer = null; openDevPanel(); }, 5000);
+    };
+    const _lpCancel = () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } };
+    _okBtn.addEventListener('touchstart',  _lpStart,  { passive: true });
+    _okBtn.addEventListener('touchend',    _lpCancel, { passive: true });
+    _okBtn.addEventListener('touchmove',   _lpCancel, { passive: true });
+    _okBtn.addEventListener('mousedown',   _lpStart);
+    _okBtn.addEventListener('mouseup',     _lpCancel);
+    _okBtn.addEventListener('mouseleave',  _lpCancel);
+  }
 
   // ── Password gate ──
   devPwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkDevPassword(); });
