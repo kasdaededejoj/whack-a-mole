@@ -2193,7 +2193,9 @@ function invDraw(){
       const hpRatio=e.hp/e.maxHp;
       const pulse=0.7+0.3*Math.sin(e.flicker*2);
       const gs=bossGrowthScale;
-      invCtx.translate(e.x+e.glitchOffset,e.y);
+      // Upward recoil on hit — peaks at glitchTimer==12, fades to 0
+      const recoilY=e.glitchTimer>0 ? -(e.glitchTimer/12)*6 : 0;
+      invCtx.translate(e.x+e.glitchOffset, e.y+recoilY);
 
       // Phase 2 yellow outer aura (keep existing aura system)
       if(bossPhase2){
@@ -2277,10 +2279,18 @@ function invDraw(){
       // Right hand join
       invCtx.fillRect(rhx-2, handY, 2, xhh);
 
-      // ── Hit flash (Batch 10 hook — white/red overlay when glitchTimer>0) ──
+      // ── Hit flash: white burst → red tint, fades over glitchTimer frames ──
       if(e.glitchTimer>0){
-        invCtx.globalAlpha=0.35;
-        invCtx.fillStyle='#fff';
+        const ft=e.glitchTimer; // 1..12
+        if(ft>=9){
+          // First 3-4 frames: bright white burst
+          invCtx.globalAlpha=0.55*(ft/12);
+          invCtx.fillStyle='#ffffff';
+        } else {
+          // Remaining frames: red tint, fading out
+          invCtx.globalAlpha=0.38*(ft/9);
+          invCtx.fillStyle='#ff2020';
+        }
         invCtx.fillRect(-hw/2, bodyTop, hw, totalH);
       }
 
