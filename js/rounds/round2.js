@@ -93,6 +93,7 @@ const BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ'];
 let bossGrowthScale=1;    // lerps to 1.38 at phase 2 transition
 let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
 let bossDeathAnim=null;   // {frame,totalFrames,x,y,gs} — vertical-split fade sequence
+let bossCastFlash=0;      // frames remaining for cast telegraph (seam glow on body)
 
 let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
@@ -593,6 +594,7 @@ function triggerBossTeleport(){
   boss.baseY=newY;
   boss.orbitAngle=0;
   bossTeleportFlash=12; // ~12 frames of flash at 60fps
+  bossCastFlash=14;
 }
 
 function spawnWave(){
@@ -612,6 +614,7 @@ function spawnWave(){
     tx, ty, // store target at spawn time — hit detection uses this, not live shooter pos
     hit:false, alive:true
   });
+  bossCastFlash=18; // ~18 frames of seam telegraph
   try{playBossWaveCast();}catch(e){}
 
   // ── CHARGE ANIMATION — contracting rings on boss over 400ms ──
@@ -701,6 +704,7 @@ function startBossAbilities(){
   bossGrowthScale=1;
   bossGlitchBurst=0;
   bossDeathAnim=null;
+  bossCastFlash=0;
   bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
   // Phase 1: pincer only — starts immediately
   schedulePincer();
@@ -713,6 +717,7 @@ function spawnPincer(){
   const ty=invCanvas.height-60;
   const dx=tx-boss.x, dy=ty-boss.y;
   const dist=Math.hypot(dx,dy)||1;
+  bossCastFlash=12;
   bossPincers.push({
     x:boss.x, y:boss.y,
     vx:(dx/dist)*BOSS_PINCER_SPEED*(bossPhase2?1.3:1),
@@ -1391,6 +1396,7 @@ function invUpdate(){
       e.y=e.baseY+Math.sin(e.orbitAngle*0.46)*16;
       e.flicker+=0.012;
       if(bossTeleportFlash>0)bossTeleportFlash--;
+      if(bossCastFlash>0)bossCastFlash--;
       // Phase 2 growth lerp
       if(bossPhase2) bossGrowthScale+=(1.38-bossGrowthScale)*0.06;
       // Phase 2 glitch burst
@@ -2285,6 +2291,28 @@ function invDraw(){
       invCtx.fillRect(lhx+xhw, handY, 2, xhh);
       // Right hand join
       invCtx.fillRect(rhx-2, handY, 2, xhh);
+
+      // ── Cast telegraph: seams flare white/yellow when bossCastFlash>0 ──
+      if(bossCastFlash>0){
+        const cf=bossCastFlash;
+        const cfMax=18;
+        // Pulse: spike at cast (cfMax), fade out
+        const cfAlpha=0.9*(cf/cfMax);
+        const cfColor=bossPhase2?'rgba(255,220,50,1)':'rgba(255,255,255,1)';
+        invCtx.save();
+        invCtx.globalAlpha=cfAlpha;
+        invCtx.fillStyle=cfColor;
+        // Head/torso seam flare (wider, brighter)
+        invCtx.fillRect(-hw/2, headTop+hh-1, hw, SEAM+2);
+        // Torso/legs seam flare
+        invCtx.fillRect(-tw/2, torsoTop+th-1, tw, SEAM+2);
+        // Centre split flare
+        invCtx.fillRect(-2, torsoTop, 4, th);
+        // Hand join flares
+        invCtx.fillRect(lhx+xhw-1, handY, 4, xhh);
+        invCtx.fillRect(rhx-3, handY, 4, xhh);
+        invCtx.restore();
+      }
 
       // ── Hit flash: white burst → red tint, fades over glitchTimer frames ──
       if(e.glitchTimer>0){
