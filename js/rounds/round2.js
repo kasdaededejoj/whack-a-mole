@@ -92,6 +92,7 @@ const BOSS_SPRITES=['ꋫ','ꊰ','ꉣ','ꇓ','ꆼ'];
 
 let bossGrowthScale=1;    // lerps to 1.38 at phase 2 transition
 let bossGlitchBurst=0;    // frames remaining for phase 2 glitch burst
+let bossDeathAnim=null;   // {frame,totalFrames,x,y,gs} — vertical-split fade sequence
 
 let invWave=0;        // 0-indexed, 0-5
 let invTransitioning=false;
@@ -699,6 +700,7 @@ function startBossAbilities(){
   bossTeleportFlash=0;
   bossGrowthScale=1;
   bossGlitchBurst=0;
+  bossDeathAnim=null;
   bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
   // Phase 1: pincer only — starts immediately
   schedulePincer();
@@ -1484,9 +1486,9 @@ function invUpdate(){
               try{playEnemyDeath(e.isBoss?0.4:0.7+Math.random()*0.5);}catch(ex){}
               state.combo=Math.min(state.combo+1,8);
               setComboValue('×'+state.combo);
-              // Boss death display
-              if(isBossWave){
+              if(e.isBoss){
                 msgEl.textContent='';
+                bossDeathAnim={frame:0,totalFrames:24,x:e.x,y:e.y,gs:bossGrowthScale};
               }
             } else {
               e.glitchTimer=10;
@@ -1521,6 +1523,10 @@ function invUpdate(){
         try{playEnemyDeath(d.entity.isBoss?0.4:0.7+Math.random()*0.5);}catch(ex){}
         state.combo=Math.min(state.combo+1,8);
         setComboValue('×'+state.combo);
+        if(d.entity.isBoss){
+          msgEl.textContent='';
+          bossDeathAnim={frame:0,totalFrames:24,x:d.entity.x,y:d.entity.y,gs:bossGrowthScale};
+        }
       } else if(d.entity.isBoss){
         msgEl.textContent=(d.entity.hp%1===0?d.entity.hp:d.entity.hp.toFixed(1))+' / '+INV_BOSS_HP;
       }
@@ -1564,6 +1570,7 @@ function invUpdate(){
               msgEl.textContent='';
               invSpawnParticles(boss.x,boss.y,2);
               try{playEnemyDeath(0.4);}catch(ex){}
+              bossDeathAnim={frame:0,totalFrames:24,x:boss.x,y:boss.y,gs:bossGrowthScale};
             } else {
               boss.glitchTimer=6;
               const _hp=boss.hp;
@@ -1577,7 +1584,7 @@ function invUpdate(){
   invParticles=invParticles.filter(p=>p.life>0);
 
   const alive=invEntities.filter(e=>e.alive);
-  if(alive.length===0){
+  if(alive.length===0 && !bossDeathAnim){
     if(invWave<5){
       // More waves to go
       nextInvaderWave();
@@ -2319,6 +2326,71 @@ function invDraw(){
       invCtx.fillText(e.glyph,0,0);
     }
     invCtx.restore();
+  }
+
+  // ── BOSS DEATH ANIMATION — vertical split-fade ──
+  if(bossDeathAnim){
+    const da=bossDeathAnim;
+    da.frame++;
+    const t=da.frame/da.totalFrames; // 0..1
+    const alpha=Math.max(0,1-t);
+    const splitX=t*48*da.gs;         // halves drift outward up to 48px at gs
+    const S=1.4*da.gs;
+    const SEAM=3;
+    const hw=42*S, hh=15*S;
+    const tw=28*S, th=34*S;
+    const xhw=14*S, xhh=9*S;
+    const lw=12*S, lh=16*S, lg=3*S;
+    const totalH=hh+SEAM+th+SEAM+lh;
+    const bodyTop=-totalH/2;
+    const headTop=bodyTop;
+    const torsoTop=headTop+hh+SEAM;
+    const legTop=torsoTop+th+SEAM;
+    const handY=torsoTop+22*S;
+    const COL_HEAD=[215,215,218], COL_TORSO=[165,165,170];
+    const COL_HAND=[190,190,195], COL_LEG=[140,140,145];
+    function _deathFill(ox, oy, rw, rh, col){
+      invCtx.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;
+      invCtx.fillRect(ox-rw/2, oy, rw, rh);
+    }
+    invCtx.save();
+    // Left half — drifts left
+    invCtx.globalAlpha=alpha;
+    invCtx.save();
+    invCtx.translate(da.x-splitX, da.y);
+    invCtx.beginPath();
+    invCtx.rect(-hw/2, bodyTop, hw/2, totalH);
+    invCtx.clip();
+    _deathFill(0, headTop, hw, hh, COL_HEAD);
+    _deathFill(0, torsoTop, tw, th, COL_TORSO);
+    invCtx.fillStyle=`rgb(${COL_HAND[0]},${COL_HAND[1]},${COL_HAND[2]})`;
+    invCtx.fillRect(-(tw/2+xhw+2), handY, xhw, xhh);
+    invCtx.fillStyle=`rgb(${COL_LEG[0]},${COL_LEG[1]},${COL_LEG[2]})`;
+    invCtx.fillRect(-(lg/2+lw), legTop, lw, lh);
+    invCtx.fillRect(lg/2, legTop, lw/2, lh);
+    invCtx.restore();
+    // Right half — drifts right
+    invCtx.save();
+    invCtx.translate(da.x+splitX, da.y);
+    invCtx.beginPath();
+    invCtx.rect(0, bodyTop, hw/2, totalH);
+    invCtx.clip();
+    _deathFill(0, headTop, hw, hh, COL_HEAD);
+    _deathFill(0, torsoTop, tw, th, COL_TORSO);
+    invCtx.fillStyle=`rgb(${COL_HAND[0]},${COL_HAND[1]},${COL_HAND[2]})`;
+    invCtx.fillRect(tw/2+2, handY, xhw, xhh);
+    invCtx.fillStyle=`rgb(${COL_LEG[0]},${COL_LEG[1]},${COL_LEG[2]})`;
+    invCtx.fillRect(-(lg/2), legTop, lw/2, lh);
+    invCtx.fillRect(lg/2, legTop, lw, lh);
+    invCtx.restore();
+    invCtx.restore();
+    if(da.frame>=da.totalFrames){
+      bossDeathAnim=null;
+      // Animation done — now trigger round end
+      state.running=false;
+      clearInterval(state.bTimer);
+      endRound();
+    }
   }
 
   // ── BOSS HP BAR — top of canvas, full width ──
