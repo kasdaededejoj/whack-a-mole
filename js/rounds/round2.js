@@ -2189,22 +2189,15 @@ function invDraw(){
     if(!e.alive)continue;
     invCtx.save();
     if(e.isBoss){
-      // Boss render — large, pulsing, HP-reactive
+      // Boss render — Conformarult body (v3), geometry-drawn, no image assets
       const hpRatio=e.hp/e.maxHp;
       const pulse=0.7+0.3*Math.sin(e.flicker*2);
-      const bossAlpha=0.6+0.4*pulse;
       const gs=bossGrowthScale;
       invCtx.translate(e.x+e.glitchOffset,e.y);
-      // Outer ring — fades with HP, grows with phase 2
-      invCtx.globalAlpha=hpRatio*0.3;
-      invCtx.strokeStyle='#fff';
-      invCtx.lineWidth=1;
-      invCtx.beginPath();invCtx.arc(0,0,50*pulse*gs,0,Math.PI*2);invCtx.stroke();
-      // Inner ring
-      invCtx.globalAlpha=hpRatio*0.15;
-      invCtx.beginPath();invCtx.arc(0,0,35*pulse*gs,0,Math.PI*2);invCtx.stroke();
-      // Phase 2 yellow outer aura
+
+      // Phase 2 yellow outer aura (keep existing aura system)
       if(bossPhase2){
+        invCtx.save();
         invCtx.globalAlpha=0.12*gs;
         invCtx.strokeStyle='rgba(255,220,50,0.6)';
         invCtx.lineWidth=3;
@@ -2212,28 +2205,94 @@ function invDraw(){
         invCtx.shadowBlur=22*gs;
         invCtx.beginPath();invCtx.arc(0,0,58*pulse*gs,0,Math.PI*2);invCtx.stroke();
         invCtx.shadowBlur=0;
+        invCtx.restore();
       }
-      // Glitch block on hit
+
+      // ── Conformarult body — v3 proportions, s=1.4*gs ──
+      // Origin (0,0) is entity centre. Body is centred horizontally,
+      // with its vertical midpoint at origin.
+      const S=1.4*gs;
+      const SEAM=3;
+      // Dimensions
+      const hw=42*S, hh=15*S;           // head
+      const tw=28*S, th=34*S;           // torso
+      const xhw=14*S, xhh=9*S;         // hands (xh = extremity-hand)
+      const lw=12*S, lh=16*S, lg=3*S;  // legs, gap between them
+      // Total height: hh + SEAM + th + SEAM + lh
+      const totalH=hh+SEAM+th+SEAM+lh;
+      const bodyTop=-totalH/2;
+
+      const headTop=bodyTop;
+      const torsoTop=headTop+hh+SEAM;
+      const legTop=torsoTop+th+SEAM;
+      const handY=torsoTop+22*S;        // hands sit at ~22*S below torso top
+
+      // Fill colours (greyscale segments)
+      const COL_HEAD  =[215,215,218];
+      const COL_TORSO =[165,165,170];
+      const COL_HAND  =[190,190,195];
+      const COL_LEG   =[140,140,145];
+      const COL_SEAM  =[0,0,0];
+
+      function fillRect(cx_off, cy_off, rw, rh, col){
+        invCtx.fillStyle=`rgb(${col[0]},${col[1]},${col[2]})`;
+        invCtx.fillRect(cx_off-rw/2, cy_off, rw, rh);
+      }
+
+      invCtx.globalAlpha=0.92;
+
+      // Head
+      fillRect(0, headTop, hw, hh, COL_HEAD);
+
+      // Torso
+      fillRect(0, torsoTop, tw, th, COL_TORSO);
+
+      // Left hand
+      const lhx=-(tw/2+xhw+2);
+      invCtx.fillStyle=`rgb(${COL_HAND[0]},${COL_HAND[1]},${COL_HAND[2]})`;
+      invCtx.fillRect(lhx, handY, xhw, xhh);
+
+      // Right hand
+      const rhx=tw/2+2;
+      invCtx.fillRect(rhx, handY, xhw, xhh);
+
+      // Left leg
+      const llx=-(lg/2+lw);
+      invCtx.fillStyle=`rgb(${COL_LEG[0]},${COL_LEG[1]},${COL_LEG[2]})`;
+      invCtx.fillRect(llx, legTop, lw, lh);
+
+      // Right leg
+      invCtx.fillRect(lg/2, legTop, lw, lh);
+
+      // ── Seams (permanent dark segmentation lines) ──
+      invCtx.fillStyle=`rgb(${COL_SEAM[0]},${COL_SEAM[1]},${COL_SEAM[2]})`;
+      // Head / torso seam
+      invCtx.fillRect(-hw/2, headTop+hh, hw, SEAM);
+      // Torso / legs seam
+      invCtx.fillRect(-tw/2, torsoTop+th, tw, SEAM);
+      // Centre vertical torso split
+      invCtx.fillRect(-1, torsoTop, 2, th);
+      // Left hand join
+      invCtx.fillRect(lhx+xhw, handY, 2, xhh);
+      // Right hand join
+      invCtx.fillRect(rhx-2, handY, 2, xhh);
+
+      // ── Hit flash (Batch 10 hook — white/red overlay when glitchTimer>0) ──
       if(e.glitchTimer>0){
-        invCtx.globalAlpha=0.25;
+        invCtx.globalAlpha=0.35;
         invCtx.fillStyle='#fff';
-        invCtx.fillRect(-44*gs,-28*gs,88*gs,56*gs);
+        invCtx.fillRect(-hw/2, bodyTop, hw, totalH);
       }
-      // Teleport landing flash
+
+      // ── Teleport landing flash ──
       if(bossTeleportFlash>0){
-        invCtx.globalAlpha=(bossTeleportFlash/12)*0.7;
+        invCtx.globalAlpha=(bossTeleportFlash/12)*0.55;
         invCtx.fillStyle='#fff';
-        invCtx.fillRect(-60*gs,-40*gs,120*gs,80*gs);
+        invCtx.fillRect(-hw/2-4, bodyTop-4, hw+8, totalH+8);
       }
-      // Boss glyph — grows with scale
-      invCtx.globalAlpha=bossAlpha;
-      const fontSize=Math.round(42*gs);
-      invCtx.font=`${fontSize}px 'BlackChancery', serif`;
-      invCtx.fillStyle='#fff';
-      invCtx.textAlign='center';invCtx.textBaseline='middle';
-      invCtx.fillText(e.glyph,0,0);
-      // Update hitbox to match growth
-      e.cellW=90*gs; e.cellH=60*gs;
+
+      // Update hitbox to body dimensions
+      e.cellW=hw; e.cellH=totalH;
       // Boss HP — drawn as full-width canvas bar at top (see invDraw)
     } else {
       const alpha=0.5+0.4*(Math.sin(e.flicker*1.3)*0.5+0.5);
