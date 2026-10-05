@@ -166,12 +166,14 @@ export function initDevPanel() {
       _lpTimer = setTimeout(() => { _lpTimer = null; openDevPanel(); }, 5000);
     };
     const _lpCancel = () => { if (_lpTimer) { clearTimeout(_lpTimer); _lpTimer = null; } };
-    _okBtn.addEventListener('touchstart',  _lpStart,  { passive: true });
-    _okBtn.addEventListener('touchend',    _lpCancel, { passive: true });
-    _okBtn.addEventListener('touchmove',   _lpCancel, { passive: true });
-    _okBtn.addEventListener('mousedown',   _lpStart);
-    _okBtn.addEventListener('mouseup',     _lpCancel);
-    _okBtn.addEventListener('mouseleave',  _lpCancel);
+    _okBtn.addEventListener('touchstart',   _lpStart,  { passive: true });
+    _okBtn.addEventListener('touchend',     _lpCancel, { passive: true });
+    _okBtn.addEventListener('touchcancel',  _lpCancel, { passive: true });
+    _okBtn.addEventListener('touchmove',    _lpCancel, { passive: true });
+    _okBtn.addEventListener('contextmenu',  e => e.preventDefault());
+    _okBtn.addEventListener('mousedown',    _lpStart);
+    _okBtn.addEventListener('mouseup',      _lpCancel);
+    _okBtn.addEventListener('mouseleave',   _lpCancel);
   }
 
   // ── Password gate ──
