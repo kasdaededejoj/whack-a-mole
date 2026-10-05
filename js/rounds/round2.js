@@ -75,7 +75,7 @@ let vfxWaveRaf=null;
 
 function _makeWaveVideo(opacity){
   const v=document.createElement('video');
-  v.src='assets/vfx_wave.webm';
+  v.src='assets/vfx_wave.webm?v=2';
   v.preload='auto';
   v.muted=true;
   v.playsInline=true;

@@ -5,6 +5,21 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest `main` at time of
 
 ---
 
+## Wave VFX video re-keyed — 2026-10-05
+
+`assets/vfx_wave.webm` re-encoded: green keyed out to pure black (ffmpeg `chromakey` +
+`despill`), blade brightened and tinted lilac (curves + `colorchannelmixer`). It keeps
+`mix-blend-mode:screen`, so black is transparent on every browser (no VP9-alpha needed, Safari-safe).
+Original kept as `assets/vfx_wave_src_green.webm` for re-processing. `?v=2` added to the `src` to
+bust the browser cache. Verified on sampled frames: zero green-dominant pixels.
+
+**Open — wave looks invisible / lands before its visual (diagnosed, not fixed):** in `spawnWave`
+the physics projectile starts at cast time, but the video only launches after the 400ms charge, so
+the damage lands about 0.4s before the visible blade arrives. The canvas fallback crescent is only
+alpha 0.18. Candidate fix: spawn the projectile inside `launchWaveVfx`.
+
+---
+
 ## Conformarult (boss) overhaul — Batches 9–14 + long-press fix — 2026-10-05
 
 Scope: `js/rounds/round2.js` (boss body/attacks), `js/devpanel.js` + `index.html` (long-press fix only).
@@ -142,6 +157,11 @@ Applies to all three video elements (main + echo1 + echo2) since they share one
 factory function. `screen` blend mode composites the bright video content against
 the dark game background, making the flat chroma-key green disappear.
 Asset (vfx_wave.webm) is confirmed flat saturated green — no soft edges to worry about.
+
+> **Correction (2026-10-05): this fix did not work.** `screen` hides black, not green — the
+> measured background `(0,253,22)` screened over the dark game is still bright green. The blade
+> itself was also dark grey (#555), so it would have been near-invisible even if keyed. Real fix
+> is in the 2026-10-05 wave video entry at the top.
 
 ---
 
