@@ -54,6 +54,8 @@ let bossShockwaves=[];
 let bossPincers=[];
 let bossShockwaveTimer=null;
 let bossPincerTimer=null;
+let bossPincerPressTimer=null;
+let bossPincerPress=[];  // Pincer Press attack: two hand-rects that converge on player
 let bossPhase2=false;
 let bossTeleportTimer=null;
 let bossTeleportFlash=0; // frames remaining for landing flash
@@ -61,6 +63,8 @@ const BOSS_SHOCKWAVE_INTERVAL=3500;      // phase 1: not active; phase 2: 3500�
 const BOSS_PINCER_CD=4000;               // phase 1: 4000ms; phase 2: 3500ms
 const BOSS_PINCER_SPEED=5.25;            // was 3.5 × 1.5 — pincer active from phase 1
 const BOSS_WAVE_SPEED=4.8;               // was 3.2 × 1.5 — wave active from phase 2
+const BOSS_PP_CD=6500;                   // Pincer Press cooldown (phase 1: 6500ms, phase 2: 5000ms)
+const BOSS_PP_SPEED=3.8;                 // hand travel speed toward convergence point
 
 // VFX sprite sheet — wave ability
 // Travelling wave VFX — WebM video element + 2 echo trails
@@ -369,9 +373,10 @@ function startInvaders(){
   if(flRaf){cancelAnimationFrame(flRaf);flRaf=null;}
   invWave5ProtectUntil=0;
   // Boss abilities
-  bossShockwaves=[];bossPincers=[];bossPhase2=false;
+  bossShockwaves=[];bossPincers=[];bossPincerPress=[];bossPhase2=false;
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
+  if(bossPincerPressTimer){clearTimeout(bossPincerPressTimer);bossPincerPressTimer=null;}
   // Hide Round I scoring HUD + timer bar (display:none, not just
   // visibility:hidden, so they don't reserve layout space and push
   // Round II's field down the page), show wave progress bar
@@ -698,16 +703,18 @@ function spawnWave(){
 function startBossAbilities(){
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
+  if(bossPincerPressTimer){clearTimeout(bossPincerPressTimer);bossPincerPressTimer=null;}
   if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
-  bossShockwaves=[];bossPincers=[];bossPhase2=false;
+  bossShockwaves=[];bossPincers=[];bossPincerPress=[];bossPhase2=false;
   bossTeleportFlash=0;
   bossGrowthScale=1;
   bossGlitchBurst=0;
   bossDeathAnim=null;
   bossCastFlash=0;
   bossTeleportTimer=setInterval(triggerBossTeleport, 3000);
-  // Phase 1: pincer only — starts immediately
+  // Phase 1: pincer + pincer press — both start immediately
   schedulePincer();
+  schedulePincerPress();
 }
 
 function spawnPincer(){
@@ -737,15 +744,60 @@ function schedulePincer(){
   }, cd);
 }
 
+// ── Pincer Press: two hand-rects detach from boss, converge on player ──
+function spawnPincerPress(){
+  const boss=invEntities.find(e=>e.isBoss&&e.alive);
+  if(!boss||!state.running||!invCanvas)return;
+  const gs=bossGrowthScale;
+  const S=1.4*gs;
+  const tw=28*S, xhw=14*S, xhh=9*S;
+  const SEAM=3;
+  const hh=15*S, th_val=34*S;
+  const totalH=hh+SEAM+th_val+SEAM+(16*S);
+  const bodyTop=-totalH/2;
+  const headTop=bodyTop;
+  const torsoTop=headTop+hh+SEAM;
+  const handY_offset=22*S; // relative to torsoTop
+  // World-space hand start positions
+  const lhStartX=boss.x-(tw/2+xhw+2);
+  const rhStartX=boss.x+(tw/2+2)+xhw; // right edge of right hand
+  const handWorldY=boss.y+torsoTop+handY_offset;
+  // Convergence point = player position
+  const tx=invShooterX;
+  const ty=invCanvas.height-54;
+  const speed=BOSS_PP_SPEED*(bossPhase2?1.3:1);
+  // Left hand vector toward player
+  const ldx=tx-lhStartX, ldy=ty-handWorldY;
+  const ld=Math.hypot(ldx,ldy)||1;
+  // Right hand vector toward player
+  const rdx=tx-rhStartX, rdy=ty-handWorldY;
+  const rd=Math.hypot(rdx,rdy)||1;
+  bossCastFlash=16;
+  bossPincerPress.push(
+    {x:lhStartX, y:handWorldY, vx:(ldx/ld)*speed, vy:(ldy/ld)*speed, w:xhw, h:xhh, hit:false, alive:true, side:'L'},
+    {x:rhStartX-xhw, y:handWorldY, vx:(rdx/rd)*speed, vy:(rdy/rd)*speed, w:xhw, h:xhh, hit:false, alive:true, side:'R'}
+  );
+}
+
+function schedulePincerPress(){
+  const cd=bossPhase2 ? BOSS_PP_CD-1500 : BOSS_PP_CD;
+  bossPincerPressTimer=setTimeout(()=>{
+    if(!state.running){return;}
+    spawnPincerPress();
+    schedulePincerPress();
+  }, cd);
+}
+
 function stopBossAbilities(){
   if(bossShockwaveTimer){clearInterval(bossShockwaveTimer);bossShockwaveTimer=null;}
   if(bossPincerTimer){clearTimeout(bossPincerTimer);bossPincerTimer=null;}
+  if(bossPincerPressTimer){clearTimeout(bossPincerPressTimer);bossPincerPressTimer=null;}
   if(bossTeleportTimer){clearInterval(bossTeleportTimer);bossTeleportTimer=null;}
   if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
   if(vfxWaveVideo){vfxWaveVideo.pause();vfxWaveVideo.style.display='none';}
   if(vfxWaveEcho1){vfxWaveEcho1.pause();vfxWaveEcho1.style.display='none';}
   if(vfxWaveEcho2){vfxWaveEcho2.pause();vfxWaveEcho2.style.display='none';}
-  bossShockwaves=[];bossPincers=[];bossTeleportFlash=0;
+  bossShockwaves=[];bossPincers=[];bossPincerPress=[];bossTeleportFlash=0;
 }
 
 function updateBossAbilities(){
@@ -797,6 +849,23 @@ function updateBossAbilities(){
     if(p.y>ch+20)p.alive=false;
   }
   bossPincers=bossPincers.filter(p=>p.alive&&!p.hit);
+
+  // Update Pincer Press hands — travel toward convergence point, damage on reach
+  for(let p of bossPincerPress){
+    p.x+=p.vx; p.y+=p.vy;
+    p.age=(p.age||0)+1;
+    // Hit test: centre of hand rect vs player
+    const phcx=p.x+p.w/2, phcy=p.y+p.h/2;
+    if(!p.hit && Math.hypot(phcx-invShooterX, phcy-(ch-54))<28){
+      p.hit=true;
+      p.alive=false;
+      const dmg=18+Math.floor(Math.random()*6); // 18-23 — converging hands hit harder
+      damagePlayer(dmg);
+    }
+    // Despawn once off canvas
+    if(p.y>ch+40||p.y<-60||p.x>invCanvas.width+40||p.x<-60) p.alive=false;
+  }
+  bossPincerPress=bossPincerPress.filter(p=>p.alive&&!p.hit);
 }
 
 function drawBossAbilities(){
@@ -842,6 +911,32 @@ function drawBossAbilities(){
     invCtx.strokeStyle='rgba(255,230,80,0.7)';
     invCtx.lineWidth=2;
     invCtx.beginPath();invCtx.arc(0,0,s.r,Math.PI*0.1,Math.PI*0.9);invCtx.stroke();
+    invCtx.restore();
+  }
+
+  // Pincer Press — detached hand rects converging on player
+  for(let p of bossPincerPress){
+    invCtx.save();
+    // Rotate hand to face travel direction
+    const angle=Math.atan2(p.vy,p.vx);
+    invCtx.translate(p.x+p.w/2, p.y+p.h/2);
+    invCtx.rotate(angle);
+    // Phase 2: yellow glow
+    if(bossPhase2){
+      invCtx.globalAlpha=0.4;
+      invCtx.shadowColor='rgba(255,220,50,0.9)';
+      invCtx.shadowBlur=14;
+      invCtx.fillStyle='rgba(255,220,50,0.3)';
+      invCtx.fillRect(-p.w/2-4,-p.h/2-4,p.w+8,p.h+8);
+      invCtx.shadowBlur=0;
+    }
+    // Hand rect — Conformarult hand colour
+    invCtx.globalAlpha=0.9;
+    invCtx.fillStyle='rgb(190,190,195)';
+    invCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    // Seam line matching body style
+    invCtx.fillStyle='rgb(0,0,0)';
+    invCtx.fillRect(-p.w/2,-1,p.w,2);
     invCtx.restore();
   }
 }
@@ -2262,14 +2357,33 @@ function invDraw(){
       // Torso
       fillRect(0, torsoTop, tw, th, COL_TORSO);
 
-      // Left hand
+      // Left hand / Right hand — morphs to spike triangle when pincers are active
       const lhx=-(tw/2+xhw+2);
-      invCtx.fillStyle=`rgb(${COL_HAND[0]},${COL_HAND[1]},${COL_HAND[2]})`;
-      invCtx.fillRect(lhx, handY, xhw, xhh);
-
-      // Right hand
       const rhx=tw/2+2;
-      invCtx.fillRect(rhx, handY, xhw, xhh);
+      const handMorph=bossPincers.length>0 ? 1 : 0; // 1 = full spike, 0 = rect
+
+      invCtx.fillStyle=`rgb(${COL_HAND[0]},${COL_HAND[1]},${COL_HAND[2]})`;
+      if(handMorph===0){
+        // Normal rect hands
+        invCtx.fillRect(lhx, handY, xhw, xhh);
+        invCtx.fillRect(rhx, handY, xhw, xhh);
+      } else {
+        // Spike — triangle pointing away from torso
+        // Left spike: tip points left
+        invCtx.beginPath();
+        invCtx.moveTo(lhx,          handY);          // top-right (join to torso)
+        invCtx.lineTo(lhx,          handY+xhh);      // bottom-right
+        invCtx.lineTo(lhx-xhw*1.4, handY+xhh/2);    // tip left
+        invCtx.closePath();
+        invCtx.fill();
+        // Right spike: tip points right
+        invCtx.beginPath();
+        invCtx.moveTo(rhx+xhw,      handY);          // top-left (join to torso)
+        invCtx.lineTo(rhx+xhw,      handY+xhh);      // bottom-left
+        invCtx.lineTo(rhx+xhw*2.4,  handY+xhh/2);   // tip right
+        invCtx.closePath();
+        invCtx.fill();
+      }
 
       // Left leg
       const llx=-(lg/2+lw);
@@ -2287,10 +2401,11 @@ function invDraw(){
       invCtx.fillRect(-tw/2, torsoTop+th, tw, SEAM);
       // Centre vertical torso split
       invCtx.fillRect(-1, torsoTop, 2, th);
-      // Left hand join
-      invCtx.fillRect(lhx+xhw, handY, 2, xhh);
-      // Right hand join
-      invCtx.fillRect(rhx-2, handY, 2, xhh);
+      // Left hand join / right hand join — only in rect mode
+      if(handMorph===0){
+        invCtx.fillRect(lhx+xhw, handY, 2, xhh);
+        invCtx.fillRect(rhx-2, handY, 2, xhh);
+      }
 
       // ── Cast telegraph: seams flare white/yellow when bossCastFlash>0 ──
       if(bossCastFlash>0){
