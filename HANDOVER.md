@@ -1,5 +1,74 @@
 # Handover — The Realm
 
+Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest `main` at time of writing: `e6e8138`
+(newest entries first below).
+
+---
+
+## Conformarult (boss) overhaul — Batches 9–14 + long-press fix — 2026-10-05
+
+Scope: `js/rounds/round2.js` (boss body/attacks), `js/devpanel.js` + `index.html` (long-press fix only).
+Adam confirmed in a live test: boss renders, dev panel password works.
+
+### Committed to `main`
+- **Batch 9 (`19579fe`) — body.** Boss glyph text replaced with pure-canvas geometry (no image
+  assets). v3 proportions at `S = 1.4 * bossGrowthScale`: wide flat head, torso, two hands, two legs.
+  No eyes. Flat greyscale fills per segment (head 215, torso 165, hands 190, legs 140).
+  Permanent black 3px seams: head/torso, torso/legs, centre torso split, hand joins. Hitbox
+  (`cellW/cellH`) now follows the body bounding box. Phase 2 yellow aura kept. Old outer/inner
+  white rings removed.
+- **Batch 10 (`a525c87`) — hurt flash.** Reuses `glitchTimer`. White burst for the first few frames,
+  then red tint (`#ff2020`) fading out; upward recoil peaking at -6px.
+- **Batch 11 (`df90e19`) — death.** `bossDeathAnim`: 24-frame vertical split, halves drift outward
+  ±48px while alpha fades 1→0. `endRound()` fires only after the animation completes. Both plasma
+  DOT and semic DOT death paths start it.
+- **Batch 12 (`feb5a2b`) — cast telegraph.** `bossCastFlash` (frames) set at each attack trigger;
+  seams flare white (phase 1) or yellow (phase 2) and fade out. Replaces the barely-visible purple rings.
+- **Batch 13 (`388e204`) — Pincer Press.** `spawnPincerPress` / `schedulePincerPress` existed but had
+  no update or draw code, so the hands never moved. Added: movement toward the player position
+  captured at spawn (directed, no homing), hit test (28px, 18–23 dmg), off-canvas despawn, and
+  a rotated-rect draw with seam line (yellow glow in phase 2). Cooldown 6500ms (5000ms phase 2),
+  speed `BOSS_PP_SPEED = 3.8` (×1.3 phase 2).
+- **Batch 14 (`388e204`) — hand→spike morph.** While `bossPincers.length > 0`, body hands draw as
+  outward-pointing spike triangles instead of rects; hand-join seams hidden in spike mode.
+- **Long-press fix (`e6e8138`).** iOS fired its callout at ~500ms, which interrupted the 5s hold on
+  `#ok-btn`. Added `-webkit-touch-callout:none; user-select:none` on `#ok-btn`, a `contextmenu`
+  `preventDefault`, and a `touchcancel` cleanup listener. Confirmed working on mobile.
+
+### Current boss attack set
+Teleport (every 3s), Pincer (the old "swipe" — directed projectile), Pincer Press (detached hands),
+travelling wave (phase 2 only, at ≤50% HP).
+
+### Known gaps / open items
+- **Swipe was never removed from rotation.** The plan said Pincer Press *replaces* the old pincer
+  ("swipe"), but `startBossAbilities` still schedules both `schedulePincer()` and
+  `schedulePincerPress()`. Decision needed: replace, or keep both.
+- **Morph is a binary swap, not keyframed.** The hand→spike change flips when a pincer is in flight;
+  there is no wind-up / swing / follow-through timeline, and it isn't synced to the cast flash.
+- **Detached hands don't leave the body.** During Pincer Press the body still draws both hands in
+  place while copies fly out. Needs the body hands hidden (or spiked) while detached.
+- **Not yet playtested end to end:** Pincer Press hit feel and damage, the death split-fade, and the
+  hurt flash on a real fight. Adam has only confirmed the boss renders.
+- Carried over: boss SFX for pincer and teleport (paused, standing hold).
+
+### Future — features we're going to do eventually
+Not scheduled; recorded so they aren't lost.
+- **Stylised buttons for upgrades** (Adam's call) — replace the current upgrade / boss-upgrade modal
+  buttons with custom-styled ones that match the game's look.
+- Carried over from earlier notes (all still open, none started):
+  - SFX eccentricity pass — base weapon sounds (`playBulletFire`, `playMissileFire`) read as too
+    kiddish; scoping brief is in the "SFX audit" section below, to be wired into `js/audio.js`.
+  - Wave VFX `playbackRate` sync — `animateVid()` never sets `v.playbackRate`, so the video plays at
+    1× regardless of travel distance.
+  - Live playtest of all four boss combos together.
+
+### Process notes
+- Scope discipline: this agent works in `round2.js` and `audio.js`; the Batch 6 `devpanel.js` /
+  `index.html` touches were explicit exceptions for the mobile pass. R1/R3 belong to other agents.
+- Rebase conflicts on `round2.js` and `HANDOVER.md`: always `--ours`.
+- Pushing needs the Claude GitHub App installed on the repo (a PAT alone is refused by the session
+  proxy). It is installed now. Never store a PAT.
+
 ---
 
 ## Mobile pass — Batch 1: groundwork — 2026-09-25
