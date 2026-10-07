@@ -122,9 +122,14 @@ function updatePlayerHpBar(){
   // Player HP is drawn on-canvas each frame in invDraw — nothing to update in DOM
 }
 
+let invPlayerInvulnFrames=0; // post-hit invincibility window (~1s @60fps)
+const INV_INVULN_DURATION=60;
+
 function damagePlayer(amount){
+  if(invPlayerInvulnFrames>0)return; // mid-invuln window — no damage, no re-trigger
   const prevHp=invPlayerHp;
   invPlayerHp=Math.max(0,invPlayerHp-amount);
+  invPlayerInvulnFrames=INV_INVULN_DURATION;
   try{playPlayerDamage();}catch(e){}
   triggerHpDrainAnimation(prevHp, invPlayerHp);
   updatePlayerHpBar();
@@ -610,15 +615,9 @@ function spawnWave(){
   const dx=tx-boss.x, dy=ty-boss.y;
   const dist=Math.hypot(dx,dy)||1;
 
-  // Physics projectile — hit detection unchanged
-  bossShockwaves.push({
-    x:boss.x, y:boss.y,
-    vx:(dx/dist)*BOSS_WAVE_SPEED, vy:(dy/dist)*BOSS_WAVE_SPEED,
-    r:20, targetDist:dist,
-    travelledDist:0,
-    tx, ty, // store target at spawn time — hit detection uses this, not live shooter pos
-    hit:false, alive:true
-  });
+  // B17: physics projectile now spawns when the video visual launches
+  // (see launchWaveVfx below), not here at cast time — damage was landing
+  // ~400ms before the wave was visible. Cast telegraph still fires now.
   bossCastFlash=18; // ~18 frames of seam telegraph
   try{playBossWaveCast();}catch(e){}
 
@@ -655,6 +654,16 @@ function spawnWave(){
   function launchWaveVfx(){
     if(!vfxWaveVideo||!state.running)return;
     if(vfxWaveRaf){cancelAnimationFrame(vfxWaveRaf);vfxWaveRaf=null;}
+
+    // B17: spawn the hit-active physics projectile now, in sync with the video
+    bossShockwaves.push({
+      x:boss.x, y:boss.y,
+      vx:(dx/dist)*BOSS_WAVE_SPEED, vy:(dy/dist)*BOSS_WAVE_SPEED,
+      r:20, targetDist:dist,
+      travelledDist:0,
+      tx, ty,
+      hit:false, alive:true
+    });
 
     const rect=invCanvas.getBoundingClientRect();
     const bossPageX=rect.left+boss.x;
@@ -827,7 +836,7 @@ function updateBossAbilities(){
     if(!s.hit && Math.hypot(s.x-s.tx, s.y-s.ty)<s.r*0.35){
       s.hit=true;
       s.alive=false; // kill wave immediately on hit
-      const dmg=31+Math.floor(Math.random()*4); // 31-34
+      const dmg=18+Math.floor(Math.random()*5); // 18-22, ~20 avg — eased w/ invuln window
       damagePlayer(dmg);
     }
     // Despawn once past the bottom or past target
@@ -1472,6 +1481,7 @@ function invLoop(){
 
 function invUpdate(){
   if(invTransitioning)return;
+  if(invPlayerInvulnFrames>0)invPlayerInvulnFrames--;
   positionNukaUI();
   const now=Date.now();
   const ch=invCanvas.height;
@@ -2588,6 +2598,11 @@ function invDraw(){
 
   invCtx.save();
   invCtx.translate(sx, sy);
+
+  // Invincibility flicker — alternating alpha while invuln window is active
+  if(invPlayerInvulnFrames>0){
+    invCtx.globalAlpha=(Math.floor(invPlayerInvulnFrames/4)%2===0)?1:0.35;
+  }
 
   // Localised purple radial glow on hit
   if(hitIntensity>0){
