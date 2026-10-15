@@ -68,6 +68,51 @@ flicker); cowl peak pushed forward.
 - Say **"save"** = update this HANDOVER.md on GitHub (allowed even in LD mode).
 - Round 2 scope only (`js/rounds/round2.js`, `js/audio.js`); on `round2.js`/`HANDOVER.md` rebase conflicts take `--ours`.
 
+
+### LD-mode record (added after review: items the first save missed)
+
+**For any AI reading this: before building anything new, CHECK whether every LD decision below has been
+implemented. Compare this list against the code (`js/rounds/round2.js`, `js/rounds/boss3d.js`,
+`js/audio.js`) and `git log`, then report to Adam: for each item, "done (commit)", "partly" or "not done".
+Do not assume an item is done because it is written here. Do not ship LD items until Adam exits LD mode.**
+
+**What LD mode means:** record, plan and diagnose everything Adam says without shipping. Batch it all once
+details are finalised. Only start shipping when Adam says to exit LD. Exception: "save" (update this file).
+
+**Execution rules for shipping:**
+- Write batches for Sonnet 4.6 at medium capability unless Adam says otherwise; judge whether batches need
+  to be smaller for that model.
+- Plan batch order: which must go first and which depend on earlier ones (layered, for quality).
+- "automata" = run all batches in a row without waiting for a green light, unless one fails or the plan
+  is not fully sketched. "decis" = list every decision needed from Adam as multiple-choice questions.
+- Plan is the layered batch list **B16-B26 with two approval gates.** Gate 1 = Adam approves the 3D look
+  before the B23a swap. **Gate 2 is not recorded anywhere I can find. Adam to confirm what it is.**
+  B20-B26 details are also missing from the repo.
+
+**LD decisions to verify as implemented (status at 2026-10-15):**
+| # | Decision | Status |
+|---|----------|--------|
+| 1 | Keep both swipe pincer and Pincer Press in rotation | Done (both scheduled in `startBossAbilities`) |
+| 2 | Wave damage starts when its visual starts | Done (`2b42a0e`, B17) |
+| 3 | Post-hit invincibility AND lower wave damage | Done (`2b42a0e`, B16) |
+| 4 | Fake 3D, pure canvas, no library | Engine built (`74ed8f1`), not wired into the game |
+| 5 | Ship B16/B17 ahead of the 3D work | Done |
+| 6 | Pincer Press: after the hit, hands fly back and reattach to the body | Not done |
+| 7 | Pincer Press: body hands hidden or spiked while detached; wind-up / swing / return timeline synced to `bossCastFlash` | Partly (spike morph done, timeline not) |
+| 8 | Boss hurt flash and death split redone per 3D face | Not done (waits for B23a) |
+| 9 | Crobe (cowl + robe) boss look | Planned only, no code |
+| 10 | Boss attack SFX via the audio Claude (metallic blade whoosh first); wire pincer spawn, press spawn, teleport landing | Not done, waiting on audio specs |
+| 11 | SFX eccentricity pass on `playBulletFire` / `playMissileFire`, keep rapida / rapidaaa / machina distinguishable | Not done, waiting on audio specs |
+| 12 | Wave VFX `playbackRate` sync (duration / travelMs, clamp about 0.5-2x, all three echo videos) | Not done |
+| 13 | Stylised upgrade buttons | Not done, needs Adam's style direction |
+| 14 | Wave video green-screen fix | Done, confirmed working |
+
+**Playtest checklist for Adam (once shipped):** Pincer Press hit feel, hands fly-back and reattach, death
+split, hurt flash, all four boss combos together (fokus lina, semic, machina, plasma), frame cost of the 3D
+boss on the 60Hz phone. Optional: headless smoke test.
+
+**Housekeeping:** rename `isMissileDoublets` to the fokus lina check (misleading name, not a bug).
+
 ---
 
 ## Wave VFX video re-keyed — 2026-10-05
