@@ -1,7 +1,72 @@
 # Handover — The Realm
 
-Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest `main` at time of writing: `e6e8138`
+Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at time of writing: `74ed8f1`
 (newest entries first below).
+
+
+---
+
+## Catch-up + "crobe" (cowl + robe) boss design plan — 2026-10-15
+
+Status: **LD mode (plan only).** Nothing below the "Shipped" list has been built into the game.
+
+### Shipped since the 2026-10-05 entry (already on `main`)
+- **B16/B17 (`2b42a0e`)** — boss damage easing (post-hit invincibility frames + lower wave damage) and
+  wave hit-sync (the wave projectile now spawns inside `launchWaveVfx`, so damage starts when the
+  visual starts). This closes the "wave lands before its visual" open item above.
+- **B18/B19a/B19b (`74ed8f1`)** — `js/rounds/boss3d.js`: stateless fake-3D engine (pure canvas 2D,
+  CAM_DIST=FOV=520, rotateX/Y/Z, `makeBox`, backface cull, painter's-algorithm sort, flat greyscale
+  shading) plus `buildConformarultParts(S)`, which mirrors the flat v3 proportions. **Not imported
+  anywhere yet** — the game still draws the flat boss.
+
+### Decisions recorded
+- Swipe pincer **and** Pincer Press are both kept in the attack rotation (resolves the open item above).
+- Fake 3D stays pure canvas, no library. Test phone is 60Hz.
+- Boss attack SFX go to the separate audio Claude (whoosh-layering brief; metallic blade first).
+
+### Gate 1 (Adam approves the 3D look before the B23a swap)
+Previews are rendered offline from `boss3d.js` as contact sheets (rest, turn 25/55, turn+nod, hit tilt,
+death split). Contact sheet 1 (plain box body): rest pose matches flat silhouette; reads blocky when turned.
+
+### New direction: "crobe" = cowl + robe on the 3D Conformarult
+Adam asked for a cowl + robe combo. Direction chosen (the version closest to the current boss):
+- **Three stacked robe bands with visible 3px seams** (shoulders, mid, hem) so it keeps the segmented look.
+- **Cowl with open front**, dark void behind, **pale mask inside** (keeps the light "head" of the original).
+- **Legs peek out under the hem.** Hands stay separate (cuff-anchored) so Pincer Press detach/fly-back/reattach and the spike morph still work.
+- Greyscale only; cowl darkest, hem lightest, hands pale. Symmetrical to start (asymmetry optional later).
+- Footprint and hitbox must stay equal to the current boss. Hurt flash and death split must work per piece.
+
+**Engine change needed:** add a `makeLoft(cx,cy,cz,sections,n,dropFront)` primitive to `boss3d.js`:
+rings of an n-gon (flat-fronted via 1/cos(pi/n) scale), sections `{y,w,d}`, quad faces between rings with
+outward normals computed from geometry, optional dropping of the front faces for the open cowl. It returns
+the same `{cx,cy,cz,verts,faces}` shape as `makeBox`, so `projectBox`/`projectScene`/`drawFaces` work unchanged.
+
+**Prototype v1 findings** (offline render, not in repo): works structurally (cowl+mask, 3 bands, split into
+clean pieces) but is squat and heavy, sleeves are slabs that overlap the robe on turns, hem has no pleats,
+cowl is too round. **v2 fixes planned:** narrower shoulders + longer hem (tall, not squat); tapered sleeves
+tucked to the body; vertical pleat facets on the hem (merge into one skirt unit to avoid depth-sort
+flicker); cowl peak pushed forward.
+
+### Risks to check before wiring (B23a)
+- Face count rises from about 36 to 40-60; check frame cost on the 60Hz phone.
+- Thin overlapping folds can flicker under painter's-algorithm sorting.
+- Hands need a clear cuff anchor or they look pasted on.
+
+### Open questions for Adam
+1. Face void: pure dark, or a faint detail (dim points or a slit of light)? (Currently a pale mask.)
+2. Asymmetry (one longer sleeve / uneven hem): yes or no?
+3. B20-B26 batch list was never found in the repo; only B23a and Gate 1 are documented. Adam to supply.
+4. Upgrade-button style direction (luxury label / glitchy cyber / minimal) still needed.
+
+### Still pending (unchanged)
+- Boss SFX wiring (pincer, press, teleport landing) once the audio Claude delivers specs.
+- SFX eccentricity pass: `playBulletFire` (square 900>300Hz, 70ms) and `playMissileFire` (sawtooth 320>80Hz, 150ms) sound too kiddish.
+- Wave VFX `playbackRate` sync (`animateVid()` never sets it).
+- Live playtest of all four boss combos; rename `isMissileDoublets` to the fokus lina check.
+
+### Working conventions
+- Say **"save"** = update this HANDOVER.md on GitHub (allowed even in LD mode).
+- Round 2 scope only (`js/rounds/round2.js`, `js/audio.js`); on `round2.js`/`HANDOVER.md` rebase conflicts take `--ours`.
 
 ---
 
