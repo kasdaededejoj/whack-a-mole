@@ -2,9 +2,14 @@
 
 ## Mode system
 Adam uses a structured mode system: **Mode 1, Mode 1.1, Mode 2 and Mode 3 Build.**
-> TODO (Adam): the original definitions of Modes 1, 1.1 and 2 are still missing; only their names survive.
-> Do not guess what they do. The collaboration modes below come from Adam's earlier (Sept 2026) notes and may
-> overlap with or be superseded by the numbered modes. Ask him which applies.
+> **Not fully recorded.** The original definitions of Modes 1, 1.1 and 2 were not found in any saved notes. What the notes imply
+> (inference, unconfirmed):
+> - **Mode 1 / 1.1 look like analysis and research modes.** Evidence: Follow-Up Actions are appended to "every Mode 1/1.1 analysis",
+>   and the research rules below (fetch the page after searching, X/10 accuracy ratings, linked sources, fresh sources) were set alongside them.
+> - **Mode 3 Build is the coding mode** (propose exact changes, wait for confirmation, batch commits, security check on every edit).
+> - **Mode 2 is unknown.** Do not guess.
+> TODO (Adam): paste the original text, or tell the AI which mode you mean when you name it. The collaboration modes below come from
+> earlier (Sept 2026) notes and may overlap with or be superseded by the numbered modes.
 
 ## Always-on wrappers (from earlier notes)
 - **CTP = Critical Thinking Partner**, default ON for all creative, technical and brand tasks: acknowledge, surface strengths
