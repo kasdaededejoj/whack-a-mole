@@ -120,3 +120,6 @@ Pending: the "Das Man" label. Adam to pick: (1) drop it, (2) keep it as a delibe
 | 16 | What references beyond the designers already named shape the brand's taste? | Answered (section 10); spellings to confirm |
 | 17 | Who or what might people wrongly assume the brand is (e.g. a hype streetwear label, a luxury house, a goth or occult scene, a vintage shop)? This is a guardrail so no output drifts toward the wrong thing. | Open (Adam asked what it meant; rephrased) |
 | 18 | Does the AI need the brand's actual name? | Answered: no, treat it as "???" (section 1) |
+| 19 | What decisions have shaped the brand since it started, and what did you try and reject? | Open |
+| 20 | Please confirm the spellings and full names in the taste references (the designers: Yohji, Rick, Geoffrey, Boris, Lulu, Dan, and the Singapore reference; the music artist transcribed as "Levy Ryan"). | Open |
+| 21 | Does the guerrilla reading hold: the red line is paid advertising only, and guerrilla placement is allowed? | Open (confirm) |
