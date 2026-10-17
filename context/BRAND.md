@@ -33,7 +33,13 @@ If filter, they are marketing systems. This is the foundational architectural qu
 - **Casing:** all lowercase in brand copy.
 - **Address:** collective "we": the institution speaks as one body.
 - **Never:** hype words (drop, exclusive, limited, grail, fire); emojis and exclamation marks; explaining itself (no tutorials, no "here's what this means"); selling language (buy now, shop, discount, sale, calls to action).
-- Still **[interview pending]**: words the brand does use, naming rules, an example of copy that sounds right and one that doesn't.
+- **Naming rules (Adam, 2026-10-17):**
+  - Archaic, museum and Latin-esque language, fused into one.
+  - A single apostrophe inside a word (e.g. an'ima-style), used as a signature mark.
+  - Words strung toward the consonants **m, t and v** (as stated; Adam was unsure of the exact term).
+  - Words borrowed from Singapore's own languages and cultures: Indian, Chinese, Malay and Eurasian, blended into the pattern above.
+  - *(Claude's observations, unconfirmed: "dua" in "dua beam" is Malay for "two"; "rapida" reads as Latin/Romance; "Conformarult" fuses "conform" with an archaic-sounding ending. These match the rule but Adam has not confirmed them.)*
+- Still **[interview pending]**: actual brand words and phrases that follow this pattern, and an example of copy that sounds right and one that doesn't.
 
 ## 5. History
 **Origin (Adam, 2026-10-17):** it started as a passion for clothes, and as a passion for being yourself after being told to conform to society and not stand out.
@@ -84,8 +90,8 @@ Pending: the "Das Man" label. Adam to pick: (1) drop it, (2) keep it as a delibe
 | 2 | Why stealth? | Answered (section 2) |
 | 3 | What does the brand believe? | Answered (section 2) |
 | 4 | What does "banality" mean in practice? | Answered (section 2); "Das Man" label unresolved |
-| 5 | Which words or phrases sound like the brand? (recurring words, favourite terms, something you'd put in a caption) | Skipped for now |
-| 6 | How do you choose names? The game's names (Conformarult, rapida, dua beam, semic, plasma, fokus lina) don't look like one pattern. Is there a rule: invented words, a borrowed language, sound before meaning, or a mix? | Open |
+| 5 | Which actual words or phrases sound like the brand? Style is covered (see section 4); I'd still like 3 to 5 real examples that use the apostrophe and m/t/v pattern. | Partly (style answered, examples missing) |
+| 6 | How do you choose names? | Answered (section 4) |
 | 7 | Give one example of copy (a caption, a line, a message) that sounds right for the brand, and one that sounds wrong. | Open |
 | 8 | Where does "Conformarult" come from, and what does it mean? | Open |
 | 9 | Where does "the Realm" come from? | Open |
