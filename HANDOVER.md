@@ -4,6 +4,28 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 (newest entries first below).
 
 
+
+---
+
+## [Claude] Context pack for moving between AI assistants — 2026-10-17
+
+Adam now has a ChatGPT subscription and will use ChatGPT and Claude in parallel. No game code changed.
+
+- **Added `/context/`** (public-safe): `README.md` (entry point + where-things-live map), `CUSTOM_INSTRUCTIONS.md` (two ChatGPT boxes),
+  `PROFILE.md`, `PREFERENCES.md`, `OPERATING_MODES.md`, `HANDOVER_PROTOCOL.md`, `projects/the-realm-game.md` (summary + progress table),
+  `topics/design-research.md`, `prototypes/crobe/` (v1 crobe prototype script and renders; v2 not built).
+- **Kept out of the public repo on purpose:** brand operations, unreleased garment designs and strategy notes. They live in
+  `PRIVATE_brand-context.md`, which Adam uploads to ChatGPT directly.
+- **Save habit (standing rule):** every task ends with an update to this file and the matching `context/` file, plus a commit.
+  Allowed even in LD mode (docs only).
+- **Two-AI rules:** pull first, tag entries `[Claude]` / `[ChatGPT]`, add entries at the top, never rewrite the other AI's, never edit the
+  same file at once. On conflicts stop and show Adam both versions (this replaces the old "take `--ours`" rule now that there are two writers).
+- **Modes (stated by Adam):** Mode 1 = analysis, Mode 1.1 = enhanced analysis (heavier analysis and rationality), Mode 2 = research,
+  Mode 3 Build = coding. CTP = Critical Thinking Partner, FS = Fresh Sources. Fuller definitions of 1, 1.1, 2 are still missing.
+
+Still open: Gate 2 and B20-B26 were never recorded. The crobe v2 render, Gate 1 approval and everything in the progress table
+in `context/projects/the-realm-game.md` are unchanged. The game is still in LD mode (plan only).
+
 ---
 
 ## Catch-up + "crobe" (cowl + robe) boss design plan — 2026-10-15

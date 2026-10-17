@@ -12,6 +12,7 @@ Written 2026-10-17 so Adam can move between AI assistants (Claude to ChatGPT) wi
 | `OPERATING_MODES.md` | Always. His mode system, standing rules and command words (LD, automata, decis, save). |
 | `HANDOVER_PROTOCOL.md` | When a chat is ending or being continued elsewhere. |
 | `projects/the-realm-game.md` | Any work on the browser game "The Realm". Links to the live handover. |
+| `prototypes/crobe/` | Work on the 3D boss look (cowl + robe prototype, v1 renders, v2 plan). |
 | `topics/design-research.md` | Fashion, design, textile or consumer-psychology questions. |
 
 ## Where things live (one home per thing, to avoid confusion)
