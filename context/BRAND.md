@@ -20,6 +20,7 @@ ask Adam. Last updated 2026-10-17. (Garment specs live elsewhere and are not par
 ## 3. The open tension (raise it whenever brand infrastructure decisions come up; do not let it pass unexamined)
 Is The Realm meant to **teach** taste or **filter** for it? If teach, every touchpoint (game, Discord, drops, archive) is an educational system.
 If filter, they are marketing systems. This is the foundational architectural question and it is unresolved.
+**Adam's current lean (2026-10-17): both, in sequence**: filter first (the funnel and the game), then teach inside (the Discord and what follows). Not final.
 
 ## 4. Language and voice (answered by Adam, 2026-10-17)
 - **Tone:** cryptic and mystical.
@@ -40,11 +41,15 @@ posting an ambition question visible only to the member and the Founder role.
 **IP strategy:** the registered logo is used privately (packaging, inserts, members-only assets); an unregistered logo is the public-facing mark.
 **Research behind the brand:** stealth precedents (Margiela, Corteiz, The Row, Chrome Hearts); consumer-psychology frameworks (Bourdieu, Han/Nunes/Dreze, Makkar/Yap);
 Singapore retail nodes and digital communities; guerrilla marketing mechanics (A6 posters, belly-band envelopes, cluster drop strategy).
-**Still undecided:** Discord access logic; drop logic (both need the teach-vs-filter question revisited).
-**Who decides what / what "ready" means:** [interview pending]
+**Drops:** small cluster drops, released through the Discord.
+**Decisions:** Adam alone has the final say. AI assistants advise and offer options; they do not decide.
+**Still undecided:** Discord access logic; the detail of the drop logic (both need the teach-vs-filter question revisited). What "ready" means for a drop: [interview pending]
 
-## 7. Red lines — [interview pending]
-What the brand refuses, so no assistant drifts toward generic streetwear defaults.
+## 7. Red lines (answered by Adam, 2026-10-17)
+- **No discounts or sales.**
+- **No public advertising.**
+- (Not ticked, so not red lines: influencer / celebrity seeding, and open restocks. Treat as undecided and ask before doing either.)
+- Still **[interview pending]**: anything else the brand refuses, and how it would respond to being copied.
 
 ## 8. The Realm (game) — its role
 A browser-based whack-a-mole / space-invaders hybrid at https://kasdaededejoj.github.io/whack-a-mole/. It is a **qualification and initiation gate**: it filters the right people
@@ -58,4 +63,6 @@ into the Discord and the physical product before they get access. Status and cod
 - What the names mean or where they come from: **[interview pending]**
 
 ## 10. Open questions
-Teach vs filter; Discord access logic; drop logic; and the interview-pending sections above.
+Teach vs filter (current lean: both in sequence); Discord access logic; drop logic detail; the interview-pending sections above;
+and a possible tension to settle: "no public advertising" is a red line, yet the research behind the brand includes guerrilla marketing (A6 posters, belly-band envelopes).
+Does physical guerrilla placement count as advertising, or is it part of the funnel?
