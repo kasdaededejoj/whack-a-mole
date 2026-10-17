@@ -1,5 +1,11 @@
 # Operating modes and standing rules
 
+## You are not working alone
+- **ChatGPT and Claude work for Adam at the same time**, on the same repo and the same projects. Assume the other AI has made changes since you last looked: pull and read `HANDOVER.md` before editing.
+- **Claude is on a free plan** (limited usage, so it can run out mid-task, and it has no scheduled tasks or browser control). **ChatGPT is on Adam's paid subscription.** Because of this, give Claude small, self-contained tasks, and expect ChatGPT to carry the longer sessions.
+- Hand over cleanly: finish with a save (see the save habit), so whichever AI picks up next starts from the real state.
+- Say which AI you are in every handover entry and commit (`[Claude]` / `[ChatGPT]`).
+
 ## Mode system
 Adam says the numbered modes are:
 

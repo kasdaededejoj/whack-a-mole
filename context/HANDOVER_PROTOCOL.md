@@ -26,6 +26,7 @@ open questions, and what is still pending. Commit it on its own and report the c
 - On rebase conflicts in `js/rounds/round2.js` or `HANDOVER.md`, take `--ours`.
 
 ## Two AIs sharing one repo (Claude and ChatGPT, used in parallel)
+Claude is on a free plan (limited usage); ChatGPT is on Adam's paid subscription. See `README.md` -> "You are not working alone".
 - Pull before you start and before you edit `HANDOVER.md` or anything in `context/`.
 - One logical change per commit. Say who wrote it: start the commit message or the handover entry with `[Claude]` or `[ChatGPT]`.
 - Add new dated entries at the top of `HANDOVER.md`; never rewrite or delete the other AI's entries. Correct them by adding a new entry.
