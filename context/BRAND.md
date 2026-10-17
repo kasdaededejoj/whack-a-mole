@@ -10,6 +10,8 @@ ask Adam. Last updated 2026-10-17 (interview round 2). (Garment specs live elsew
 - A **taste institution**, not a fashion brand with content attached. Clothing is one artifact among music, archives, essays, a browser-based game and a Discord community.
 - Three-axis archetype: **normality, mysticism, unconventionalism.** Always reference the full archetype in brand decisions. Bee orchid mimicry is one extension of it, not the defining concept: do not over-index on orchids.
 - Common thread across all output: **curiosity.**
+- **What it is, in Adam's words:** "a realm to facilitate the growth of banality and unconventionalism with fashion. Nothing more, nothing less."
+- **What it is not:** not hype streetwear, not a luxury house, not vintage, not even goth or cult (similar, but not it). "It's just what it is."
 
 ## 2. Ethos
 - Two-stage arc: liberation from irrelevant social authorities, then arrival at banality (ordinary life with interior conviction), then deep appreciation.
@@ -21,7 +23,7 @@ ask Adam. Last updated 2026-10-17 (interview round 2). (Garment specs live elsew
 - **What "banality" means here (Adam's meaning, confirmed 2026-10-17):** being fine with being boring to other people because the thing matters to you. A person with different interests, some of which don't correlate,
   held for their own enjoyment. For the brand that covers darkness, art, interesting music, relics, history and anything outside the mainstream that is "shrouded"
   only because those who appreciate it value the effort that went into making it.
-  *(CTP note, unresolved: Adam first linked this to the German concept* das Man*. In Heidegger's* Being and Time *das Man is the anonymous "they" of conformity, close to the opposite of this meaning; the nearer Heidegger idea is authenticity. Do not use "Das Man" as the brand's label until Adam picks: drop it, reclaim it deliberately, or name a different source.)*
+  **Label decided (Adam, 2026-10-17):** the concept is *Eigentlichkeit* (authenticity), not *das Man*. Do not call it "Das Man" (Heidegger's *das Man* is the anonymous conformist "they", the opposite). Pronounced EYE-gen-tlikh-kite.
 - **Why stealth (Adam, personal):** he does not want the brand to be mainstream. It should be discovered, chanced upon, by a community that appreciates it. That is why the brand takes pride in nuance.
 
 ## 3. The open tension (raise it whenever brand infrastructure decisions come up; do not let it pass unexamined)
@@ -44,12 +46,22 @@ If filter, they are marketing systems. This is the foundational architectural qu
 - **Speaks in riddles, never direct customer-service talk (Adam's examples):**
   - Right: asked "when is my order coming?", the brand answers **"in due time."**
   - Wrong: addressing the person directly "as if we're a human being", e.g. "it's coming in exactly 3 weeks, so rest assured", which is CSR talk.
-- Still **[interview pending]**: 3 to 5 real brand words or phrases that follow the naming pattern.
+- **Brand lexicon (Adam's examples):** the brand swaps ordinary platform and product words for its own Latin-esque ones:
+  - Instagram is **"Pictum"**.
+  - TikTok is **"Energi"** (energy, with an "i" in place of the "y").
+  - Clothes are **"Vestas"**.
+  *(Spellings come from a voice transcript; Adam to confirm. Extend the lexicon in the same spirit when needed, and ask before inventing a term for something important.)*
+- **When asked about the inspiration behind the brand**, Adam answers along the lines of: "because of the past and the present to stand" (voice-transcribed; exact wording to confirm). Treat it as the style of answer: short, riddle-like, no explanation.
+- **Stance:** the brand claims nothing about itself. "We are not someone, we are not more than who we are. We just are."
 
 ## 5. History
 **Origin (Adam, 2026-10-17):** it started as a passion for clothes, and as a passion for being yourself after being told to conform to society and not stand out.
 The aim is to let people be themselves, whether that is boring, unconventional or just different.
-**Still [interview pending]:** the decisions that shaped the brand over time, and what was tried and rejected.
+**Decisions that shaped the brand (Adam, 2026-10-17):** the central decision was drawing the line between what is considered mainstream and what is considered "us". What "us" looks like:
+- **Colour:** black first. Dark purple (specifically magenta purple, or "dark purple" in Pantone terms). Dark reds, crimson. Midnight blue, sometimes as an accent. Dark in nature, or unexpected.
+- **Moving image:** slow, static and film-esque qualities in any video. The aim is to capture insights of darkness and sometimes the light, "quote unquote", being the brand's personalities and interests.
+- **Silhouette and design:** long, flowy silhouettes that explore dye; oversized silhouettes with wind crossing through them (a constant). Design references include cyber sigilism and surrealism, but "we don't use much references".
+**What was tried and rejected:** unnecessary mainstream cultural wording that tries to sell, and anything implying the brand is someone or more than it is.
 
 ## 6. How we operate
 **Funnel (multi-gate):** physical business cards -> password-protected Carrd page -> capped Discord invite links.
@@ -63,12 +75,12 @@ Singapore retail nodes and digital communities; guerrilla marketing mechanics (A
 **Drops:** small cluster drops, released through the Discord.
 **Access (Adam, 2026-10-17):** the people who stay are those who reach the end of the funnel, "people that get us". In the game, completing it (resilience) earns access via a QR code.
 Other games or random pop-ups can open further routes. The Discord is also open to people who are big appreciators of fashion and, more importantly, are proud to be themselves irrespective of opinion.
-Who gets removed: not yet answered.
+Who gets removed: left to be decided later (Adam: "that will decide").
 **Guerrilla placement vs advertising:** advertising means paying for a defined space with guaranteed views and impressions. Guerrilla placement (A6 posters, belly-band envelopes) is the brand's alternative:
 it targets specific spaces and adds the brand's own anti-corporate spin. *(Claude's reading of an answer that was ambiguous: the red line is **paid advertising**; guerrilla placement is allowed. Adam to confirm.)*
 **If the brand is copied:** good, it shows demand. Anything can be copied except the network, the connections and what the brand stands for.
 **Decisions:** Adam alone has the final say. AI assistants advise and offer options; they do not decide.
-**Still undecided:** removal rules for the Discord; the detail of the drop logic (needs the teach-vs-filter question revisited). What "ready" means for a drop: Adam declined to answer ("that doesn't matter"); do not ask again.
+**Still undecided (on purpose):** removal rules for the Discord; the detail of the drop logic (needs the teach-vs-filter question revisited). What "ready" means for a drop: Adam declined to answer ("that doesn't matter"); do not ask again.
 
 ## 7. Red lines (answered by Adam, 2026-10-17)
 - **No discounts or sales.**
@@ -89,24 +101,24 @@ into the Discord and the physical product before they get access. Completing the
 
 ## 10. Taste references (Adam, 2026-10-17; spellings from a voice transcript, to confirm)
 - **Philosophy and values:** Taoism: being present, moving with the flow. Most brand concepts are philosophical and value-oriented.
-- **Designers and labels:** Yohji, Rick, Geoffrey, Boris, Lulu, Dan, and a Singapore reference transcribed as "Depression". Confirm the full names and spellings.
+- **Designers and labels:** Yohji, Rick, Geoffrey, Boris, Lulu, Dan, and a Singapore reference transcribed as "Depression"; in a later answer also "CCP", "Alex9SM" and "Lulu Don". All from a garbled voice transcript: confirm the full names and spellings before using any.
+- **Design references:** cyber sigilism, surrealism, long flowy dyed silhouettes, oversized silhouettes with wind passing through. Adam says the brand doesn't lean on many references.
 - **Music:** angelcore, euphoric dubstep, and artists "so out there that they are the genre" (one transcribed as "Levy Ryan", to confirm). The list keeps evolving.
 
 ## 11. Open questions
-Teach vs filter (current lean: both in sequence); the "Das Man" label; removal rules for the Discord; drop logic detail; whether guerrilla placement is allowed
-while paid advertising is the red line (Claude's reading, to confirm); what the brand must never be mistaken for; real brand words that follow the naming pattern;
-the history after the origin (decisions shaped, things rejected); spellings of the taste references.
+Teach vs filter (current lean: both in sequence); removal rules for the Discord (deliberately left for later); drop logic detail; whether guerrilla placement is allowed
+while paid advertising is the red line (Claude's reading, to confirm); spellings of the taste references and the lexicon; whether the inspiration phrase is worded right.
 
 ## 12. Interview tracker (keep updated; any AI can resume from here; show open questions in full each time)
-Pending: the "Das Man" label. Adam to pick: (1) drop it, (2) keep it as a deliberate reversal, (3) name a different source.
+Resolved: the "Das Man" label is dropped; the concept is Eigentlichkeit (authenticity).
 
 | # | Full question | Status |
 |---|---------------|--------|
 | 1 | How did the brand start? | Answered (section 5) |
 | 2 | Why stealth? | Answered (section 2) |
 | 3 | What does the brand believe? | Answered (section 2) |
-| 4 | What does "banality" mean in practice? | Answered (section 2); "Das Man" label unresolved |
-| 5 | Which actual words or phrases sound like the brand? Style is covered (see section 4); I'd still like 3 to 5 real examples that use the apostrophe and m/t/v pattern. | Partly (style answered, real examples missing) |
+| 4 | What does "banality" mean in practice? | Answered (section 2); label resolved: Eigentlichkeit |
+| 5 | Which actual words or phrases sound like the brand? | Answered (section 4: lexicon and inspiration phrase) |
 | 6 | How do you choose names? | Answered (section 4) |
 | 7 | Give one example of copy that sounds right for the brand, and one that sounds wrong. | Answered (section 4) |
 | 8 | Where does "Conformarult" come from, and what does it mean? | Answered (section 9) |
@@ -114,12 +126,13 @@ Pending: the "Das Man" label. Adam to pick: (1) drop it, (2) keep it as a delibe
 | 10 | Do the upgrade and ability names mean anything, or are they sound-driven? | Answered: sound-driven |
 | 11 | Does physical guerrilla placement count as "advertising"? | Answered (section 6); Claude's reading to confirm |
 | 12 | What does "ready" mean for a drop? | Declined by Adam ("doesn't matter"); do not ask again |
-| 13 | Discord access: who gets in, who stays, and who gets removed? | Partly (who gets in and stays answered, removal open) |
+| 13 | Discord access: who gets in, who stays, and who gets removed? | Answered; removal left to decide later |
 | 14 | Should influencer or celebrity seeding and open restocks be red lines too, or left open? | Left open on purpose; ChatGPT to propose |
 | 15 | How should the brand respond if someone copies it? | Answered (section 6) |
 | 16 | What references beyond the designers already named shape the brand's taste? | Answered (section 10); spellings to confirm |
-| 17 | Who or what might people wrongly assume the brand is (e.g. a hype streetwear label, a luxury house, a goth or occult scene, a vintage shop)? This is a guardrail so no output drifts toward the wrong thing. | Open (Adam asked what it meant; rephrased) |
+| 17 | Who or what might people wrongly assume the brand is? | Answered (section 1) |
 | 18 | Does the AI need the brand's actual name? | Answered: no, treat it as "???" (section 1) |
-| 19 | What decisions have shaped the brand since it started, and what did you try and reject? | Open |
-| 20 | Please confirm the spellings and full names in the taste references (the designers: Yohji, Rick, Geoffrey, Boris, Lulu, Dan, and the Singapore reference; the music artist transcribed as "Levy Ryan"). | Open |
-| 21 | Does the guerrilla reading hold: the red line is paid advertising only, and guerrilla placement is allowed? | Open (confirm) |
+| 19 | What decisions have shaped the brand since it started, and what did you try and reject? | Answered (section 5) |
+| 20 | Please confirm the spellings and full names in the taste references. Voice transcripts garbled them ("CCP", "Alex9SM", "Lulu Don", "Depression", "Levy Ryan", Geoffrey, Boris, Dan). | Open |
+| 21 | Does the guerrilla reading hold: the red line is paid advertising only (buying ad space), and guerrilla placement is allowed? | Open (explained to Adam; needs yes/no) |
+| 22 | Please confirm the spellings of the lexicon (Pictum, Energi, Vestas) and the exact wording of the inspiration answer ("because of the past and the present to stand"). | Open |
