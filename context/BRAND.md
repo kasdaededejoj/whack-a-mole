@@ -50,7 +50,8 @@ If filter, they are marketing systems. This is the foundational architectural qu
   - Instagram is **"Pictum"**.
   - TikTok is **"Energi"** (energy, with an "i" in place of the "y").
   - Clothes are **"Vestas"**.
-  *(Spellings come from a voice transcript; Adam to confirm. Extend the lexicon in the same spirit when needed, and ask before inventing a term for something important.)*
+  - **Where the words come from (Adam):** Latin, plus RPG (role-playing game) references. Adam keeps the specific references private because they are personal to him: do not ask which.
+  *(Spellings come from a voice transcript and were not re-checked. Extend the lexicon in the same spirit when needed, and ask before inventing a term for something important.)*
 - **When asked about the inspiration behind the brand**, Adam answers along the lines of: "because of the past and the present to stand" (voice-transcribed; exact wording to confirm). Treat it as the style of answer: short, riddle-like, no explanation.
 - **Stance:** the brand claims nothing about itself. "We are not someone, we are not more than who we are. We just are."
 
@@ -77,14 +78,14 @@ Singapore retail nodes and digital communities; guerrilla marketing mechanics (A
 Other games or random pop-ups can open further routes. The Discord is also open to people who are big appreciators of fashion and, more importantly, are proud to be themselves irrespective of opinion.
 Who gets removed: left to be decided later (Adam: "that will decide").
 **Guerrilla placement vs advertising:** advertising means paying for a defined space with guaranteed views and impressions. Guerrilla placement (A6 posters, belly-band envelopes) is the brand's alternative:
-it targets specific spaces and adds the brand's own anti-corporate spin. *(Claude's reading of an answer that was ambiguous: the red line is **paid advertising**; guerrilla placement is allowed. Adam to confirm.)*
+it targets specific spaces and adds the brand's own anti-corporate spin. **Confirmed by Adam (2026-10-17): the red line is paid advertising only; guerrilla placement is allowed.**
 **If the brand is copied:** good, it shows demand. Anything can be copied except the network, the connections and what the brand stands for.
 **Decisions:** Adam alone has the final say. AI assistants advise and offer options; they do not decide.
 **Still undecided (on purpose):** removal rules for the Discord; the detail of the drop logic (needs the teach-vs-filter question revisited). What "ready" means for a drop: Adam declined to answer ("that doesn't matter"); do not ask again.
 
 ## 7. Red lines (answered by Adam, 2026-10-17)
 - **No discounts or sales.**
-- **No paid advertising** (paying for a set space and guaranteed impressions). Guerrilla placement is not paid advertising; see section 6. *(Clarified from "no public advertising"; Adam to confirm.)*
+- **No paid advertising** (paying for a set space and guaranteed impressions). Guerrilla placement is not paid advertising; see section 6. *(Adam's original wording was "no public advertising"; he confirmed on 2026-10-17 that guerrilla placement is fine.)*
 - **Influencer / celebrity seeding and open restocks: intentionally left open by Adam.** He wants ChatGPT to propose a position on these, which he says may tie in nicely later. Do not treat them as decided either way.
 - Still **[interview pending]**: what the brand must never be mistaken for (question 17).
 
@@ -101,15 +102,31 @@ into the Discord and the physical product before they get access. Completing the
 
 ## 10. Taste references (Adam, 2026-10-17; spellings from a voice transcript, to confirm)
 - **Philosophy and values:** Taoism: being present, moving with the flow. Most brand concepts are philosophical and value-oriented.
-- **Designers and labels:** Yohji, Rick, Geoffrey, Boris, Lulu, Dan, and a Singapore reference transcribed as "Depression"; in a later answer also "CCP", "Alex9SM" and "Lulu Don". All from a garbled voice transcript: confirm the full names and spellings before using any.
+- **Designers and labels.** Adam named Yohji (Yamamoto) and Rick (Owens) directly. His other mentions were garbled by voice transcription, so Claude researched them (Mode 2, 2026-10-17). These are **identifications, not confirmations**; Adam said no further designer references are needed:
+
+  | Said | Most likely | Confidence | Source |
+  |------|-------------|-----------|--------|
+  | "CCP" | Carol Christian Poell: Austrian designer, label C.C.P., Milan; scar-stitched leather, anatomical cuts, drip sneakers | 9/10 | [Rawlooks](https://rawlooks.com/brand/carol-christian-poell/) |
+  | "Alex9SM" | 1017 ALYX 9SM: Matthew M. Williams, Milan; avant-garde streetwear, construction-led | 9/10 | [Rawlooks](https://rawlooks.com/brand/1017-alyx-9sm/) |
+  | "Geoffrey" | Geoffrey B. Small: American designer, handmade in Veneto, Italy; 100+ Paris collections | 8/10 | [Wikipedia](https://en.wikipedia.org/wiki/Geoffrey_B._Small) |
+  | "Boris" | Boris Bidjan Saberi: avant-garde label with a diffusion line, 11 | 8/10 | [Hypebeast](https://hypebeast.com/hb100/2017/borisbidjansaberi) |
+  | "Lulu, Dan" / "Lulu Don" | Lou Dalton: English menswear designer, London; known for knitwear collaborations. Phonetic match only, and the style fits less than the others | 5/10 | [Wikipedia](https://en.wikipedia.org/wiki/Lou_Dalton) |
+  | "Depression" (Singapore) | DEPRESSION: Singapore label, flagship at Cineleisure Orchard; black, androgynous, dark humour (Time Out, 2012, so details may be dated) | 8/10 | [Time Out](https://www.timeout.com/singapore/shopping/depression) |
+
 - **Design references:** cyber sigilism, surrealism, long flowy dyed silhouettes, oversized silhouettes with wind passing through. Adam says the brand doesn't lean on many references.
-- **Music:** angelcore, euphoric dubstep, and artists "so out there that they are the genre" (one transcribed as "Levy Ryan", to confirm). The list keeps evolving.
+- **Music:** angelcore, euphoric dubstep, and artists "so out there that they are the genre". One name was transcribed as "Levy Ryan"; research could not identify it, so do not use it. The list keeps evolving.
 
 ## 11. Open questions
-Teach vs filter (current lean: both in sequence); removal rules for the Discord (deliberately left for later); drop logic detail; whether guerrilla placement is allowed
-while paid advertising is the red line (Claude's reading, to confirm); spellings of the taste references and the lexicon; whether the inspiration phrase is worded right.
+Teach vs filter (current lean: both in sequence); removal rules for the Discord (deliberately left for later); influencer seeding and open restocks (left open for ChatGPT to propose);
+the exact wording of the inspiration phrase; spellings in the lexicon; the unidentified music artist.
 
-## 12. Interview tracker (keep updated; any AI can resume from here; show open questions in full each time)
+## 12. Self-check (for the AI reading this: do this before your first reply)
+Answer these two in one line each, to yourself. If you cannot answer one confidently, reread the section named and then ask Adam instead of guessing.
+1. A customer asks "when is my order coming?" How does the brand reply? *(Check against section 4: a short, lowercase, cryptic line in the collective "we", such as "in due time". Never a delivery estimate, never customer-service reassurance.)*
+2. In one sentence: what is this brand, and what is it not? *(Check against section 1: a realm to facilitate the growth of banality and unconventionalism with fashion; not hype streetwear, a luxury house, vintage, or goth/cult. Its name is "???".)*
+If you are unsure how these two relate to the red lines, read section 7 (no discounts or sales; no paid advertising; seeding and restocks are open for you to propose).
+
+## 13. Interview tracker (interview complete 2026-10-17; keep updated; any AI can resume from here)
 Resolved: the "Das Man" label is dropped; the concept is Eigentlichkeit (authenticity).
 
 | # | Full question | Status |
@@ -133,6 +150,6 @@ Resolved: the "Das Man" label is dropped; the concept is Eigentlichkeit (authent
 | 17 | Who or what might people wrongly assume the brand is? | Answered (section 1) |
 | 18 | Does the AI need the brand's actual name? | Answered: no, treat it as "???" (section 1) |
 | 19 | What decisions have shaped the brand since it started, and what did you try and reject? | Answered (section 5) |
-| 20 | Please confirm the spellings and full names in the taste references. Voice transcripts garbled them ("CCP", "Alex9SM", "Lulu Don", "Depression", "Levy Ryan", Geoffrey, Boris, Dan). | Open |
-| 21 | Does the guerrilla reading hold: the red line is paid advertising only (buying ad space), and guerrilla placement is allowed? | Open (explained to Adam; needs yes/no) |
-| 22 | Please confirm the spellings of the lexicon (Pictum, Energi, Vestas) and the exact wording of the inspiration answer ("because of the past and the present to stand"). | Open |
+| 20 | Please confirm the spellings and full names in the taste references. | Closed: Adam said no more designer references needed; Claude researched the garbled ones (section 10) |
+| 21 | Does the guerrilla reading hold: the red line is paid advertising only, and guerrilla placement is allowed? | Answered: yes (sections 6 and 7) |
+| 22 | Where do the lexicon words come from, and are the spellings right? | Answered: Latin plus RPG references (kept private); spellings not re-checked |

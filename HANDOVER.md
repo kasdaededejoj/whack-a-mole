@@ -6,6 +6,19 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 
 
+
+---
+
+## [Claude] Brand interview complete; BRAND.md filled in — 2026-10-17
+
+- **`context/BRAND.md` is now filled** from an interview with Adam: ethos (Eigentlichkeit, not Das Man), origin, voice (cryptic, lowercase, collective "we", riddles),
+  naming rules and lexicon (Pictum, Energi, Vestas), red lines (no discounts or sales, no paid advertising; guerrilla placement is fine), palette and film language,
+  what the brand is not, access logic, taste references (designers identified by Mode 2 research, flagged as identifications).
+- **Brand name is withheld: refer to it as "???".**
+- **Left open on purpose:** influencer seeding and open restocks (ChatGPT to propose), Discord removal rules. Adam declined to define "ready" for a drop. Do not ask again.
+- **Self-check added** (BRAND.md section 12 and `context/README.md`): any AI reading the pack answers two short questions before replying.
+- Custom instructions Box 2 gained a voice line for writing as the brand. Paste the updated boxes into ChatGPT.
+
 ---
 
 ## [Claude] Brand page added to the context pack — 2026-10-17
