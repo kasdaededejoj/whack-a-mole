@@ -21,8 +21,12 @@ ask Adam. Last updated 2026-10-17. (Garment specs live elsewhere and are not par
 Is The Realm meant to **teach** taste or **filter** for it? If teach, every touchpoint (game, Discord, drops, archive) is an educational system.
 If filter, they are marketing systems. This is the foundational architectural question and it is unresolved.
 
-## 4. Language and voice — [interview pending]
-How the brand speaks, words it uses and never uses, tone, naming rules.
+## 4. Language and voice (answered by Adam, 2026-10-17)
+- **Tone:** cryptic and mystical.
+- **Casing:** all lowercase in brand copy.
+- **Address:** collective "we": the institution speaks as one body.
+- **Never:** hype words (drop, exclusive, limited, grail, fire); emojis and exclamation marks; explaining itself (no tutorials, no "here's what this means"); selling language (buy now, shop, discount, sale, calls to action).
+- Still **[interview pending]**: words the brand does use, naming rules, an example of copy that sounds right and one that doesn't.
 
 ## 5. History — [interview pending]
 Origin, the decisions that shaped the brand, what was tried and rejected.
