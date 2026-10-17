@@ -75,24 +75,26 @@ Teach vs filter (current lean: both in sequence); Discord access logic; drop log
 and a possible tension to settle: "no public advertising" is a red line, yet the research behind the brand includes guerrilla marketing (A6 posters, belly-band envelopes).
 Does physical guerrilla placement count as advertising, or is it part of the funnel?
 
-## 11. Interview tracker (keep updated; any AI can resume from here)
-| # | Question | Status |
-|---|----------|--------|
+## 11. Interview tracker (keep updated; any AI can resume from here; show open questions in full each time)
+Pending: the "Das Man" label. Adam to pick: (1) drop it, (2) keep it as a deliberate reversal, (3) name a different source.
+
+| # | Full question | Status |
+|---|---------------|--------|
 | 1 | How did the brand start? | Answered (section 5) |
 | 2 | Why stealth? | Answered (section 2) |
 | 3 | What does the brand believe? | Answered (section 2) |
-| 4 | What does "banality" mean in practice? | Answered (section 2); "Das Man" label unresolved, see CTP note |
-| 5 | Words or phrases that sound like the brand | Open |
-| 6 | Naming rules (how names like Conformarult get chosen) | Open |
-| 7 | One example of copy that sounds right, one that sounds wrong | Open |
+| 4 | What does "banality" mean in practice? | Answered (section 2); "Das Man" label unresolved |
+| 5 | Which words or phrases sound like the brand? (recurring words, favourite terms, something you'd put in a caption) | Skipped for now |
+| 6 | How do you choose names? The game's names (Conformarult, rapida, dua beam, semic, plasma, fokus lina) don't look like one pattern. Is there a rule: invented words, a borrowed language, sound before meaning, or a mix? | Open |
+| 7 | Give one example of copy (a caption, a line, a message) that sounds right for the brand, and one that sounds wrong. | Open |
 | 8 | Where does "Conformarult" come from, and what does it mean? | Open |
 | 9 | Where does "the Realm" come from? | Open |
-| 10 | Do the upgrade and ability names mean anything? | Open |
-| 11 | Does guerrilla placement count as "advertising"? | Open |
-| 12 | What does "ready" mean for a drop? | Open |
-| 13 | Discord access: who gets in, stays, goes | Open |
-| 14 | Influencer seeding and open restocks: red lines? | Partly (not ticked, so undecided) |
-| 15 | Response to being copied | Open |
-| 16 | Taste references beyond named designers | Open |
-| 17 | What the brand must never be mistaken for | Open |
-| 18 | Does the AI need the brand's actual name (keep it out of the public repo) | Open |
+| 10 | Do the upgrade and ability names (rapida, rapidaaa, beam, dua beam, fokus lina, semic, machina, plasma) mean anything, or are they sound-driven? | Open |
+| 11 | Does physical guerrilla placement (A6 posters, belly-band envelopes) count as "advertising" under the no-public-advertising rule, or is it part of the funnel? | Open |
+| 12 | What does "ready" mean for a drop: what has to be true before it goes out? | Open |
+| 13 | Discord access: who gets in, who stays, and who gets removed? | Open |
+| 14 | Should influencer or celebrity seeding and open restocks be red lines too, or left open? | Partly (not ticked, so undecided) |
+| 15 | How should the brand respond if someone copies it? | Open |
+| 16 | What references beyond the designers already named (artists, films, music, books) shape the brand's taste? | Open |
+| 17 | What should the brand never be mistaken for? | Open |
+| 18 | Does the AI need the brand's actual name? (The page is public: keep the name out of the repo; tell the assistant directly if needed.) | Open |
