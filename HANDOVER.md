@@ -5,6 +5,18 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 
 
+
+---
+
+## [Claude] Brand page added to the context pack — 2026-10-17
+
+- **Added `context/BRAND.md`**: one page for everything about the brand (identity, ethos, teach-vs-filter tension, operations, vocabulary).
+  Sections 4 (voice), 5 (history), 7 (red lines) and parts of 2, 6, 9 are **[interview pending]**; Adam is being interviewed to fill them.
+- **Moved in** from `PROFILE.md`, `topics/design-research.md`, `projects/the-realm-game.md` and the old private brand file; those now point to `BRAND.md`.
+- **Adam chose to make `BRAND.md` public**, including funnel, Discord and IP strategy. No passwords or tokens are in it.
+- **Garment R&D stays out of the repo** (`PRIVATE_garment-rd.md`, uploaded to the assistant directly).
+- Custom instructions Box 1 now carries two sentences of brand identity and points to `BRAND.md`.
+
 ---
 
 ## [Claude] Context pack for moving between AI assistants — 2026-10-17

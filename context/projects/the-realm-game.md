@@ -1,6 +1,6 @@
 # The Realm (browser game)
 
-**What:** a browser-based whack-a-mole / space-invaders hybrid. It is the brand's discovery and gatekeeping mechanic.
+**What:** a browser-based whack-a-mole / space-invaders hybrid. Its role in the brand is described in `BRAND.md` (section 8).
 **Live:** https://kasdaededejoj.github.io/whack-a-mole/  **Repo:** `kasdaededejoj/whack-a-mole` (deploys from branch `main`, no Actions).
 **Source of truth for status:** `/HANDOVER.md` in the repo root. Read it before touching code; this file is only a summary and goes stale.
 

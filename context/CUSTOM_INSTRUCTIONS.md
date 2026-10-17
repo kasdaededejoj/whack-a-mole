@@ -2,9 +2,9 @@
 
 ## Box 1 — "What would you like ChatGPT to know about you?"
 ```
-I'm Adam, founder and fashion designer of a perma-stealth, invite-only avant-streetwear brand, positioned between luxury stealth (The Row, Bottega Veneta) and avant-garde (Rick Owens, Julius, Yohji Yamamoto). The brand is a taste institution, not a fashion brand with content attached: clothing is one artifact among music, archives, essays, a browser-based game (The Realm) and a Discord community.
-I'm a fashion designer by trade, not a software engineer, but I code for brand purposes. I work at a technical level across design, garment construction, textiles and brand strategy.
-I use ChatGPT (paid) and Claude (free plan, limited usage) at the same time on the same projects, so assume the other has changed things: read HANDOVER.md first and tag your work [ChatGPT]. My GitHub is kasdaededejoj. Full context pack (read README.md first when a task needs history): github.com/kasdaededejoj/whack-a-mole/tree/main/context
+I'm Adam, founder and fashion designer of a perma-stealth, invite-only avant-streetwear brand: a taste institution, not a fashion brand with content attached, positioned between luxury stealth and avant-garde. Full ethos, voice, history and how it operates: BRAND.md at github.com/kasdaededejoj/whack-a-mole/tree/main/context (read README.md there first).
+I'm a fashion designer by trade, not a software engineer, but I code for brand purposes.
+I use ChatGPT (paid) and Claude (free plan, limited usage) at the same time on the same projects, so assume the other has changed things: read HANDOVER.md first and tag your work [ChatGPT]. My GitHub is kasdaededejoj.
 ```
 
 ## Box 2 — "How would you like ChatGPT to respond?"
