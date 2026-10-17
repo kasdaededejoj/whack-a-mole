@@ -6,14 +6,14 @@ Adam says the numbered modes are:
 | Mode | What it is (as stated by Adam, 2026-10-17) |
 |------|--------------------------------------------|
 | **Mode 1** | Analysis |
-| **Mode 1.1** | Enhanced analysis |
+| **Mode 1.1** | Enhanced analysis: heavier analysis and heavier rationality than Mode 1 (Adam only partly remembers the rest) |
 | **Mode 2** | Research |
 | **Mode 3 Build** | Coding (rules in the next section) |
 
 **CTP** wraps all modes (see below). Follow-Up Actions are appended to every Mode 1 / 1.1 analysis. The research rules under
 "Standing rules" (fetch the page after searching, X/10 accuracy ratings, linked sources, fresh sources) govern analysis and research.
 
-> **Not fully recorded:** only the one-line meaning of each mode is known. What exactly makes 1.1 "enhanced" compared with 1, and the
+> **Not fully recorded:** only the one-line meaning of each mode is known. The rest of what makes 1.1 "enhanced" compared with 1 (beyond heavier analysis and rationality), and the
 > full output format of each mode, were not written down. Do not invent it: if Adam names a mode and the task is ambiguous, ask.
 > TODO (Adam): paste the full definitions if you want them exact. The collaboration modes below (Surgical, Completeness) come from
 > earlier Sept 2026 notes and may overlap with or be superseded by these modes.
