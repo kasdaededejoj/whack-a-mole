@@ -1,5 +1,8 @@
 # Handover protocol
 
+## Save habit: every task ends with a save
+Saving is not only on request. After every task or decision, update `HANDOVER.md` and the relevant `context/` file, then report the commit.
+
 ## When Adam says "save"
 Update the project's `HANDOVER.md` on GitHub with: what changed, decisions made (including ones made in LD mode),
 open questions, and what is still pending. Commit it on its own and report the commit hash.
@@ -9,6 +12,13 @@ open questions, and what is still pending. Commit it on its own and report the c
 2. **Check whether every LD-mode decision in the handover has actually been implemented.** Compare the list against the code and
    `git log`, and report each as "done (commit)", "partly" or "not done". Do not assume done because it is written down.
 3. Do not ship LD items until Adam exits LD mode.
+
+## Hard constraints carried over from earlier notes (re-verify against the code before relying on them)
+- **Audio is a no-touch zone** unless the task is audio. Past breakages: a listener consumed before interaction, and a GitHub Releases CORS failure.
+  The old rule named `BGM_URL`, `THUD_URL`, `bgmAudio`, `initAudio`, `getAudio`, `preloadThud`, `playThud`, `playMiss` in `index.html`. The code has since been split
+  into modules (`js/audio.js`), so re-check what those names map to now.
+- Confirm the current file state before editing; files change between sessions, so never assume the last session's version is current.
+- Design philosophy for the game: no tutorials, no explanations ("let them discover it").
 
 ## Hygiene
 - Never write tokens, passwords or keys into any file or commit (GitHub push protection will block them, and they would be public).
