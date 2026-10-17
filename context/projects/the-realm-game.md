@@ -22,3 +22,25 @@ Vanilla JS ES modules, canvas rendering, Web Audio procedural SFX (no sample fil
 
 ## Scope discipline
 Different agents own Round 1, Round 2 and Round 3. Stay inside your round.
+
+## Progress snapshot (2026-10-17) — what is done and not done
+Full detail and commit hashes: `/HANDOVER.md`. This table goes stale; if it disagrees with HANDOVER.md or the code, the code wins.
+
+| Item | Status |
+|------|--------|
+| Four boss combos (fokus lina, semic, machina, plasma) | Done, not yet playtested together |
+| Boss body, hurt flash, death split, cast telegraph, Pincer Press, hand-to-spike morph | Done (flat 2D boss) |
+| Both swipe pincer and Pincer Press in rotation | Done |
+| Post-hit invincibility + lower wave damage (B16) | Done |
+| Wave damage synced to its visual (B17) | Done |
+| 3D engine `js/rounds/boss3d.js` (B18/B19) | Built, **not wired into the game** |
+| 3D boss swap-in (B23a), hurt flash and death split per face | Not done, waits for Gate 1 approval |
+| Gate 1: Adam approves the 3D look | Pending (crobe v1 shown, v2 planned; see `context/prototypes/crobe/`) |
+| Crobe (cowl + robe) boss design | Prototype v1 only |
+| Pincer Press polish: hands fly back and reattach, body hands hidden while detached, wind-up/swing/return timeline | Not done |
+| Boss attack SFX (pincer, press, teleport landing) | Not done, waiting on audio specs |
+| SFX eccentricity pass (`playBulletFire`, `playMissileFire`) | Not done, waiting on audio specs |
+| Wave VFX `playbackRate` sync | Not done |
+| Stylised upgrade buttons | Not done, needs Adam's style direction |
+| Gate 2, batches B20-B26 | Details never recorded. Rebuild the batch plan from HANDOVER.md before shipping |
+| Playtest of all four combos, 3D frame cost on the 60Hz phone | Not done |
