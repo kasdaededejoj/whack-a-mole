@@ -17,10 +17,10 @@ ask Adam. Last updated 2026-10-17. (Garment specs live elsewhere and are not par
 - Game design philosophy: no tutorials, no explanations. "Let them discover it."
 - **Adam's own words on the ethos (2026-10-17):** "we believe that everyone should embrace banality and unconventionalism." Whether you're into something no one knows about,
   or something seen as cringy, you should take part in it.
-- **What "banality" means here:** *Das Man* (a German concept; Adam has not yet named the book). A person with different interests, some of which don't correlate,
+- **What "banality" means here (Adam's meaning, confirmed 2026-10-17):** being fine with being boring to other people because the thing matters to you. A person with different interests, some of which don't correlate,
   held for their own enjoyment. For the brand that covers darkness, art, interesting music, relics, history and anything outside the mainstream that is "shrouded"
   only because those who appreciate it value the effort that went into making it.
-  *(CTP note: in Heidegger's* Being and Time*, das Man is the anonymous "they" of social conformity, close to the opposite of how it is used here. Adam to confirm the source and the intended sense.)*
+  *(CTP note, unresolved: Adam first linked this to the German concept* das Man*. In Heidegger's* Being and Time *das Man is the anonymous "they" of conformity, close to the opposite of this meaning; the nearer Heidegger idea is authenticity. Do not use "Das Man" as the brand's label until Adam picks: drop it, reclaim it deliberately, or name a different source.)*
 - **Why stealth (Adam, personal):** he does not want the brand to be mainstream. It should be discovered, chanced upon, by a community that appreciates it. That is why the brand takes pride in nuance.
 
 ## 3. The open tension (raise it whenever brand infrastructure decisions come up; do not let it pass unexamined)
@@ -81,7 +81,7 @@ Does physical guerrilla placement count as advertising, or is it part of the fun
 | 1 | How did the brand start? | Answered (section 5) |
 | 2 | Why stealth? | Answered (section 2) |
 | 3 | What does the brand believe? | Answered (section 2) |
-| 4 | What does "banality" mean in practice? | Answered (section 2); source book to confirm |
+| 4 | What does "banality" mean in practice? | Answered (section 2); "Das Man" label unresolved, see CTP note |
 | 5 | Words or phrases that sound like the brand | Open |
 | 6 | Naming rules (how names like Conformarult get chosen) | Open |
 | 7 | One example of copy that sounds right, one that sounds wrong | Open |
