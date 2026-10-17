@@ -1,15 +1,22 @@
 # Operating modes and standing rules
 
 ## Mode system
-Adam uses a structured mode system: **Mode 1, Mode 1.1, Mode 2 and Mode 3 Build.**
-> **Not fully recorded.** The original definitions of Modes 1, 1.1 and 2 were not found in any saved notes. What the notes imply
-> (inference, unconfirmed):
-> - **Mode 1 / 1.1 look like analysis and research modes.** Evidence: Follow-Up Actions are appended to "every Mode 1/1.1 analysis",
->   and the research rules below (fetch the page after searching, X/10 accuracy ratings, linked sources, fresh sources) were set alongside them.
-> - **Mode 3 Build is the coding mode** (propose exact changes, wait for confirmation, batch commits, security check on every edit).
-> - **Mode 2 is unknown.** Do not guess.
-> TODO (Adam): paste the original text, or tell the AI which mode you mean when you name it. The collaboration modes below come from
-> earlier (Sept 2026) notes and may overlap with or be superseded by the numbered modes.
+Adam says the numbered modes are:
+
+| Mode | What it is (as stated by Adam, 2026-10-17) |
+|------|--------------------------------------------|
+| **Mode 1** | Analysis |
+| **Mode 1.1** | Enhanced analysis |
+| **Mode 2** | Research |
+| **Mode 3 Build** | Coding (rules in the next section) |
+
+**CTP** wraps all modes (see below). Follow-Up Actions are appended to every Mode 1 / 1.1 analysis. The research rules under
+"Standing rules" (fetch the page after searching, X/10 accuracy ratings, linked sources, fresh sources) govern analysis and research.
+
+> **Not fully recorded:** only the one-line meaning of each mode is known. What exactly makes 1.1 "enhanced" compared with 1, and the
+> full output format of each mode, were not written down. Do not invent it: if Adam names a mode and the task is ambiguous, ask.
+> TODO (Adam): paste the full definitions if you want them exact. The collaboration modes below (Surgical, Completeness) come from
+> earlier Sept 2026 notes and may overlap with or be superseded by these modes.
 
 ## Always-on wrappers (from earlier notes)
 - **CTP = Critical Thinking Partner**, default ON for all creative, technical and brand tasks: acknowledge, surface strengths
