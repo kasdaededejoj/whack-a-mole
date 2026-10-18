@@ -1,5 +1,15 @@
 # Handover — The Realm
 
+## [ChatGPT] Skill doc for workflows and style — 2026-10-18
+
+- Added root `SKILL.md` at Adam's request: decision support, recorded modes and commands, response style, brand voice, shared-repo work, and save/continuation rules. Linked it from `READ ME.md` and `context/README.md`.
+- Based it on the current chat and existing context sources; kept the incomplete Mode 1.1 definition and historical tool assignments explicit. The later conflict-preservation rule takes precedence over the old automatic `--ours` instruction.
+- The wider brand review and saved/not-saved audit remain paused while Adam supplies more information. This documentation task does not resume those tasks or authorize game implementation.
+- The original repo and the PR copy are now private; the current GitHub account has accepted write access to the original. Sensitive-material storage boundaries remain in effect.
+- The guide is stored in the repository, not installed globally. No game code changed.
+
+---
+
 ## [ChatGPT] Living PRD draft — 2026-10-18
 
 - Added `PRD.md` as a public, game-only working draft covering the current journey, acceptance criteria, release gates, and decisions still needed. It authorizes no gameplay implementation.

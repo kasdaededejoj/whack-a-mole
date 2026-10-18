@@ -12,6 +12,7 @@ Written 2026-10-17 so Adam can move between AI assistants (Claude to ChatGPT) wi
 ## Files
 | File | Read it when |
 |------|--------------|
+| `../SKILL.md` | Working with Adam: consolidated workflows and style, with links to the detailed source notes. |
 | `CUSTOM_INSTRUCTIONS.md` | Setting up a new assistant. Two blocks sized for ChatGPT's custom instructions boxes. |
 | `BRAND.md` | Anything about the brand: ethos, voice, history, how it operates, red lines. Read it for any brand task. |
 | `PROFILE.md` | Always. Who Adam is. |

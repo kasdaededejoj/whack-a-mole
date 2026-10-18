@@ -22,6 +22,7 @@ Canonical project direction is documented in:
 - `agent.md` — AI/developer implementation rules
 - `PROJECT.md` — current project status and milestones
 - `PRD.md` — living product requirements, scope, and release gates
+- `SKILL.md` — Adam's workflows, decision support, and communication/brand style
 - `HANDOVER.md` — long-running session notes when needed
 
 Note: this repository intentionally uses `READ ME.md` and `agent.md` as the
