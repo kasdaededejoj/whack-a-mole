@@ -26,7 +26,7 @@ CURRENT STATE (verify against the code and HANDOVER.md before relying on it)
 - The game (The Realm) is in LD mode: plan only, no shipping until Adam says so.
 - The 3D boss engine exists in js/rounds/boss3d.js but isn't wired in. The cowl + robe look is a v1 prototype in context/prototypes/crobe/; v2 is planned. Gate 1 (Adam approves the 3D look) is pending.
 - Not done: Pincer Press polish, boss SFX wiring and the SFX pass (waiting on a separate audio AI), wave VFX playback sync, stylised upgrade buttons, a playtest of all four boss combos.
-- Missing: Gate 2 and batches B20-B26 were never recorded. Rebuild the batch plan from HANDOVER.md before shipping.
+- Missing: Gate 2 and batches B20-B26 were never recorded. Rebuild the batch plan from HANDOVER.md before shipping, and see its entry "Batch plan B16-B26: what is actually known" for the known fragments and where the rest probably is (an earlier Claude Code session, session_01HLE3iXNyM7TwC6nDBfE3Gu, unconfirmed). Never invent the missing batches.
 
 OPEN, FOR YOU
 - Influencer or celebrity seeding and open restocks: Adam left these open on purpose. Propose a position.

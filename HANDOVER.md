@@ -31,6 +31,31 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 
 
+
+---
+
+## [Claude] Batch plan B16-B26: what is actually known, and where the rest probably is — 2026-10-18
+
+Adam asked whether the remaining batches are recorded in GitHub. **They are not.** Only fragments exist. Searched: the repo, every commit message and the full transcript of this session; the B20-B26 list is not in any of them.
+
+**Known fragments (from commit messages)**
+
+| Batch | What it is | Status |
+|-------|-----------|--------|
+| B16 | Boss damage easing: 1s post-hit invincibility, wave damage 31-34 down to 18-22 (`2b42a0e`) | Done |
+| B17 | Wave projectile spawns when its visual launches (`2b42a0e`) | Done |
+| B18 / B19a / B19b | Fake-3D engine `boss3d.js` and the Conformarult box build, rest pose verified identical to the flat draw (`74ed8f1`) | Done, not wired in |
+| Gate 1 | Adam approves the 3D look before the swap | Pending |
+| B23a | Wire `boss3d.js` into the boss draw behind a flag, flat boss as fallback | Not done, waits on Gate 1 |
+| B20, B21, B22, B24, B25, B26, Gate 2 | **Unknown. Do not invent them.** | Unrecorded |
+
+**Where the rest probably is.** Adam's memory notes say he approved "the layered batch plan (B16-B26 with two approval gates)" in an earlier chat. The earlier boss-work commits were written by the Claude Code session
+`session_01HLE3iXNyM7TwC6nDBfE3Gu` (see commits `db81615` and `caa2a2d`): https://claude.ai/code/session_01HLE3iXNyM7TwC6nDBfE3Gu. That is the most likely place the plan was written, but it is **not confirmed**.
+
+**How to recover it:** Adam opens that session (or whichever chat he approved the plan in) and asks: "List batches B16 to B26 and both approval gates, with what each one does and what depends on what." He pastes the answer into any AI here,
+which records it in this file as a new entry and then updates `context/projects/the-realm-game.md`, `CLAUDE_START_HERE.md` and `CHATGPT_START_HERE.md`.
+If it cannot be found, rebuild a plan from the table above and Adam's decisions, and label it as a reconstruction.
+
 ---
 
 ## [Claude] Claude start-here handover added — 2026-10-18
