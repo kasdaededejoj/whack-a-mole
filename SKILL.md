@@ -49,10 +49,11 @@ Read `context/BRAND.md` for identity, vocabulary, examples, and open choices. Th
 
 - Write brand copy in lowercase, with collective **we**, cryptic phrasing, and riddles. Avoid selling language, hype words, emojis, and exclamation marks.
 - Preserve the full archetype: normality, mysticism, unconventionalism. Curiosity connects the output; no single reference or motif defines it.
+- When brand infrastructure decisions arise, examine whether the touchpoint teaches appreciation, filters for affinity, or serves another explicit purpose. The filter-first/teach-inside lean is provisional; do not resolve the tension or approve a sequence by default.
 - Use the established lexicon. Keep uncertain transcript-derived spellings marked; ask before settling an important new term.
 - Recorded visual preferences include black, dark magenta purple, crimson, occasional midnight blue, flowing silhouettes, and slow, static, film-like moving images.
 - Game direction favors negative space, minimal HUD, silhouette before color, restrained feedback, and discovery without tutorials or explanations.
-- Preserve recorded red lines: no discounts or sales and no paid advertising. Guerrilla placement is allowed. Influencer/celebrity seeding and open restocks remain open for a proposal; community removal rules are deferred.
+- Preserve recorded red lines: no discounts or sales and no paid advertising. Guerrilla placement is allowed. The latest "no public ads" wording needs a scope decision before an affected proposal; do not silently broaden or narrow it. Small cluster drops are the recorded format. Influencer/celebrity seeding and open restocks remain open for a proposal; community removal rules are deferred.
 
 Before a first substantive brand reply, do the two-question self-check in `context/BRAND.md` section 12. If the answers remain unclear after rereading, ask Adam rather than guessing. Do not invent operational promises from a copy-style example.
 
@@ -81,5 +82,7 @@ Keep implementation status and feature gates in the PRD/project handover. Rebuil
 Keep product requirements in `PRD.md`, detailed brand identity in `context/BRAND.md`, workflow/style in this file, and implementation history in `HANDOVER.md`.
 
 Imported operations remain in the local `PRIVATE_operations.md` outside GitHub, with their private PRD supplement. Do not copy them back into the repository, even though it is private. The staging import/wipe is complete; do not recreate it. `PRIVATE_garment-rd.md` is supplied directly by Adam and must remain outside GitHub. Never save credentials in documents or commits.
+
+Adam has now supplied garment R&D details directly in chat. They are recorded in the local `PRIVATE_garment-rd.md` outside GitHub as founder-supplied research/design notes, not independently validated production specifications. Do not repeat those details in public or repository summaries.
 
 The broader audit of all saved/missing work is separate from this documentation update. Do not claim it has been completed.

@@ -31,6 +31,8 @@ Is The Realm meant to **teach** taste or **filter** for it? If teach, every touc
 If filter, they are marketing systems. This is the foundational architectural question and it is unresolved.
 **Adam's current lean (2026-10-17): both, in sequence**: filter first (the funnel and the game), then teach inside (the Discord and what follows). Not final.
 
+**[ChatGPT] Founder clarification, 2026-10-18:** keep this tension explicit when considering brand infrastructure. Adam's supplied summary includes both "teach-then-filter" and "filter first"; it does not resolve the sequence. Do not treat a default sequence or a game-completion result as proof of taste/affinity. The philosophical arc remains liberation from irrelevant authorities → ordinary life with interior conviction → deep appreciation, connected through curiosity.
+
 ## 4. Language and voice (answered by Adam, 2026-10-17)
 - **Tone:** cryptic and mystical.
 - **Casing:** all lowercase in brand copy.
@@ -80,6 +82,8 @@ it targets specific spaces and adds the brand's own anti-corporate spin. **Confi
 - **No paid advertising** (paying for a set space and guaranteed impressions). Guerrilla placement is not paid advertising; see section 6. *(Adam's original wording was "no public advertising"; he confirmed on 2026-10-17 that guerrilla placement is fine.)*
 - **Influencer / celebrity seeding and open restocks: intentionally left open by Adam.** He wants ChatGPT to propose a position on these, which he says may tie in nicely later. Do not treat them as decided either way.
 - Still **[interview pending]**: what the brand must never be mistaken for (question 17).
+
+**[ChatGPT] Wording to preserve, 2026-10-18:** Adam's clarification repeats "no public ads" alongside no paid advertising and explicit permission for guerrilla placement. The earlier paid-advertising prohibition is clear; whether the new wording adds another restriction is unresolved. Clarify only when an affected proposal is active. Small cluster drops remain the stated format.
 
 ## 8. The Realm (game) — its role
 A browser-based whack-a-mole / space-invaders hybrid at https://kasdaededejoj.github.io/whack-a-mole/. It is a **qualification and initiation gate**: it filters the right people

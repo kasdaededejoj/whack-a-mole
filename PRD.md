@@ -8,7 +8,11 @@ This document records the brand purpose relevant to The Realm, the current game,
 
 ??? is Adam's perma-stealth, invite-only avant-streetwear brand. The name is deliberately withheld. Its recorded ambition is a taste institution expressed through fashion, music, archives, essays, a game, and community.
 
+Its positioning references sit between luxury stealth (The Row, Bottega Veneta) and avant-garde (Rick Owens, Julius, Yohji Yamamoto). These describe the intended territory; the brand does not claim to be a luxury house, hype streetwear, vintage, goth, or a cult.
+
 Adam describes its purpose as a realm that facilitates the growth of banality and unconventionalism with fashion. Banality means being comfortable with interests others may find ordinary or boring because they matter to you. Unconventional interests can coexist with ordinary ones; the brand does not demand difference for its own sake.
+
+The philosophical arc is liberation from irrelevant social authorities, arrival at ordinary life with interior conviction, and deep appreciation. Adam links banality to Eigentlichkeit/authenticity. The stance is "we just are", rather than claiming superiority or an invented identity.
 
 Its three-part archetype is **normality, mysticism, unconventionalism**, connected by curiosity. Direction is founder-authored; audience interpretation is open. Discovery, nuance, and appreciation matter more than mass visibility. Touchpoints should feel like a museum, archive, or editorial publication.
 
@@ -21,6 +25,8 @@ The Realm is a minimalist browser game and a qualification/initiation experience
 The recorded audience includes people who appreciate fashion and value being themselves irrespective of others' opinions. Precise audience segments and recruitment targets have not been defined in this PRD.
 
 **Open strategic question:** does the experience teach perception, filter for affinity, or do both in sequence? The latest recorded lean is filter first, then teach inside; it is not final. Completing the game is a behavioral proxy and does not establish brand affinity by itself.
+
+Adam explicitly reaffirmed that this tension must be examined when infrastructure decisions arise. The latest summary contains both "teach-then-filter" and "filter first"; it does not settle a new order. Evaluate the purpose of each touchpoint instead of treating the sequence as approved.
 
 Sensitive operations are documented in a separate local private PRD supplement outside GitHub. Their presence in a handover does not verify their implementation. Do not copy that supplement into this repository.
 
@@ -59,6 +65,7 @@ These checks define proposed product acceptance evidence; they have not been pas
 | --- | --- | --- |
 | Round I | Perception gate exists in source. Older `PROJECT.md`/`DESIGN.md` describe the former mole/combo mechanics. | Reconcile obsolete descriptions; browser pass/fail and usability proof still needed. |
 | Round II | Wave, boss, and four combination paths exist in source. | Joint playtest of the four combinations; Round II feature lock remains pending in the handover. |
+| Wave echoes and HP scaling | `round2.js` creates two travelling-wave echo videos and scales boss HP from a base of 313 by 1.5 per counted upgrade. | Existence in source does not establish visual synchronization or balanced difficulty; playtest still needed. |
 | Round III | Turn-based action system exists in source; older status notes call the round complete/locked. | Verify actual end-to-end behavior before relying on that completion claim. |
 | Boss renderer | `js/rounds/boss3d.js` exists; the game does not import it. | Gate 1: Adam approves the 3D look before wiring it in. |
 | Crobe look | Offline cowl-and-robe v1 prototype/contact sheet exists under `context/prototypes/crobe/`. | v2 planned: taller/narrower form, tapered sleeves, hem facets, sharper cowl. Not integrated. |
@@ -76,7 +83,7 @@ Pending status is sourced from `HANDOVER.md`; this is not an exhaustive code aud
 - Preserve the existing vanilla HTML/CSS/JavaScript architecture, event flow, and game balance outside an approved task. Follow [agent.md](agent.md).
 - Use negative space, minimal HUD, silhouette before color, and restrained feedback. Brand copy is lowercase, collective "we", cryptic, and free of selling language.
 - Retain the discovery principle: no tutorials or explanatory brand copy. Raise concrete usability failures without silently changing that principle.
-- Preserve settled commercial red lines in brand work: no discounts/sales and no paid advertising; guerrilla placement is allowed. Influencer/celebrity seeding and open restocks remain open.
+- Preserve settled commercial red lines in brand work: no discounts/sales and no paid advertising; guerrilla placement is allowed. Adam's latest summary also says "no public ads"; any additional restriction beyond paid advertising remains unclear. Small cluster drops are the recorded format. Influencer/celebrity seeding and open restocks remain open.
 - Respect round/file ownership, audio boundaries, and visual approval gates. A plan, prototype, or documentation update does not authorize game implementation.
 - Keep imported operations and garment R&D outside GitHub, regardless of repository visibility. Never save credentials in project documents.
 

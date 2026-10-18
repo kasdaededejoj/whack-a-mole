@@ -1,5 +1,15 @@
 # Handover — The Realm
 
+## [ChatGPT] Founder brand clarification and private R&D notes — 2026-10-18
+
+- Pulled Claude's new start-here update before editing. Extended the PRD's positioning and philosophical arc; explicitly retained teach-versus-filter as an unresolved infrastructure question. The supplied summary's inconsistent sequence wording was not silently resolved.
+- Updated skill/brand context to preserve the latest advertising wording without treating the ambiguous "no public ads" phrase as a settled extra rule. Small cluster drops remain the recorded format; seeding/restocks and deferred removal policy remain open.
+- Recorded sensitive operations clarifications and garment R&D only in local private project files outside GitHub. Founder clarification of the onboarding question is captured there; no bot/service implementation was inspected or changed. No garment specifications or private operations are copied into repository files.
+- Source inspection confirms Round II contains two wave echo videos and boss HP scaling. Added that source evidence to the PRD while retaining pending playback-sync and joint-playtest status. Round I remains a perception gate in current source despite the historical hybrid description.
+- Validation: skill structure, documentation links/whitespace, preservation of prior handover entries, and documentation-only diff. No game changes, browser playtest, bot validation, release, or completed wider saved/not-saved audit is claimed. The game remains in LD.
+
+---
+
 ## [ChatGPT] PRD and skill reconciled with current founder rules — 2026-10-18
 
 - Pulled Claude's context/start-here and completed import/wipe updates before editing. Added root `PRD.md` and `SKILL.md` to the current main-line documentation and linked them from `READ ME.md`, `context/README.md`, and the game summary.
