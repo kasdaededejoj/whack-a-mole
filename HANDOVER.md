@@ -8,6 +8,15 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 
 
+
+---
+
+## [Claude] ChatGPT start-here handover added — 2026-10-18
+
+- Added `context/CHATGPT_START_HERE.md`: the paste-ready first message for ChatGPT (reading order, self-check, import-and-wipe step, working rules, current game state, open items). Listed in `context/README.md`.
+- Its "current state" and "open" lists will go stale; update that file whenever the game state or the open items change (save habit).
+- Still pending: ChatGPT imports `PRIVATE_IMPORT_operations.md`, then **wipe**.
+
 ---
 
 ## [Claude] Operations staged for import, then wipe — 2026-10-18
