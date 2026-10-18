@@ -110,15 +110,15 @@ into the Discord and the physical product before they get access. Completing the
   | "Alex9SM" | 1017 ALYX 9SM: Matthew M. Williams, Milan; avant-garde streetwear, construction-led | 9/10 | [Rawlooks](https://rawlooks.com/brand/1017-alyx-9sm/) |
   | "Geoffrey" | Geoffrey B. Small: American designer, handmade in Veneto, Italy; 100+ Paris collections | 8/10 | [Wikipedia](https://en.wikipedia.org/wiki/Geoffrey_B._Small) |
   | "Boris" | Boris Bidjan Saberi: avant-garde label with a diffusion line, 11 | 8/10 | [Hypebeast](https://hypebeast.com/hb100/2017/borisbidjansaberi) |
-  | "Lulu, Dan" / "Lulu Don" | Lou Dalton: English menswear designer, London; known for knitwear collaborations. Phonetic match only, and the style fits less than the others | 5/10 | [Wikipedia](https://en.wikipedia.org/wiki/Lou_Dalton) |
+  | "Lulu, Dan" / "Lulu Don" | Lou Dalton: English menswear designer, London; known for knitwear collaborations. Adam confirmed this one on 2026-10-18 (read from a voice reply) | confirmed by Adam | [Wikipedia](https://en.wikipedia.org/wiki/Lou_Dalton) |
   | "Depression" (Singapore) | DEPRESSION: Singapore label, flagship at Cineleisure Orchard; black, androgynous, dark humour (Time Out, 2012, so details may be dated) | 8/10 | [Time Out](https://www.timeout.com/singapore/shopping/depression) |
 
 - **Design references:** cyber sigilism, surrealism, long flowy dyed silhouettes, oversized silhouettes with wind passing through. Adam says the brand doesn't lean on many references.
-- **Music:** angelcore, euphoric dubstep, and artists "so out there that they are the genre". One name was transcribed as "Levy Ryan"; research could not identify it, so do not use it. The list keeps evolving.
+- **Music:** angelcore, euphoric dubstep, and artists "so out there that they are the genre". The list keeps evolving. Adam said the individual artist names don't matter, so none are recorded.
 
 ## 11. Open questions
 Teach vs filter (current lean: both in sequence); removal rules for the Discord (deliberately left for later); influencer seeding and open restocks (left open for ChatGPT to propose);
-the exact wording of the inspiration phrase; spellings in the lexicon; the unidentified music artist.
+the exact wording of the inspiration phrase; spellings in the lexicon.
 
 ## 12. Self-check (for the AI reading this: do this before your first reply)
 Answer these two in one line each, to yourself. If you cannot answer one confidently, reread the section named and then ask Adam instead of guessing.

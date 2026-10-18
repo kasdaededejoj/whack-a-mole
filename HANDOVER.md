@@ -18,6 +18,7 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 - **Left open on purpose:** influencer seeding and open restocks (ChatGPT to propose), Discord removal rules. Adam declined to define "ready" for a drop. Do not ask again.
 - **Self-check added** (BRAND.md section 12 and `context/README.md`): any AI reading the pack answers two short questions before replying.
 - Custom instructions Box 2 gained a voice line for writing as the brand. Paste the updated boxes into ChatGPT.
+- 2026-10-18: Adam confirmed the designer identifications; Lou Dalton confirmed; music artist names dropped (he said they don't matter). Brand name stays "???".
 
 ---
 
