@@ -15,7 +15,7 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 - Added `context/CHATGPT_START_HERE.md`: the paste-ready first message for ChatGPT (reading order, self-check, import-and-wipe step, working rules, current game state, open items). Listed in `context/README.md`.
 - Its "current state" and "open" lists will go stale; update that file whenever the game state or the open items change (save habit).
-- Still pending: ChatGPT imports `PRIVATE_IMPORT_operations.md`, then **wipe**.
+- **Done:** ChatGPT imported `PRIVATE_IMPORT_operations.md` and deleted it from the repo (`2916fdc`, 2026-10-18). The wipe step is complete; old versions remain in git history, as Adam accepted.
 
 ---
 
@@ -25,7 +25,7 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
   `context/PRIVATE_IMPORT_operations.md`. `BRAND.md` keeps a pointer. Ethos, voice, vocabulary and taste stay public.
 - The staging file starts with an instruction: the AI imports it into its project folder as `PRIVATE_operations.md`, tells Adam, and the file is then deleted from the repo.
 - **"wipe"** (new command word): delete `context/PRIVATE_IMPORT_operations.md` in its own commit once it has been imported. Adam accepted that a normal delete leaves old versions in git history.
-- Status: **staged, not yet imported, not yet wiped.**
+- Status: **imported by ChatGPT and wiped (`2916fdc`, 2026-10-18).** The staging file no longer exists in the repo.
 
 ---
 

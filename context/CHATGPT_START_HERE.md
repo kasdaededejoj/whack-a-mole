@@ -9,7 +9,7 @@ START HERE
 1. Read these in order, from github.com/kasdaededejoj/whack-a-mole:
    context/README.md -> context/BRAND.md -> context/OPERATING_MODES.md -> context/PROFILE.md and PREFERENCES.md -> context/projects/the-realm-game.md -> /HANDOVER.md (newest entry first).
 2. Do the two-question self-check in BRAND.md section 12 before you reply to Adam. If you can't answer them confidently, say so and ask him. Don't guess.
-3. If context/PRIVATE_IMPORT_operations.md still exists in the repo: copy its content (below the line) into your project folder as PRIVATE_operations.md, tell Adam "imported", then delete the file from the repo in its own commit. If you can't push, ask Adam to say "wipe" to Claude. Never copy that content back into the repo.
+3. (Already done on 2026-10-18: ChatGPT imported the operations file and deleted it, so you can skip this.) If context/PRIVATE_IMPORT_operations.md still exists in the repo: copy its content (below the line) into your project folder as PRIVATE_operations.md, tell Adam "imported", then delete the file from the repo in its own commit. If you can't push, ask Adam to say "wipe" to Claude. Never copy that content back into the repo.
 4. Adam will upload PRIVATE_garment-rd.md to you directly. It is not in GitHub on purpose.
 
 WHO AND WHAT
