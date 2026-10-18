@@ -15,6 +15,7 @@ Written 2026-10-17 so Adam can move between AI assistants (Claude to ChatGPT) wi
 | `../SKILL.md` | Working with Adam: consolidated workflow and style, reconciled against his latest direct instructions. |
 | `../PRD.md` | Brand purpose and game requirements, source-checked journey, planned work, and unresolved product decisions. |
 | `CHATGPT_START_HERE.md` | First message for a new ChatGPT chat: reading order, current state, rules, what is open. Paste it or point ChatGPT at it. |
+| `CLAUDE_START_HERE.md` | First message for a new Claude chat: role and scope, rules, current state, what is open. Paste it or point Claude at it. |
 | `CUSTOM_INSTRUCTIONS.md` | Setting up a new assistant. Two blocks sized for ChatGPT's custom instructions boxes. |
 | `BRAND.md` | Anything about the brand: ethos, voice, history, how it operates, red lines. Read it for any brand task. |
 | `PROFILE.md` | Always. Who Adam is. |

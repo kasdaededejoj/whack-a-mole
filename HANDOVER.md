@@ -20,6 +20,14 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 
 
+
+---
+
+## [Claude] Claude start-here handover added — 2026-10-18
+
+- Added `context/CLAUDE_START_HERE.md`: paste-ready first message for a new Claude chat (access and reading order, scope: Round 2 and `js/audio.js` only, Mode 3 Build rules, two-writer rules, how pushing works, current state, open items). Listed in `context/README.md`.
+- Its "current state" lists go stale: update it with the save habit whenever game state or open items change.
+
 ---
 
 ## [Claude] ChatGPT start-here handover added — 2026-10-18
