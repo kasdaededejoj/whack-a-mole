@@ -1,6 +1,7 @@
 # The Realm (browser game)
 
-**What:** a browser-based whack-a-mole / space-invaders hybrid. Its role in the brand is described in `BRAND.md` (section 8).
+**What:** a minimalist three-round browser game: perception questions, invader combat, then a turn-based duel. The repo name and older notes refer to the former whack-a-mole Round I. Its brand role is described in `BRAND.md` (section 8).
+**Requirements and workflow:** `/PRD.md` records brand purpose, game requirements, current/planned scope, and acceptance evidence; `/SKILL.md` records Adam's current modes, collaboration workflow, and brand style. Updated 2026-10-18 after source inspection; no browser playtest performed.
 **Live:** https://kasdaededejoj.github.io/whack-a-mole/  **Repo:** `kasdaededejoj/whack-a-mole` (deploys from branch `main`, no Actions).
 **Source of truth for status:** `/HANDOVER.md` in the repo root. Read it before touching code; this file is only a summary and goes stale.
 

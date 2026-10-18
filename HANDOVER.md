@@ -1,5 +1,16 @@
 # Handover — The Realm
 
+## [ChatGPT] PRD and skill reconciled with current founder rules — 2026-10-18
+
+- Pulled Claude's context/start-here and completed import/wipe updates before editing. Added root `PRD.md` and `SKILL.md` to the current main-line documentation and linked them from `READ ME.md`, `context/README.md`, and the game summary.
+- The PRD now records brand identity/purpose, the game as one part of the wider Realm, current source behavior, planned work, acceptance evidence, and unresolved gates. Source confirms Round I is a seven-question perception gate and Round III resolves action choices in turns; older mole/combo and pure-timing descriptions should not be treated as current mechanic specifications.
+- Skill rules now follow Adam's latest direct instructions: Mode 2 = research; LD prevents gameplay shipping; explicit documentation requests and the save habit allow scoped documentation updates. Restored FS, linked inspected sources, X/10 ratings, and shared-repo saves. Earlier portable-contract definitions do not override these latest instructions.
+- Verified the 3D module is not imported by the current game and the crobe folder documents a v1 prototype with v2 planned. Other pending-work and gate statuses are attributed to the handover; no full completion audit is claimed.
+- Imported operations and the private PRD supplement remain outside GitHub. The staging wipe is already complete on main (`2916fdc`); no private operations were added back. The original supplied working handover remains in its original folder as Adam requested.
+- Validation: skill structure and documentation whitespace/link checks. No gameplay code changed, no browser or deployment playtest performed, and no game release authorized. The game remains in LD. The wider saved/not-saved audit remains separate.
+
+---
+
 Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at time of writing: `74ed8f1`
 (newest entries first below).
 

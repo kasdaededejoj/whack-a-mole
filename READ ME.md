@@ -21,6 +21,8 @@ Canonical project direction is documented in:
 - `READ ME.md` — project overview and setup orientation
 - `agent.md` — AI/developer implementation rules
 - `PROJECT.md` — current project status and milestones
+- `PRD.md` — brand purpose, game requirements, current/planned scope, and acceptance evidence
+- `SKILL.md` — Adam's current collaboration workflow, modes, and brand style
 - `HANDOVER.md` — long-running session notes when needed
 
 Note: this repository intentionally uses `READ ME.md` and `agent.md` as the
