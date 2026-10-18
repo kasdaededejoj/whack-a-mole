@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] Living PRD draft — 2026-10-18
+
+- Added `PRD.md` as a public, game-only working draft covering the current journey, acceptance criteria, release gates, and decisions still needed. It authorizes no gameplay implementation.
+- Linked it from `READ ME.md` and `context/projects/the-realm-game.md`.
+- Reconciled the PRD against current code and recent handover notes. `PROJECT.md` and `DESIGN.md` have older Round I/II descriptions, so the PRD flags those as needing reconciliation before using them as current mechanic requirements.
+- No gameplay code changed. Browser playtesting was not performed for this documentation batch.
+
+---
+
 Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at time of writing: `74ed8f1`
 (newest entries first below).
 

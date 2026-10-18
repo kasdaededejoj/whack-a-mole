@@ -3,6 +3,7 @@
 **What:** a browser-based whack-a-mole / space-invaders hybrid. Its role in the brand is described in `BRAND.md` (section 8).
 **Live:** https://kasdaededejoj.github.io/whack-a-mole/  **Repo:** `kasdaededejoj/whack-a-mole` (deploys from branch `main`, no Actions).
 **Source of truth for status:** `/HANDOVER.md` in the repo root. Read it before touching code; this file is only a summary and goes stale.
+**Product brief:** `/PRD.md` records the game journey, requirements, release gates, and open decisions. It is a working draft; code and playtest evidence determine implementation status.
 
 ## Stack
 Vanilla JS ES modules, canvas rendering, Web Audio procedural SFX (no sample files), WebM VP9 for wave VFX.
