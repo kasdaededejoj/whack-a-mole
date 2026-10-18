@@ -36,6 +36,10 @@ Written 2026-10-17 so Adam can move between AI assistants (Claude to ChatGPT) wi
 Garment specs and unreleased designs are kept out. Adam uploads them to his assistant directly as `PRIVATE_garment-rd.md`.
 If a task needs them and they are missing, ask Adam.
 
+## Import and wipe (only while `PRIVATE_IMPORT_operations.md` exists in this folder)
+That file holds sensitive brand operations, staged here only so it can be moved into the assistant's project folder. Follow the instruction at the top of that file:
+import it, tell Adam, then it is deleted from the repo. Once it is gone, ignore this section.
+
 ## First thing to do
 Read `BRAND.md`, then do its section 12 self-check (two short questions) before replying to Adam. If you can't answer them confidently, say so and ask.
 

@@ -7,6 +7,17 @@ Live: https://kasdaededejoj.github.io/whack-a-mole/ — latest code commit at ti
 
 
 
+
+---
+
+## [Claude] Operations staged for import, then wipe — 2026-10-18
+
+- Sensitive **operations** text (funnel, community/Discord bot, measurement, commerce stack, IP strategy, access logic) moved out of `context/BRAND.md` into the temporary file
+  `context/PRIVATE_IMPORT_operations.md`. `BRAND.md` keeps a pointer. Ethos, voice, vocabulary and taste stay public.
+- The staging file starts with an instruction: the AI imports it into its project folder as `PRIVATE_operations.md`, tells Adam, and the file is then deleted from the repo.
+- **"wipe"** (new command word): delete `context/PRIVATE_IMPORT_operations.md` in its own commit once it has been imported. Adam accepted that a normal delete leaves old versions in git history.
+- Status: **staged, not yet imported, not yet wiped.**
+
 ---
 
 ## [Claude] Brand interview complete; BRAND.md filled in — 2026-10-17

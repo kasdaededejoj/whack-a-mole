@@ -65,18 +65,10 @@ The aim is to let people be themselves, whether that is boring, unconventional o
 **What was tried and rejected:** unnecessary mainstream cultural wording that tries to sell, and anything implying the brand is someone or more than it is.
 
 ## 6. How we operate
-**Funnel (multi-gate):** physical business cards -> password-protected Carrd page -> capped Discord invite links.
-**Community:** the Discord is called "the Realm". A custom `discord.py` bot creates a private thread for each new member when the onboarded role is assigned,
-posting an ambition question visible only to the member and the Founder role.
-**Measurement:** Google Analytics on Carrd; invite-link batch tracking, to read conversion by drop context.
-**Commerce and build:** Shopify stays as the backend for inventory and analytics. Framer is a build-and-freeze frontend before launch.
-**IP strategy:** the registered logo is used privately (packaging, inserts, members-only assets); an unregistered logo is the public-facing mark.
+**Operations details** (funnel, community setup, measurement, commerce stack, IP strategy, access logic) are kept out of this repo, in the assistant's project folder as `PRIVATE_operations.md`. If `context/PRIVATE_IMPORT_operations.md` still exists in this repo, see `context/README.md` -> "Import and wipe".
 **Research behind the brand:** stealth precedents (Margiela, Corteiz, The Row, Chrome Hearts); consumer-psychology frameworks (Bourdieu, Han/Nunes/Dreze, Makkar/Yap);
 Singapore retail nodes and digital communities; guerrilla marketing mechanics (A6 posters, belly-band envelopes, cluster drop strategy).
 **Drops:** small cluster drops, released through the Discord.
-**Access (Adam, 2026-10-17):** the people who stay are those who reach the end of the funnel, "people that get us". In the game, completing it (resilience) earns access via a QR code.
-Other games or random pop-ups can open further routes. The Discord is also open to people who are big appreciators of fashion and, more importantly, are proud to be themselves irrespective of opinion.
-Who gets removed: left to be decided later (Adam: "that will decide").
 **Guerrilla placement vs advertising:** advertising means paying for a defined space with guaranteed views and impressions. Guerrilla placement (A6 posters, belly-band envelopes) is the brand's alternative:
 it targets specific spaces and adds the brand's own anti-corporate spin. **Confirmed by Adam (2026-10-17): the red line is paid advertising only; guerrilla placement is allowed.**
 **If the brand is copied:** good, it shows demand. Anything can be copied except the network, the connections and what the brand stands for.
@@ -91,7 +83,7 @@ it targets specific spaces and adds the brand's own anti-corporate spin. **Confi
 
 ## 8. The Realm (game) — its role
 A browser-based whack-a-mole / space-invaders hybrid at https://kasdaededejoj.github.io/whack-a-mole/. It is a **qualification and initiation gate**: it filters the right people
-into the Discord and the physical product before they get access. Completing the game earns access via QR code. Status and code: `projects/the-realm-game.md` and `/HANDOVER.md`.
+into the Discord and the physical product before they get access. Status and code: `projects/the-realm-game.md` and `/HANDOVER.md`.
 
 ## 9. Vocabulary (names used in the world and the game)
 - **The Realm**: a word Adam coined. It captures the ever-growing stratosphere (the ether) of the brand: today the Discord server, expanding later into other areas. It covers the whole space and the cornucopia of individuals within it.

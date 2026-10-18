@@ -67,6 +67,7 @@ Applies even in LD mode (docs only, never game code).
 | **LD mode** | Record, plan and diagnose everything he says **without shipping**. Batch it all once details are final. Only start shipping when he says to exit LD. |
 | **automata** | Execute all batches consecutively without waiting for a green light between each, unless something fails or the plan isn't fully sketched. |
 | **decis** | Summarise every decision currently needed from him, each as a multiple-choice question. |
+| **wipe** | Delete the staging file `context/PRIVATE_IMPORT_operations.md` from the repo in its own commit, after it has been imported into the assistant's project folder. Normal delete: old versions stay in git history. |
 | **save** | Update the GitHub `HANDOVER.md` and `context/`. Works even while in LD mode. Also happens automatically after every task (see Save habit). |
 
 ## Shipping rules
