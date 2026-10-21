@@ -1,5 +1,15 @@
 # Handover — The Realm
 
+## [ChatGPT] Brand basis reconciled with the vizar'dd before world selection — 2026-10-21
+
+- Adam said he was unsure where to go next and requested the brand ethos, design and aesthetic language, with consultation of vizar'dd. Found the existing coordinator chat under the current title **the vizar'dd** (`01a14cc0-863d-7ff0-b048-4d168700372c`), sent labeled request `2026-10-21-youxi-005`, and retrieved its complete read-only handoff `2026-10-21-vizard-001` through chat status/read tools. The receiving agent verified Adam's original request. No reply or acknowledgement loop was requested.
+- Read current BRAND/SKILL/project guidance and reconciled the handoff. Saved `context/projects/realm-brand-basis.md`, with provenance, recorded ethos/aesthetics, evidence limits and recommendations; linked from PRD 3.7 and the game summary. BRAND.md remains the detailed identity source. No private operations or garment specifications were copied.
+- Preserved the full normality/mysticism/unconventionalism archetype and curiosity; banality concerns ordinary life held with personal conviction. Black/deep colour accents, flowing/oversized proportions, wind, restrained composition and film-like motion are recorded preferences, not an approved environmental material palette or camera specification. Current fonts do not approve a revamp typography system.
+- Free-world interest remains exploratory. No setting, architecture, materials, hostile presence, occult lore or horror genre was selected. Prior courtyard/archive/hidden-passage examples are proposals. The suggested next step is to compare a few small scene compositions against the brief before choosing a world; this is not approval to build them.
+- Pulled main before documentation edits, preserved previous entries and validated links/scope. Documentation only; game/assets/dependencies unchanged and no deployment performed. LD remains in force.
+
+---
+
 ## [ChatGPT] Online stack examples and Shift+D prototype access direction — 2026-10-21
 
 - Adam asked for online games using the proposed stack and chose the existing developer panel as the access point for a separate test space that preserves the main game. He clarified the transcribed “Shifty” as **“Shift plus D.”** Inspected `js/devpanel.js`/`index.html`; the shortcut and round/portal entries exist, but a 3D entry does not.

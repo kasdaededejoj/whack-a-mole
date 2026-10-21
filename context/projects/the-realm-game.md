@@ -13,6 +13,8 @@ This is planned direction in LD; current gameplay has not changed. See [the deci
 
 Adam chose **Shift+D → a separate 3D test space** as the future access route, preserving the normal game. PRD section 3.6 records the isolation approach; no button, scene or route has been implemented yet. The options document now includes source-verified online examples using the core stack; they were not fully playtested.
 
+Before selecting the world, Adam requested the brand basis and consultation with **the vizar'dd**. [The reconciled brief](realm-brand-basis.md), linked from PRD section 3.7, records the ethos and aesthetic vocabulary plus clearly labeled design interpretations. Free exploration is intriguing to Adam but its scope/navigation and the actual setting remain open; generic horror/cult styling has not been chosen.
+
 ## Latest review — [ChatGPT], 2026-10-21
 
 Read [the whole-game analysis](../reviews/game-analysis-2026-10-21.md) before planning fixes. Source inspection and isolated execution found progression, wave collision, plasma input, Round I failure-transition, and duel victory/Gambit defects. The four combination names and supporting code do not establish four functioning builds. The public URL returned a GitHub Pages 404 in the review browser; the local external QR image also failed to load. Causes and downstream access remain unverified.

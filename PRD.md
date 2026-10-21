@@ -75,6 +75,12 @@ Adam chose the existing **Shift+D developer panel** as the access point for the 
 
 The ordinary Begin route must retain its behavior and avoid loading the prototype's renderer/assets. Verify both routes, repeat entry/reset and return behavior before claiming the test cannot affect the main game. Initially opening the experiment from the welcome screen avoids relying on the current developer panel as a reliable mid-round pause; its previously audited pause/timer issues remain a separate concern. Access/isolation direction is recorded; no prototype or panel code has been implemented in this documentation/research task.
 
+### 3.7 Brand basis before world selection
+
+Adam requested the brand ethos, design and aesthetic language before deciding where the free-world idea should go. [The applied brand brief](context/projects/realm-brand-basis.md) reconciles `context/BRAND.md` with a read-only handoff from **the vizar'dd**. Its confirmed source language and recommendations are kept distinct.
+
+Evaluate the entrance against normality, mysticism, unconventionalism and curiosity; black/deep-colour accents, flowing proportions, restrained composition and film-like motion are recorded preferences. Their environmental translation remains a design task. No world, architecture/material palette, hostile presence or horror identity is selected by these notes. Earlier courtyard/archival scenes remain proposals; free exploration is under consideration, with its movement and scope still open. LD remains in force.
+
 ## 4. Current game journey
 
 Source inspection on 2026-10-18, reconciled against `main` and the latest handover. No browser or deployed-build playtest was performed for this document.
