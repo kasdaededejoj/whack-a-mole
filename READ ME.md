@@ -22,6 +22,7 @@ Canonical project direction is documented in:
 - `agent.md` — AI/developer implementation rules
 - `PROJECT.md` — current project status and milestones
 - `PRD.md` — brand purpose, game requirements, current/planned scope, and acceptance evidence
+- `BRAND_DESIGN.md` — living brand/entrance design guide and decision register; `DESIGN.md` preserves legacy arcade notes
 - `SKILL.md` — Adam's current collaboration workflow, modes, and brand style
 - `HANDOVER.md` — long-running session notes when needed
 

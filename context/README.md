@@ -12,6 +12,7 @@ Written 2026-10-17 so Adam can move between AI assistants (Claude to ChatGPT) wi
 ## Files
 | File | Read it when |
 |------|--------------|
+| `../BRAND_DESIGN.md` | Living design language and application to The Realm: recorded directions, proposals, flow template, and open design decisions. |
 | `AGENT_COMMS.md` | Distinguishing Adam's instructions from agent updates; message format, authority, shared-file coordination, and Claude relay limits. |
 | `CHAT_AGENTS.md` | Chat roles and boundaries for you'xi (game execution) and biz (business), including onboarding status. |
 | `../SKILL.md` | Working with Adam: consolidated workflow and style, reconciled against his latest direct instructions. |

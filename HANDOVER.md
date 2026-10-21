@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] Living design guide and agent-dialogue clarification — 2026-10-21
+
+- Adam clarified that agent conversation should be treated as agent-origin speech, including labeled relays, and asked for a design Markdown that can grow as the design/flow is refined. Updated communication guidance to accept labeled responses, prefer direct agent replies, and avoid unnecessary user-facing acknowledgement chatter. Source/authorization verification remains required for new authority.
+- Added `BRAND_DESIGN.md` as the living brand/entrance design guide with recorded aesthetic language, 3D entrance direction, proposed encounter/transition review template, and an open decision register. No new setting, material, movement system, typography, soundscape, or encounter is treated as approved.
+- Preserved the body of the older `DESIGN.md` with a legacy-status pointer. Linked the new guide from PRD 3.7, SKILL, READ ME, and context index. The detailed brand source and you'xi's applied brief remain provenance; private operations and garment R&D stay outside GitHub.
+- Pulled current main before editing and preserved prior handover entries. Validation: skill structure, relative links/anchors, whitespace, and documentation-only scope. No gameplay/assets/dependencies changed; LD remains in force.
+
+---
+
 ## [ChatGPT] Brand basis reconciled with the vizar'dd before world selection — 2026-10-21
 
 - Adam said he was unsure where to go next and requested the brand ethos, design and aesthetic language, with consultation of vizar'dd. Found the existing coordinator chat under the current title **the vizar'dd** (`01a14cc0-863d-7ff0-b048-4d168700372c`), sent labeled request `2026-10-21-youxi-005`, and retrieved its complete read-only handoff `2026-10-21-vizard-001` through chat status/read tools. The receiving agent verified Adam's original request. No reply or acknowledgement loop was requested.

@@ -77,6 +77,8 @@ The ordinary Begin route must retain its behavior and avoid loading the prototyp
 
 ### 3.7 Brand basis before world selection
 
+The living [brand and entrance design guide](BRAND_DESIGN.md) is the place to develop this language, compare design choices, and record founder decisions. Its encounter-flow template is a proposal for reviewing continuity, not approved stage content or implementation scope. `DESIGN.md` remains legacy arcade-game source history.
+
 Adam requested the brand ethos, design and aesthetic language before deciding where the free-world idea should go. [The applied brand brief](context/projects/realm-brand-basis.md) reconciles `context/BRAND.md` with a read-only handoff from **the vizar'dd**. Its confirmed source language and recommendations are kept distinct.
 
 Evaluate the entrance against normality, mysticism, unconventionalism and curiosity; black/deep-colour accents, flowing proportions, restrained composition and film-like motion are recorded preferences. Their environmental translation remains a design task. No world, architecture/material palette, hostile presence or horror identity is selected by these notes. Earlier courtyard/archival scenes remain proposals; free exploration is under consideration, with its movement and scope still open. LD remains in force.

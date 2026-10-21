@@ -1,5 +1,7 @@
 # DESIGN.md
 
+> Legacy arcade-game design notes. Some mechanic descriptions are historical. Use [BRAND_DESIGN.md](BRAND_DESIGN.md) for the current living brand/entrance design guide and [PRD.md](PRD.md) for current versus planned product requirements. The older notes below are preserved as source history, not approval for the new 3D entrance.
+
 # THE REALM
 
 ## Vision
