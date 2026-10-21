@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] Founder entrance direction and responsive-mystery references — 2026-10-21
+
+- Adam described the current game as too game-like and wants a shadowy entrance that invites investigation. He explicitly chose a trace leading somewhere and an artifact concealing something as primary; a presence noticing the visitor is secondary. He wants rounds removed from the front, retained internally for tracking, with clear linkage after every stage.
+- Recorded this planned direction in PRD section 2.1, `context/projects/realm-entrance-direction.md`, and the project summary. The encounter involving an archival card, continuing line, matching artifact and occasional repeated gesture is a ChatGPT proposal only. No stage count, mechanics, lore, failure/access rules or teach-versus-filter sequence was decided.
+- Searched and opened primary creator pages for DEVICE 6 (text as navigable geography and narrative-linked interaction) and House of Eternal Return (found artifacts and ordinary objects concealing passages). Recorded the transferable principles without treating either work's style, chapter framing or effectiveness as an approved Realm requirement.
+- Pulled current main before documentation edits; preserved older entries. Documentation save only. No game, audio, asset or deployment changes. LD remains in force, and the old batch plan/crobe gates are not approval for this revamp. The earlier audit concerns the current build; its proposed repair order is not a prerequisite the founder has accepted for a redesigned entrance.
+
+---
+
 ## [ChatGPT] Whole-game source review and partial browser walkthrough — 2026-10-21
 
 - Adam asked you'xi to analyze the entire game. Saved the evidence, design assessment, coverage limits, and proposed next order in `context/reviews/game-analysis-2026-10-21.md`; linked from the project summary. Gameplay remains in LD. No code, balance, audio, renderer, or deployment changes were made.

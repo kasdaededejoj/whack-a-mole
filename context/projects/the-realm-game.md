@@ -5,6 +5,10 @@
 **Documented public URL:** https://kasdaededejoj.github.io/whack-a-mole/ (404 observed in the review browser; hosting cause unverified). **Repo:** `kasdaededejoj/whack-a-mole`.
 **Source of truth for status:** `/HANDOVER.md` in the repo root. Read it before touching code; this file is only a summary and goes stale.
 
+## Entrance revamp direction — [ChatGPT], 2026-10-21
+
+Adam now prioritizes a shadowy entrance that invites investigation: a trace and concealed artifacts are primary, a noticing presence secondary. Remove visible round framing while retaining internal stages for tracking, and make each transition clearly connected. This is planned direction in LD; current gameplay has not changed. See [the decision record and references](realm-entrance-direction.md) and PRD section 2.1. Specific encounters remain proposals.
+
 ## Latest review — [ChatGPT], 2026-10-21
 
 Read [the whole-game analysis](../reviews/game-analysis-2026-10-21.md) before planning fixes. Source inspection and isolated execution found progression, wave collision, plasma input, Round I failure-transition, and duel victory/Gambit defects. The four combination names and supporting code do not establish four functioning builds. The public URL returned a GitHub Pages 404 in the review browser; the local external QR image also failed to load. Causes and downstream access remain unverified.

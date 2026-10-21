@@ -1,6 +1,6 @@
 # ??? and The Realm — product requirements
 
-**Status:** working draft. **Owner:** Adam. **Updated:** 2026-10-18.
+**Status:** working draft. **Owner:** Adam. **Updated:** 2026-10-21.
 
 This document records the brand purpose relevant to The Realm, the current game, planned work, acceptance evidence, and unresolved decisions. It does not authorize implementation. The game remains in LD: plan and diagnose; no gameplay shipping until Adam authorizes it.
 
@@ -29,6 +29,12 @@ The recorded audience includes people who appreciate fashion and value being the
 Adam explicitly reaffirmed that this tension must be examined when infrastructure decisions arise. The latest summary contains both "teach-then-filter" and "filter first"; it does not settle a new order. Evaluate the purpose of each touchpoint instead of treating the sequence as approved.
 
 Sensitive operations are documented in a separate local private PRD supplement outside GitHub. Their presence in a handover does not verify their implementation. Do not copy that supplement into this repository.
+
+### 2.1 [ChatGPT] Entrance revamp direction — 2026-10-21
+
+Adam wants a shadowy entrance that invites investigation. Visible round framing should go; internal rounds/stages remain for tracking, with a clear linkage between every stage. A trace leading somewhere and artifacts concealing something are primary; a presence noticing the visitor is secondary. **Founder direction, not implemented.**
+
+The specific encounter, transitions, references and open questions are recorded in [the entrance direction](context/projects/realm-entrance-direction.md). Its sample artifact/gesture sequence is a proposal. Stage count, content, failure rules and the teach-versus-filter relationship remain open. The current mechanics below describe the existing build and do not establish the revamp's approved design. LD remains in force.
 
 ## 3. Current game journey
 
