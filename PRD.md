@@ -67,6 +67,14 @@ Before expanding the world, review a small 3D encounter: one space, one investig
 
 Decide the movement model and target devices before locking the engine/control plan. The item and its marketing use, stage count, narrative, failure/recovery and the teach-versus-filter relationship remain open. None of the earlier B20–B26/crobe approvals is inferred to authorize this revamp.
 
+### 3.6 Experimental access through Shift+D
+
+Adam chose the existing **Shift+D developer panel** as the access point for the new test space, with the main game preserved. He explicitly corrected the transcribed name “Shifty” to “Shift plus D.” The panel already exists in `js/devpanel.js`; the new 3D entry does not yet exist.
+
+**Proposed isolation:** add a dedicated “3D entrance — test space” entry which opens a separate experimental page/runtime. Load its 3D code/assets only after that entry is selected. Keep its state, animation loop, input listeners and reset behavior separate from the current rounds; do not import or mutate the current game state or lockout data. A proposed path such as `experiments/realm3d/` is an engineering suggestion, not an existing route.
+
+The ordinary Begin route must retain its behavior and avoid loading the prototype's renderer/assets. Verify both routes, repeat entry/reset and return behavior before claiming the test cannot affect the main game. Initially opening the experiment from the welcome screen avoids relying on the current developer panel as a reliable mid-round pause; its previously audited pause/timer issues remain a separate concern. Access/isolation direction is recorded; no prototype or panel code has been implemented in this documentation/research task.
+
 ## 4. Current game journey
 
 Source inspection on 2026-10-18, reconciled against `main` and the latest handover. No browser or deployed-build playtest was performed for this document.

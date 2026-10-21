@@ -1,5 +1,15 @@
 # Handover — The Realm
 
+## [ChatGPT] Online stack examples and Shift+D prototype access direction — 2026-10-21
+
+- Adam asked for online games using the proposed stack and chose the existing developer panel as the access point for a separate test space that preserves the main game. He clarified the transcribed “Shifty” as **“Shift plus D.”** Inspected `js/devpanel.js`/`index.html`; the shortcut and round/portal entries exist, but a 3D entry does not.
+- Searched and opened creator repositories, manifests and live URLs for Don't Look Away, The Bell of Ages and Bruno Simon's game-like portfolio. All have evidence of Three.js + Vite with Blender asset workflows and additional tools. Recorded links, relevance and confidence in `context/projects/realm-3d-options.md`; no full playthroughs or performance validation are claimed.
+- Added PRD section 3.6 and matching context: the proposed prototype uses a dedicated Shift+D button and separate experimental page/runtime, with assets loaded only on entry and no main-game state/storage dependencies. This is an isolation requirement and proposed engineering approach, not a verified implementation. Normal Begin behavior, asset requests and repeated entry/exit/reset still need checks after a scoped build.
+- The task recorded the chosen access route and researched examples; no new gameplay/renderer/panel code, dependency install or deployment was performed. LD remains in force. Prefer initial access from welcome rather than assuming the existing developer panel reliably pauses a running round; its previously audited timer/resume issues remain separate.
+- Pulled current main, preserved prior entries, checked local documentation links and documentation-only scope. The normal game and existing shortcuts were not modified by this save.
+
+---
+
 ## [ChatGPT] Dedicated 3D game PRD section, Futures item and software options — 2026-10-21
 
 - At Adam's request, expanded the earlier entrance note into **PRD section 3: The Realm — 3D entrance revamp**, retaining the current-build sections separately and renumbering them. Updated the active context reference; preserved previous handover entries, whose section 2.1 references are historical.

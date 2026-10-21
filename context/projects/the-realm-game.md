@@ -11,6 +11,8 @@ Adam now prioritizes a shadowy entrance that invites investigation: a trace and 
 
 This is planned direction in LD; current gameplay has not changed. See [the decision record and references](realm-entrance-direction.md) and [3D software options](realm-3d-options.md). Three.js + Blender + Vite is a recommendation, not an installed or approved stack. Specific encounters remain proposals.
 
+Adam chose **Shift+D → a separate 3D test space** as the future access route, preserving the normal game. PRD section 3.6 records the isolation approach; no button, scene or route has been implemented yet. The options document now includes source-verified online examples using the core stack; they were not fully playtested.
+
 ## Latest review — [ChatGPT], 2026-10-21
 
 Read [the whole-game analysis](../reviews/game-analysis-2026-10-21.md) before planning fixes. Source inspection and isolated execution found progression, wave collision, plasma input, Round I failure-transition, and duel victory/Gambit defects. The four combination names and supporting code do not establish four functioning builds. The public URL returned a GitHub Pages 404 in the review browser; the local external QR image also failed to load. Causes and downstream access remain unverified.

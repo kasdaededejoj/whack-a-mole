@@ -30,6 +30,22 @@ These are alternative engine/authoring approaches, not a list of engines to inst
 
 One small space, one artifact that invites inspection, a related visible response, and one linked transition. This should resolve the initial camera/movement feel and controls on named desktop/phone targets while keeping the low-poly visual reference recognizable. Use elapsed-time simulation and intentional input/collision boundaries. Record loading, frame stability and perceived readability; low polygon counts alone do not establish performance. **8/10 — proposed validation scope, not approval to build it.**
 
+## Shift+D testing route — founder direction
+
+Adam wants the experimental space accessible through the existing Shift+D developer panel while preserving the main game. “Shifty” was a transcription; he clarified “Shift plus D.” The existing shortcut and round/portal buttons were inspected in `js/devpanel.js` and `index.html`. **10/10 — founder clarification plus source inspection.**
+
+Recommendation: one dedicated button opens a separate page/runtime, initially from the welcome screen. Its own 3D bundle/assets, scene, animation loop, input and reset state should be separate from the current game; no current round/state/storage modules should be used. Normal Begin should not request the 3D assets. A path such as `experiments/realm3d/` is proposed only. This access route is not implemented yet; the existing developer panel's mid-round pause/resume problems are not resolved by choosing it. **8/10 — isolation proposal; separation must be tested before claiming no effects on the main game.**
+
+## Online examples with evidence for the core stack
+
+Searched and opened creator repositories, package manifests and project pages on 2026-10-21. All three have evidence for Three.js + Vite and a Blender asset workflow, with other dependencies in addition. These establish examples of the core tool combination, not exact architecture parity or measured suitability for The Realm. Live URLs were opened with the web reader; no full gameplay/browser-performance tests were performed.
+
+| Example | Why it is useful to inspect | Stack evidence | Confidence |
+| --- | --- | --- | --- |
+| [Don't Look Away](https://weeping-angels.vercel.app/) | A first-person chapel horror experiment with objects reacting to observation; relevant to spatial atmosphere and a noticing presence. Its tone is not an approved Realm direction. | [Creator README](https://github.com/blendi-remade/weeping-angels) explicitly lists Three.js, Blender asset preparation and Vite; [package.json](https://github.com/blendi-remade/weeping-angels/blob/main/package.json) contains Three.js/Vite. Creator specifies desktop keyboard/mouse. | 9/10 — repository and live entry page inspected; not played through. |
+| [The Bell of Ages](https://nearbycoder.github.io/Ocarina/) | A browser 3D action-adventure, useful for looking at a small polygonal world, linked spaces and an asset pipeline. | [Creator repository](https://github.com/nearbycoder/Ocarina) documents Blender-generated models and Vite tooling; [package.json](https://github.com/nearbycoder/Ocarina/blob/main/package.json) includes Three.js/Vite. | 9/10 — source documentation/manifest and live URL inspected; live gameplay not verified. |
+| [Bruno Simon's portfolio](https://bruno-simon.com/) | A game-like portfolio explored by driving, useful for seeing a website expressed as a discoverable 3D environment. It is not a first-person game. | [Creator repository](https://github.com/brunosimon/folio-2025) documents Blender exports; [package.json](https://github.com/brunosimon/folio-2025/blob/main/package.json) lists Three.js/Vite and additional tools such as Rapier. | 9/10 — creator README, manifest and live page inspected; not played through. |
+
 ## Primary sources inspected
 
 These pages were opened, rather than relying on search snippets. Technical facts above are descriptions of available capabilities, not evidence of their implementation in The Realm.

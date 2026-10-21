@@ -13,6 +13,7 @@ Adam said the current experience feels too game-like and wants a shadowy entranc
 - Secondary premise: a presence noticing the visitor (option 2).
 - Later in the same chat, Adam made **first-person 3D** a requirement, referencing Need for Madness. He clarified that the **angular, low-poly visual style** is the primary reference. Movement/navigation freedom is not decided by that reference.
 - Adam requested a **Futures** subsection: users receive a weird item at the end of the game, which will be utilised in marketing collateral. Its form and use remain open. Canonical game requirements now occupy PRD section 3; the software recommendation is recorded in `realm-3d-options.md`.
+- Adam selected the existing **Shift+D developer panel** as the entrance to a separate 3D test space, preserving the main game. The initial “Shifty” transcription was explicitly corrected to “Shift plus D.” Access/isolation direction is recorded in PRD section 3.6; the entry and scene are not yet implemented.
 
 **10/10 — direct founder statements in the source chat.** “Responsive mystery” interested Adam, and he requested real examples; this does not approve every proposed mechanic. No new stage count, story, specific item identity, failure rule, or resolution to teach-versus-filter was selected. Existing mechanics are current implementation, not an approved blueprint for the revamp.
 
