@@ -1,6 +1,6 @@
 # ??? — living design guide
 
-**Owner:** Adam. **Maintained by:** the vizar'dd with the relevant project agent. **Updated:** 2026-10-21.
+**Owner:** Adam. **Maintained by:** the vizar'dd with the relevant project agent. **Updated:** 2026-10-22.
 
 This is the living design document for the brand's expression and its application to The Realm. Keep enduring intentions, principles, choices, and open questions here; put activity-specific exercises in supporting notes.
 
@@ -17,6 +17,8 @@ Banality concerns ordinary life and interests held with personal conviction, inc
 The intended touchpoint character is museum-like, archival, or editorial. This describes a quality of attention and presentation; it does not select a literal museum/archive setting. The precise design meaning of each archetype remains open for refinement. Teach-versus-filter must remain an explicit question when it affects infrastructure or an encounter's purpose.
 
 ### Emotional purpose — founder clarification, 2026-10-21
+
+**Tentative as of 2026-10-22:** Adam asked to park the latest design discussion while he goes to work. Keep these emotional aims, interpretations of recognition, archetype examples, and explanation-policy refinements as working material for his return. No new design is locked or authorized for implementation by this save. Previously completed document cleanup remains recorded.
 
 **Intrigue, recognition, and appreciation** are Adam's selected emotional aims. They describe the desired experience, not a mandatory three-step sequence or a measured audience response.
 
@@ -88,7 +90,7 @@ Storyboards, visual studies, and observation exercises belong in working notes s
 | D07 | Typography, lighting, motion, sound | Preferences recorded; system open. | Review samples in context rather than approving isolated stylistic labels. |
 | D08 | Completion item | Future concept recorded; details open. | Define its meaning and relation to the experience when that task is active. |
 | D09 | Teach versus filter | Unresolved; filter-first/teach-inside is a provisional lean. | State what a proposed encounter asks of a visitor and what it helps them notice or learn. |
-| D10 | Emotional purpose | Intrigue, recognition, appreciation selected on 2026-10-21. | Refine recognition and how intentional details become appreciable; do not assume a fixed emotional sequence. |
+| D10 | Emotional purpose | Intrigue, recognition, appreciation stated on 2026-10-21; parked as tentative on 2026-10-22. | Revisit on Adam's return; refine recognition and how intentional details become appreciable without assuming a fixed sequence. |
 | D11 | Scope of no explanations | Discovery principle recorded; layered policy proposed. | Decide the place of optional provenance/design detail and any operational cues. |
 
 Keep a dated source for founder choices. D10 records Adam's direct clarification in the vizar'dd chat on 2026-10-21; the examples and explanation policy remain proposals.

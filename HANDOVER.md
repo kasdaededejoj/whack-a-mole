@@ -1,5 +1,13 @@
 # Handover — The Realm
 
+## [ChatGPT] Latest design discussion parked as tentative — 2026-10-22
+
+- Adam asked to leave the latest design discussion tentative while he goes to work. Added explicit status notes to BRAND_DESIGN, PRD 3.7, and brand context: emotional aims, recognition, archetype examples, and explanation-policy refinements remain working material. No new design lock or implementation authority; completed documentation cleanup is retained.
+- Adam asked about "save" and "change" in our context. Current command notes define save as updating HANDOVER and matching context with a reported repository save. No special command definition for change has been found; its intended meaning remains to clarify rather than invent.
+- Pulled before editing. Documentation-only save; no gameplay, assets, private sources, or external systems changed. LD remains in force.
+
+---
+
 ## [ChatGPT] Emotional purpose recorded; design guide simplified — 2026-10-21
 
 - Adam selected intrigue, recognition, and appreciation, explaining appreciation through intentional graphics, genuine historical references where present, original authored details, garment features, and sourcing care. Recorded this intent in BRAND_DESIGN, PRD 3.7, and brand context without asserting verified provenance, product quality, or ethical/sustainability performance. Recognition's precise role and any sequence remain open.

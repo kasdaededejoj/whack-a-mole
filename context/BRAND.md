@@ -16,6 +16,8 @@ ask Adam. Last updated 2026-10-17 (interview round 2). (Garment specs live elsew
 ## 2. Ethos
 
 **[ChatGPT] Founder clarification, 2026-10-21:** Adam selected **intrigue, recognition, and appreciation** as the emotional purpose. Appreciation is grounded in intentional graphics, historical references in some pieces, original details in others, small garment-design features, and sourcing/supply-chain care. This is founder intent, not independently verified provenance or an ethical/sustainability claim. Recognition's exact role remains to be refined; no fixed emotional sequence was stated.
+
+**[ChatGPT] Follow-up, 2026-10-22:** Adam asked to park the latest design discussion as tentative while he goes to work. The emotional aims and their detailed interpretation remain working material for review; do not treat this discussion as a locked design or permission to implement it.
 - Two-stage arc: liberation from irrelevant social authorities, then arrival at banality (ordinary life with interior conviction), then deep appreciation.
 - Direction is **centralised and founder-authored**; interpretation is **decentralised** to the audience. Editorial, non-audience-captured. The goal is cultivating perception.
 - Every touchpoint should feel like a museum, an archive or an editorial publication.
