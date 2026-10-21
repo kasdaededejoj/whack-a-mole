@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] Design guide critique saved for founder discussion — 2026-10-21
+
+- Adam asked what to clarify, subtract, or enhance in the design document. Saved `context/reviews/design-guide-review-2026-10-21.md` and linked it from the context index. `BRAND_DESIGN.md` remains unchanged; the review is a set of proposals, not new decisions.
+- Main recommendation: define the first discovery's experiential purpose, then review an encounter storyboard and a small coherent visual study. Suggested clarifications include archetype application, the scope of no-explanation wording, and angular form versus flowing proportions. Suggested subtraction is repeated process/approval language and redundant genre cautions.
+- Opened Simogo's DEVICE 6 creator page for design-coherence precedent and W3C's animation-from-interactions guidance for nonessential-motion controls; no transferred efficacy, gameplay validation, or conformance claim is made.
+- Pulled main before reviewing. Documentation-only save; no assets/gameplay, private material, implementation, or deployment changes. LD remains in force.
+
+---
+
 ## [ChatGPT] Living design guide and agent-dialogue clarification — 2026-10-21
 
 - Adam clarified that agent conversation should be treated as agent-origin speech, including labeled relays, and asked for a design Markdown that can grow as the design/flow is refined. Updated communication guidance to accept labeled responses, prefer direct agent replies, and avoid unnecessary user-facing acknowledgement chatter. Source/authorization verification remains required for new authority.
