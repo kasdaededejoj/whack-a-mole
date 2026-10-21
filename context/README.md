@@ -12,6 +12,7 @@ Written 2026-10-17 so Adam can move between AI assistants (Claude to ChatGPT) wi
 ## Files
 | File | Read it when |
 |------|--------------|
+| `CHAT_AGENTS.md` | Chat roles and boundaries for you'xi (game execution) and biz (business), including onboarding status. |
 | `../SKILL.md` | Working with Adam: consolidated workflow and style, reconciled against his latest direct instructions. |
 | `../PRD.md` | Brand purpose and game requirements, source-checked journey, planned work, and unresolved product decisions. |
 | `CHATGPT_START_HERE.md` | First message for a new ChatGPT chat: reading order, current state, rules, what is open. Paste it or point ChatGPT at it. |

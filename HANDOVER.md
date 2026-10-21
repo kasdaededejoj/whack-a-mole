@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] you'xi and biz chats created — 2026-10-21
+
+- At Adam's request, created separate local chats named `you'xi` (game execution) and `biz` (business/brand decision support) in the ??? project. Their roles, identifiers, and boundaries are recorded in `context/CHAT_AGENTS.md` and linked from `context/README.md`.
+- Both received current-context onboarding briefs and read-only initial scope. Their initial turns stopped at a reported account usage limit; chat creation succeeded, but completed onboarding is not claimed.
+- No gameplay execution, business decision, external-system change, cross-chat messaging authority, or lifting of LD was implied. Private source material remains outside GitHub.
+- Pulled the latest shared repository before the documentation update. Validation: creation results and compact chat-status snapshots; documentation whitespace and preservation of earlier handover entries. No gameplay files changed.
+
+---
+
 ## [ChatGPT] Founder brand clarification and private R&D notes — 2026-10-18
 
 - Pulled Claude's new start-here update before editing. Extended the PRD's positioning and philosophical arc; explicitly retained teach-versus-filter as an unresolved infrastructure question. The supplied summary's inconsistent sequence wording was not silently resolved.
