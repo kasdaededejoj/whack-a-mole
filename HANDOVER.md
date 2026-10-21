@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] Founder-versus-agent communication protocol — 2026-10-21
+
+- Adam authorized a method for the coordinator, you'xi, biz, and Claude to distinguish founder instructions from agent coordination. Added `context/AGENT_COMMS.md` and linked it from skill/context/handover guidance; recorded the new coordination permission in `context/CHAT_AGENTS.md`.
+- Adam can write normally. Agent updates use an explicit envelope with author, source chat, unique ID, type, scope, evidence, request, and any original founder-decision reference. Labels and tool user roles are not authentication; relayed claims of approval must be verified at the original human source before supplying new authority.
+- The protocol allows relevant project updates between the three Codex chats, with delivery/acknowledgement distinguished from completed work. It does not authorize gameplay shipping, scope expansion, other external messages, or recurring polling. Claude can read the shared record or receive Adam's labeled relay; no direct Claude delivery is claimed.
+- Pulled current main before editing and preserved previous entries. The saved protocol is the onboarding source for both chats; notification results are reported separately in the coordinator chat. No gameplay or private-source content changed.
+
+---
+
 ## [ChatGPT] you'xi and biz chats created — 2026-10-21
 
 - At Adam's request, created separate local chats named `you'xi` (game execution) and `biz` (business/brand decision support) in the ??? project. Their roles, identifiers, and boundaries are recorded in `context/CHAT_AGENTS.md` and linked from `context/README.md`.

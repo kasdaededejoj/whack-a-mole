@@ -15,6 +15,8 @@ Created at Adam's request on 2026-10-20; status checked 2026-10-21. Both are sep
 - Imported private operations, the private PRD supplement, and garment R&D remain outside GitHub. Private context is available locally for relevant work and must not be copied into repository documents.
 - Preserve Claude's work and current file/round ownership. Pull before editing; coordinate shared documentation and stop on conflicts. Chat creation does not authorize autonomous messages between chats.
 
+**2026-10-21 update:** Adam subsequently authorized relevant updates between these agents and the coordinator. Follow `AGENT_COMMS.md` for sender labels, source verification, scope, and delivery evidence. This supersedes the original chat-creation restriction for project coordination only.
+
 ## Onboarding status
 
 Both initial onboarding turns failed with a reported account usage limit. Their creation succeeded and the prompts remain in the chats, but completed onboarding has not been verified. Do not interpret their opening commentary as completed inspection or implementation. No game or business execution task has been assigned through these onboarding prompts.
