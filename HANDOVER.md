@@ -1,5 +1,15 @@
 # Handover — The Realm
 
+## [ChatGPT] Whole-game source review and partial browser walkthrough — 2026-10-21
+
+- Adam asked you'xi to analyze the entire game. Saved the evidence, design assessment, coverage limits, and proposed next order in `context/reviews/game-analysis-2026-10-21.md`; linked from the project summary. Gameplay remains in LD. No code, balance, audio, renderer, or deployment changes were made.
+- Baseline `615c434`: 13/13 JS modules pass syntax checks and relative import targets exist. Five focused in-memory source reproductions confirm: Round II timer auto-advances with enemies alive; boss wave collision uses the old target rather than the current player; plasma input fires the prior beam; failed Round I schedules a pass transition alongside reload; Gambit can override a killing blow. These are isolated execution checks, not complete browser regressions.
+- Local browser observations: successful source-informed Round I → Round II; Round II idle failure → welcome; developer jumps to later screens; a duel standoff turn → choose. Portal preview's external QR failed to load and no clickable continuation exists. The documented GitHub Pages URL returned a 404 in this environment; hosting cause was not diagnosed. Phone/desktop layout observations are not real-device proof, and viewport settings were restored.
+- Full combat/all four builds, full duel outcomes, tracing/expiry, QR destination/scan, listening, refresh-rate performance, and deployed gameplay remain not tested. The review challenges the undocumented form-recognition rule and chance-heavy climax without deciding teach-versus-filter or approving changed mechanics. Gate 1, crobe integration, and missing batches/Gate 2 remain open.
+- Pulled current main before documentation saves; coordinator was idle. Preserved prior handover entries. Follow-up implementation requires a scoped task; recommendations in the review do not grant approval. Onboarding and founder-versus-agent protocol verification are complete in you'xi; the older onboarding-status note remains historical.
+
+---
+
 ## [ChatGPT] Founder-versus-agent communication protocol — 2026-10-21
 
 - Adam authorized a method for the coordinator, you'xi, biz, and Claude to distinguish founder instructions from agent coordination. Added `context/AGENT_COMMS.md` and linked it from skill/context/handover guidance; recorded the new coordination permission in `context/CHAT_AGENTS.md`.

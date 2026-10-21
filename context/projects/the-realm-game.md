@@ -1,12 +1,19 @@
 # The Realm (browser game)
 
 **What:** a minimalist three-round browser game: perception questions, invader combat, then a turn-based duel. The repo name and older notes refer to the former whack-a-mole Round I. Its brand role is described in `BRAND.md` (section 8).
-**Requirements and workflow:** `/PRD.md` records brand purpose, game requirements, current/planned scope, and acceptance evidence; `/SKILL.md` records Adam's current modes, collaboration workflow, and brand style. Updated 2026-10-18 after source inspection; no browser playtest performed.
-**Live:** https://kasdaededejoj.github.io/whack-a-mole/  **Repo:** `kasdaededejoj/whack-a-mole` (deploys from branch `main`, no Actions).
+**Requirements and workflow:** `/PRD.md` records brand purpose, game requirements, current/planned scope, and acceptance evidence; `/SKILL.md` records Adam's current modes, collaboration workflow, and brand style. Updated 2026-10-21; the latest review includes partial local browser observation, not release acceptance.
+**Documented public URL:** https://kasdaededejoj.github.io/whack-a-mole/ (404 observed in the review browser; hosting cause unverified). **Repo:** `kasdaededejoj/whack-a-mole`.
 **Source of truth for status:** `/HANDOVER.md` in the repo root. Read it before touching code; this file is only a summary and goes stale.
 
+## Latest review — [ChatGPT], 2026-10-21
+
+Read [the whole-game analysis](../reviews/game-analysis-2026-10-21.md) before planning fixes. Source inspection and isolated execution found progression, wave collision, plasma input, Round I failure-transition, and duel victory/Gambit defects. The four combination names and supporting code do not establish four functioning builds. The public URL returned a GitHub Pages 404 in the review browser; the local external QR image also failed to load. Causes and downstream access remain unverified.
+
+Local browser coverage was partial: entry, source-informed Round I pass into Round II, idle Round II failure, a duel turn via developer jump, and portal preview. Full combat, complete duel outcomes, real phone/refresh-rate testing, tracing/expiry, audio listening, and deployed gameplay remain untested. No gameplay changed; LD and existing gates remain in force. Earlier “done” entries below are historical snapshots, not current acceptance evidence.
+
 ## Stack
-Vanilla JS ES modules, canvas rendering, Web Audio procedural SFX (no sample files), WebM VP9 for wave VFX.
+
+Vanilla JS ES modules, canvas rendering, Web Audio procedural SFX plus recorded BGM/thud audio, WebM VP9 for wave VFX.
 
 ## Round 2 (invaders + boss "Conformarult")
 - Weapons: wave 2 pick (`rapida` or `beam`), wave 4 pick (`dua beam` or `rapidaaa`).
