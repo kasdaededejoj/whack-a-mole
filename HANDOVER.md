@@ -1,5 +1,15 @@
 # Handover — The Realm
 
+## [ChatGPT] Dedicated 3D game PRD section, Futures item and software options — 2026-10-21
+
+- At Adam's request, expanded the earlier entrance note into **PRD section 3: The Realm — 3D entrance revamp**, retaining the current-build sections separately and renumbering them. Updated the active context reference; preserved previous handover entries, whose section 2.1 references are historical.
+- Added **3.4 Futures**: users receive a weird item at the end, to be utilised in marketing collateral. Identity, digital/physical form, delivery/persistence and relationship to the current completion/access flow remain open. No marketing integration or item implementation is approved.
+- Adam strongly requires first-person 3D. In response to a clarification question he selected **“Primarily the angular, low-poly visual style”** for the Need for Madness reference. Recorded that direction without assuming racing mechanics, free-roaming movement or a specific renderer.
+- Researched and opened current primary sources for Three.js rendering/controls/model loading, the Khronos Blender glTF exporter, Vite, Rapier, Babylon.js cameras/collisions, PlayCanvas Editor and the official reference game site. `context/projects/realm-3d-options.md` records Three.js + Blender + Vite as the provisional recommendation, optional physics, alternatives and evidence limits. Engine selection, assets, controls and performance targets remain untested/unapproved.
+- Pulled main before edits. Validated documentation links, section references, prior-entry preservation and documentation-only scope. No dependencies installed, gameplay/renderer/assets changed, or deployment performed. LD remains in force; this new whole-world requirement does not execute the old fake-3D boss plan.
+
+---
+
 ## [ChatGPT] Founder entrance direction and responsive-mystery references — 2026-10-21
 
 - Adam described the current game as too game-like and wants a shadowy entrance that invites investigation. He explicitly chose a trace leading somewhere and an artifact concealing something as primary; a presence noticing the visitor is secondary. He wants rounds removed from the front, retained internally for tracking, with clear linkage after every stage.

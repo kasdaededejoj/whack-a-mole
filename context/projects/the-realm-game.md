@@ -7,7 +7,9 @@
 
 ## Entrance revamp direction — [ChatGPT], 2026-10-21
 
-Adam now prioritizes a shadowy entrance that invites investigation: a trace and concealed artifacts are primary, a noticing presence secondary. Remove visible round framing while retaining internal stages for tracking, and make each transition clearly connected. This is planned direction in LD; current gameplay has not changed. See [the decision record and references](realm-entrance-direction.md) and PRD section 2.1. Specific encounters remain proposals.
+Adam now prioritizes a shadowy entrance that invites investigation: a trace and concealed artifacts are primary, a noticing presence secondary. Remove visible round framing while retaining internal stages for tracking, and make each transition clearly connected. He requires **first-person 3D**, taking the **angular, low-poly visual style** of Need for Madness as the primary reference. PRD section 3 is the dedicated revamp section; its **Futures** subsection records an end-of-game weird item to be used in marketing collateral, with form/integration still open.
+
+This is planned direction in LD; current gameplay has not changed. See [the decision record and references](realm-entrance-direction.md) and [3D software options](realm-3d-options.md). Three.js + Blender + Vite is a recommendation, not an installed or approved stack. Specific encounters remain proposals.
 
 ## Latest review — [ChatGPT], 2026-10-21
 

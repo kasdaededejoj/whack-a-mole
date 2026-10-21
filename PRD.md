@@ -30,13 +30,44 @@ Adam explicitly reaffirmed that this tension must be examined when infrastructur
 
 Sensitive operations are documented in a separate local private PRD supplement outside GitHub. Their presence in a handover does not verify their implementation. Do not copy that supplement into this repository.
 
-### 2.1 [ChatGPT] Entrance revamp direction — 2026-10-21
+## 3. The Realm — 3D entrance revamp
+
+**Status:** founder-directed product requirements in LD; not implemented. **Recorded by:** [ChatGPT], 2026-10-21. Engine selection and specific scenes remain proposals.
+
+### 3.1 Experience and continuity
 
 Adam wants a shadowy entrance that invites investigation. Visible round framing should go; internal rounds/stages remain for tracking, with a clear linkage between every stage. A trace leading somewhere and artifacts concealing something are primary; a presence noticing the visitor is secondary. **Founder direction, not implemented.**
 
 The specific encounter, transitions, references and open questions are recorded in [the entrance direction](context/projects/realm-entrance-direction.md). Its sample artifact/gesture sequence is a proposal. Stage count, content, failure rules and the teach-versus-filter relationship remain open. The current mechanics below describe the existing build and do not establish the revamp's approved design. LD remains in force.
 
-## 3. Current game journey
+### 3.2 3D presentation and viewpoint
+
+- The experience must be **3D, viewed from a first-person perspective**. This requirement concerns the entrance/world, not merely the existing isolated fake-3D boss prototype.
+- **Need for Madness is the visual reference.** Adam clarified that its **angular, low-poly visual style** is the main attraction. Free-roaming movement, vehicle mechanics and exact rendering techniques have not been selected by that reference.
+- Preserve the investigation-led direction in section 3.1 through the 3D environment and its transitions. The renderer is a means of expressing the entrance; it does not decide its stage content or interaction rules.
+- Exact camera movement, desktop/phone controls, geometry/material treatment, scene size, lighting and performance budgets remain to be designed and tested.
+
+**Founder requirement and clarification, not implementation or approval to begin a renderer migration.** The older pure-canvas/no-library decision described a previous boss task; it does not constitute the approved technical plan for this whole-world revamp.
+
+### 3.3 Technology recommendation — proposed
+
+Provisional recommendation: **Three.js + Blender + Vite**, using one browser 3D engine/library. Three.js supplies rendering and add-ons; movement rules, collision handling, artifact interaction and stage management still need implementation. Blender supplies the model-authoring workflow; Vite supplies the development server and production build. These tools are recommended roles, not installed dependencies or a finalized architecture.
+
+Desktop first-person look can use Three.js `PointerLockControls`; phone interaction needs a separately designed touch path. Add a physics engine such as Rapier only if physical object behavior or character-controller needs justify it. Babylon.js is an alternative with documented first-person cameras and camera collisions; PlayCanvas is an alternative with a visual browser editor. See [the researched options](context/projects/realm-3d-options.md) for sources, tradeoffs and verification limits.
+
+### 3.4 Futures
+
+- **At the end of the game, users receive a weird item that will be utilised in the brand's marketing collateral.**
+- This is a founder-requested future concept. The item's identity, digital/physical form, delivery, persistence and specific use in collateral remain undefined. Its relationship to the current QR completion/access flow also remains open.
+- Recording this concept does not make its production or marketing integration part of the initial 3D build scope.
+
+### 3.5 Proposed first validation and open choices
+
+Before expanding the world, review a small 3D encounter: one space, one investigable artifact, one meaningful response, and a visibly connected transition into another internal stage. Confirm the angular visual direction, first-person feel, discoverability, collision/input behavior and performance on named target devices. **Proposed validation scope; implementation not yet authorized.**
+
+Decide the movement model and target devices before locking the engine/control plan. The item and its marketing use, stage count, narrative, failure/recovery and the teach-versus-filter relationship remain open. None of the earlier B20–B26/crobe approvals is inferred to authorize this revamp.
+
+## 4. Current game journey
 
 Source inspection on 2026-10-18, reconciled against `main` and the latest handover. No browser or deployed-build playtest was performed for this document.
 
@@ -50,7 +81,7 @@ Source inspection on 2026-10-18, reconciled against `main` and the latest handov
 
 The repository name and older descriptions refer to whack-a-mole. Current `js/rounds/round1.js` implements the perception gate. Round III's older timing-focused description is a design intention; the inspected implementation resolves action choices in turns. Local lockout storage is not proof of secure identity or access enforcement.
 
-## 4. Requirements and acceptance evidence
+## 5. Requirements and acceptance evidence
 
 These checks define proposed product acceptance evidence; they have not been passed by writing this document.
 
@@ -65,7 +96,7 @@ These checks define proposed product acceptance evidence; they have not been pas
 | R7 | The portal provides the intended completion opportunity. | Confirm QR destination and usability, expiry, repeat-use behavior, and phone-to-phone versus desktop-to-phone use against approved rules. |
 | R8 | The game communicates the brand's world coherently. | Founder review of copy, silhouette, motion, sound, and narrative meaning against the approved brand direction. Player affinity remains unproven without suitable evidence. |
 
-## 5. Implemented versus planned
+## 6. Implemented versus planned
 
 | Area | Evidence/status | Remaining gate or work |
 | --- | --- | --- |
@@ -84,7 +115,7 @@ These checks define proposed product acceptance evidence; they have not been pas
 
 Pending status is sourced from `HANDOVER.md`; this is not an exhaustive code audit proving that every pending item is absent.
 
-## 6. Design, architecture, and storage constraints
+## 7. Design, architecture, and storage constraints
 
 - Preserve the existing vanilla HTML/CSS/JavaScript architecture, event flow, and game balance outside an approved task. Follow [agent.md](agent.md).
 - Use negative space, minimal HUD, silhouette before color, and restrained feedback. Brand copy is lowercase, collective "we", cryptic, and free of selling language.
@@ -93,7 +124,7 @@ Pending status is sourced from `HANDOVER.md`; this is not an exhaustive code aud
 - Respect round/file ownership, audio boundaries, and visual approval gates. A plan, prototype, or documentation update does not authorize game implementation.
 - Keep imported operations and garment R&D outside GitHub, regardless of repository visibility. Never save credentials in project documents.
 
-## 7. Decisions still needed
+## 8. Decisions still needed
 
 1. **Teach versus filter:** confirm the intended relationship and what observation would show the game serving it.
 2. **Release evidence:** name target devices/browsers and the acceptance bar for Round II feature lock and final completion.
@@ -105,6 +136,6 @@ Pending status is sourced from `HANDOVER.md`; this is not an exhaustive code aud
 
 Do not reopen the question of what makes a drop "ready"; Adam previously declined it. Do not ask for the withheld name or private naming inspirations.
 
-## 8. Maintenance and evidence
+## 9. Maintenance and evidence
 
 Use [SKILL.md](SKILL.md) for collaboration, modes, and save rules; `context/BRAND.md` for detailed identity; and `HANDOVER.md` for recent work and proof. Record decisions as decisions and recommendations as proposals. Keep planned, implemented, playtested, and released states distinct. Update the matching context summary after meaningful changes without rewriting another assistant's entries.
