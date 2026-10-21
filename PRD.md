@@ -77,6 +77,8 @@ The ordinary Begin route must retain its behavior and avoid loading the prototyp
 
 ### 3.7 Brand basis before world selection
 
+**Founder clarification, 2026-10-21:** the desired emotional purpose is **intrigue, recognition, and appreciation**. Appreciation concerns intentional graphics, genuine historical references where present, original authored details, small garment-design features, and care in sourcing/supply-chain choices. These are desired intentions, not independently verified product/provenance claims or a fixed three-step emotional sequence. Recognition's precise meaning remains open. The design guide records alternative archetype interpretations and a proposed explanation policy; neither is approved encounter content.
+
 The living [brand and entrance design guide](BRAND_DESIGN.md) is the place to develop this language, compare design choices, and record founder decisions. Its encounter-flow template is a proposal for reviewing continuity, not approved stage content or implementation scope. `DESIGN.md` remains legacy arcade-game source history.
 
 Adam requested the brand ethos, design and aesthetic language before deciding where the free-world idea should go. [The applied brand brief](context/projects/realm-brand-basis.md) reconciles `context/BRAND.md` with a read-only handoff from **the vizar'dd**. Its confirmed source language and recommendations are kept distinct.

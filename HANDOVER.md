@@ -1,5 +1,14 @@
 # Handover — The Realm
 
+## [ChatGPT] Emotional purpose recorded; design guide simplified — 2026-10-21
+
+- Adam selected intrigue, recognition, and appreciation, explaining appreciation through intentional graphics, genuine historical references where present, original authored details, garment features, and sourcing care. Recorded this intent in BRAND_DESIGN, PRD 3.7, and brand context without asserting verified provenance, product quality, or ethical/sustainability performance. Recognition's precise role and any sequence remain open.
+- Applied Adam's approved subtractions: reduced repeated governance/caveats, compressed genre cautions, and moved technical access details back to the PRD. Accepted his distinction between enduring design principles and activity-specific exercises; moved the encounter exercise into `context/design/encounter-review-template.md`.
+- Added three alternative archetype perspectives (graphic/history, form/construction, origin/process) and elaborated interpretation/provenance/operational explanation as a proposal. No example setting, real garment feature, historical claim, supplier, control cue, or disclosure policy is treated as selected or verified.
+- Pulled before editing and preserved prior handover entries. Documentation checks only; no implementation, asset change, external sourcing research, provenance verification, or deployment. LD remains in force.
+
+---
+
 ## [ChatGPT] Design guide critique saved for founder discussion — 2026-10-21
 
 - Adam asked what to clarify, subtract, or enhance in the design document. Saved `context/reviews/design-guide-review-2026-10-21.md` and linked it from the context index. `BRAND_DESIGN.md` remains unchanged; the review is a set of proposals, not new decisions.

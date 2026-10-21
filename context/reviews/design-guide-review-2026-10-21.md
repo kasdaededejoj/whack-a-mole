@@ -2,6 +2,8 @@
 
 Status: recommendations for Adam's review. These are not new founder decisions or implementation authority. The main `BRAND_DESIGN.md` has not been revised by this review.
 
+Subsequent founder response on 2026-10-21: Adam selected intrigue, recognition, and appreciation and approved the suggested subtractions. The guide was updated under that direct instruction; activity-specific exercises moved to `../design/encounter-review-template.md`. Archetype variations and the scope of no explanations remain under discussion. The original recommendations below are retained as review history, not a claim that all were accepted.
+
 ## Verdict
 
 The guide captures the recorded language and preserves uncertainty, but it is stronger on atmosphere and governance than on the intended visitor experience. The highest-value next decision is what the first meaningful discovery should make a visitor feel and understand. **8/10 — design judgment, not user-tested.**

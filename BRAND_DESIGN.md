@@ -2,17 +2,11 @@
 
 **Owner:** Adam. **Maintained by:** the vizar'dd with the relevant project agent. **Updated:** 2026-10-21.
 
-This is the working design document for the brand's expression and its application to The Realm. It is a starting point for refinement, not a claim that the design is finished or implemented. Adam asked for a design Markdown that can be extended as the design and flow become clearer.
+This is the living design document for the brand's expression and its application to The Realm. Keep enduring intentions, principles, choices, and open questions here; put activity-specific exercises in supporting notes.
 
-## 1. Document roles and decision status
+## 1. Reading this guide
 
-- [Brand context](context/BRAND.md): detailed identity, ethos, voice, vocabulary, and source history.
-- This guide: design language, its application, flow questions, and the design decision register.
-- [PRD](PRD.md): product requirements, scope, current versus planned behavior, and acceptance evidence.
-- [Legacy game design](DESIGN.md): earlier arcade-game principles/mechanics; not the specification for the new 3D entrance.
-- [Applied brand brief](context/projects/realm-brand-basis.md): the reconciled ethos/aesthetic briefing that preceded world selection.
-
-Use **recorded direction**, **proposal**, **open**, and **superseded** explicitly. A recorded design direction does not authorize implementation. Mark a proposal as a founder decision only after Adam chooses it, and retain the source of that choice. Specific colors, materials, settings, interactions, or technical tools are not approved by appearing as examples here.
+Status labels: **recorded direction**, **proposal**, **open**, **superseded**. Detailed identity lives in [brand context](context/BRAND.md); scope and implementation evidence live in the [PRD](PRD.md); collaboration/approval rules live in [SKILL.md](SKILL.md). Examples are proposals until Adam chooses them. [DESIGN.md](DESIGN.md) preserves the older arcade notes.
 
 ## 2. Design purpose — recorded direction
 
@@ -22,6 +16,14 @@ Banality concerns ordinary life and interests held with personal conviction, inc
 
 The intended touchpoint character is museum-like, archival, or editorial. This describes a quality of attention and presentation; it does not select a literal museum/archive setting. The precise design meaning of each archetype remains open for refinement. Teach-versus-filter must remain an explicit question when it affects infrastructure or an encounter's purpose.
 
+### Emotional purpose — founder clarification, 2026-10-21
+
+**Intrigue, recognition, and appreciation** are Adam's selected emotional aims. They describe the desired experience, not a mandatory three-step sequence or a measured audience response.
+
+Appreciation should have something substantive to attach to: graphics created with intent; historical references in some pieces; details authored by the brand in others; small garment-design features; and care about supply-chain and sourcing choices. This records intent, not independently verified provenance, production quality, or ethical/sustainability claims.
+
+The precise meaning of recognition is still to refine. Recognizing recurring details, relationships, or design intent is a working interpretation; recognizing oneself or a personal affinity is another possibility. Do not silently choose between them.
+
 ## 3. Aesthetic language — recorded preferences
 
 | Dimension | Recorded basis | Still to determine |
@@ -30,7 +32,7 @@ The intended touchpoint character is museum-like, archival, or editorial. This d
 | Silhouette and proportion | Long, flowing, oversized forms; dye and wind-through movement in the fashion/design language. | Translation into spaces, objects, scale, and readable angular geometry. No environmental material palette is selected. |
 | Composition | Restraint, negative space, silhouette, deliberate feedback, sparse interface. | Scene density, focal hierarchy, navigation cues, and how much each viewpoint reveals. |
 | Motion | Slow, static, film-like moving images; presence and flow are references. | Camera movement, locomotion, object animation, transition duration, and motion/accessibility treatment in first-person play. |
-| Typography | Lowercase, short wording, elegant and sparse presentation. | Type system for the new entrance. Existing BlackChancery/Thestral in the old build are implementation evidence, not a new typography decision. |
+| Typography | Lowercase, short wording, elegant and sparse presentation. | Typeface, hierarchy, placement, and legibility in context. |
 | Voice | Cryptic, mystical, collective "we", riddles; no hype or selling language. | The particular lines, placement, frequency, and relationship between text and environmental discovery. |
 | Naming | Archaic/museum/Latin-esque naming, an internal apostrophe signature, Singaporean cultural influences; some spellings remain uncertain. | Important new names and final spellings. Do not infer a whole mythology from a sound-driven ability name. |
 | Sound | Earlier game notes favor restrained, readable feedback. | New-world sound palette, spatial behavior, ambience, and silence. Existing audio ownership boundaries still apply. |
@@ -48,28 +50,30 @@ The new direction is a shadowy entrance that invites investigation. Its visible 
 - Each stage needs a clear link to what came before and what follows. Merely hiding the word "round" does not define that link.
 - Adam expressed interest in free exploration. The movement model, world scale, and degree of freedom remain open.
 - A weird item received at the end and used in marketing collateral is a recorded future concept. Its identity, form, use, and integration remain open.
-- The test-space entry is the existing **Shift+D panel**, with isolation from the main game. The engineering details remain in the PRD, not inferred from the aesthetic guide.
 
-Source: [entrance direction](context/projects/realm-entrance-direction.md) and [PRD section 3](PRD.md#3-the-realm--3d-entrance-revamp). Existing mechanics and the earlier crobe task do not automatically define this new experience. LD remains in force.
+Source: [entrance direction](context/projects/realm-entrance-direction.md) and [PRD section 3](PRD.md#3-the-realm--3d-entrance-revamp). Test access and engineering isolation belong in the PRD. LD remains in force.
 
-## 5. Encounter and transition flow — proposed working template
+## 5. Archetype in practice — alternative interpretations
 
-Use this template to make an encounter reviewable before implementation. It is a design aid, not an approved encounter or fixed sequence of mechanics.
+These variations illustrate different perspectives, not selected settings, real product facts, historical claims, or three required stages. The archetype should guide the whole language without requiring one literal symbol for each term in every scene.
 
-| Question | What to establish |
-| --- | --- |
-| Arrival | What does the visitor see, hear, or recognize on entering? |
-| Invitation | Which concrete feature gives them a reason to investigate? |
-| Action | What can they try, and how do the available controls make that possible? |
-| Response | What perceptible, related consequence follows their action? |
-| Discovery | What changes in their understanding of the object or place? |
-| Link | What trace, object, recognition, or consequence connects this encounter to another? |
-| Return | If revisiting is possible, what remains recognizable and what has changed? |
-| Recovery | What happens after a missed clue, repeated action, interrupted session, or inability to use the intended input? |
+| Perspective | Normality | Mysticism | Unconventionalism | Intended appreciation |
+| --- | --- | --- | --- | --- |
+| Graphic and history | A familiar printed image or label. | A partly visible relationship invites a second look. | A change of viewpoint brings an unexpected composition or reinterpretation into view. | Attention to an authored detail, or a documented historical source when one genuinely exists. |
+| Form and construction | A recognizable hanging form, fold, or edge. | Its construction is not immediately apparent. | Unexpected proportion or geometry changes how the ordinary form reads. | A small, intentional construction choice becomes perceptible. |
+| Origin and process | An ordinary parcel, tool, or material sample. | Separate traces suggest a relationship before revealing it. | Presentation reorganizes a familiar process so an overlooked decision becomes noticeable. | Specific, verified sourcing/process detail rather than a generic claim of care. |
 
-**Recommendation:** make the invitation and consequence concrete while leaving the interpretation open. Intentional ambiguity about meaning and unclear controls are different design issues. Evaluate both without automatically adding a tutorial.
+### Scope of no explanations — proposal for discussion
 
-**Recommendation:** compare a few small scene compositions before committing to a whole setting. The earlier courtyard, archive objects, hidden passages, and self-repeating trace were illustrative proposals. They are not selected content.
+The recorded discovery principle remains. The following distinguishes possible kinds of explanation; Adam has requested elaboration, not yet selected this policy:
+
+- **Interpretation/lore:** allow meaning to remain open. Avoid captions that dictate how to feel or explain every symbol.
+- **Authored details and provenance:** consider optional inspectable material that lets a visitor discover an actual reference, design decision, or sourcing fact. Clearly distinguish historical source, original invention, and unknown provenance. Do not fabricate history to deepen mystery.
+- **Operation and feedback:** consider making actions discoverable and their results perceptible. Precise feedback or a restrained control cue need not explain the world, but whether any explicit cue is acceptable is still a founder choice.
+
+Optional contextual information could support appreciation without requiring every visitor to read an explanation. This remains a recommendation. Specific disclosure format, depth, and relationship to the cryptic voice are open.
+
+Storyboards, visual studies, and observation exercises belong in working notes such as the [encounter review template](context/design/encounter-review-template.md). Record their enduring design conclusions here; they are not universal design rules or fixed first-minute requirements.
 
 ## 6. Decisions to develop
 
@@ -79,25 +83,26 @@ Use this template to make an encounter reviewable before implementation. It is a
 | D02 | First-person 3D and angular form | Recorded direction. | Review a small scene composition against the brand language before authorizing a build. |
 | D03 | World/setting and environmental materials | Open. | Compare a small number of candidate settings with their rationale and tradeoffs. |
 | D04 | Movement and exploration | Interest recorded; scope open. | Establish desired freedom, density, revisiting, and target inputs. |
-| D05 | Encounter content and causal links | Investigative premise recorded; exact encounters open. | Fill the proposed flow template for one encounter and its transition. |
+| D05 | Encounter content and causal links | Investigative premise recorded; exact encounters open. | Establish a perceptible relationship between a discovery and what follows. |
 | D06 | Presence | Secondary role recorded; identity/behavior open. | Decide what its observation adds before giving it a literal form or hostility. |
 | D07 | Typography, lighting, motion, sound | Preferences recorded; system open. | Review samples in context rather than approving isolated stylistic labels. |
 | D08 | Completion item | Future concept recorded; details open. | Define its meaning and relation to the experience when that task is active. |
 | D09 | Teach versus filter | Unresolved; filter-first/teach-inside is a provisional lean. | State what a proposed encounter asks of a visitor and what it helps them notice or learn. |
+| D10 | Emotional purpose | Intrigue, recognition, appreciation selected on 2026-10-21. | Refine recognition and how intentional details become appreciable; do not assume a fixed emotional sequence. |
+| D11 | Scope of no explanations | Discovery principle recorded; layered policy proposed. | Decide the place of optional provenance/design detail and any operational cues. |
 
-No new decision in this table is marked settled by creating the document. Founder choices should record date, original source, affected scope, and any superseded proposal; then update the PRD if a requirement changes.
+Keep a dated source for founder choices. D10 records Adam's direct clarification in the vizar'dd chat on 2026-10-21; the examples and explanation policy remain proposals.
 
 ## 7. Review questions — recommendations
 
 - Does the choice express the full brand language, or rely on darkness and symbols alone?
+- What actual detail or choice can the visitor come to appreciate? Is its historical, invented, or sourcing basis represented accurately?
 - What makes this place/object worth attending to before the visitor knows the brand?
 - Can a visitor connect their action to the next discovery without explanatory copy?
 - Are ordinary and unconventional details given room to coexist?
 - Does an introduced presence, object, or effect add a purpose that Adam has actually chosen?
 - Is a supposed mystery a deliberate interpretation choice, an unresolved design decision, or an input/state defect?
 
-Generic horror, cult/goth identity, hostile surveillance, occult lore, and jump scares are not selected simply by choosing a shadowy visual direction. These are unapproved directions, not a newly invented universal ban. Propose them explicitly if a future concept genuinely depends on them.
+Shadow and mystery do not select a genre; preserve the recorded identity rather than adding one by default.
 
-## 8. Maintenance
-
-Extend this document as Adam supplies design detail. Keep founder decisions, interpretations, proposals, and unknowns distinct. Preserve source links and decision history; do not claim approval from agent consensus. Coordinate edits with you'xi when requirements or flow overlap. Save a concise handover/context update and leave gameplay implementation for an explicitly authorized task.
+Workflow and saving follow [SKILL.md](SKILL.md). Implementation scope follows the PRD and Adam's direct instructions.
